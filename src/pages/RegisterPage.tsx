@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { SiGithub } from 'react-icons/si';
-import './LoginPage.css';
+import './RegisterPage.css';
 
-const LoginPage: React.FC = () => {
+const RegisterPage: React.FC = () => {
   const [formData, setFormData] = useState({
+    fullName: '',
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -18,15 +20,19 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login attempt:', formData);
+    if (formData.password !== formData.confirmPassword) {
+      alert('Passwords do not match!');
+      return;
+    }
+    console.log('Register attempt:', formData);
   };
 
-  const handleSocialLogin = (provider: string) => {
-    console.log(`Login with ${provider}`);
+  const handleSocialRegister = (provider: string) => {
+    console.log(`Register with ${provider}`);
   };
 
   return (
-    <div className="login-page">
+    <div className="register-page">
       {/* Background patterns */}
       <div className="background-pattern">
         <div className="pattern-item pattern-1">📚</div>
@@ -39,10 +45,10 @@ const LoginPage: React.FC = () => {
         <div className="pattern-item pattern-8">📖</div>
       </div>
 
-      <div className="login-container">
-        <div className="login-card">
+      <div className="register-container">
+        <div className="register-card">
           {/* Left Side - Illustration */}
-          <div className="login-illustration">
+          <div className="register-illustration">
             <div className="illustration-content">
               <div className="logo-section">
                 <div className="logo-container">
@@ -70,34 +76,50 @@ const LoginPage: React.FC = () => {
               </div>
               
               <div className="illustration-text">
-                <p className="subtitle">Welcome back to your English learning journey</p>
+                <p className="subtitle">Start your English learning journey with our advanced platform</p>
                 
                 <div className="features-highlight">
                   <div className="feature-point">
                     <div className="feature-dot"></div>
-                    <span>Continue Your Progress</span>
+                    <span>Interactive Learning Experience</span>
                   </div>
                   <div className="feature-point">
                     <div className="feature-dot"></div>
-                    <span>Access Your Courses</span>
+                    <span>Real-time Progress Tracking</span>
                   </div>
                   <div className="feature-point">
                     <div className="feature-dot"></div>
-                    <span>Track Your Achievements</span>
+                    <span>AI-Powered Practice Sessions</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Side - Login Form */}
-          <div className="login-form-section">
+          {/* Right Side - Registration Form */}
+          <div className="register-form-section">
             <div className="form-header">
-              <h1 className="form-title">Welcome Back</h1>
-              <p className="form-description">Sign in to your account to continue learning</p>
+              <h1 className="form-title">Create Account</h1>
+              <p className="form-description">Fill in your information to get started</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="login-form">
+            <form onSubmit={handleSubmit} className="register-form">
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="fullName" className="form-label">Full Name</label>
+                  <input
+                    type="text"
+                    id="fullName"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleInputChange}
+                    placeholder="Enter your full name"
+                    className="form-input"
+                    required
+                  />
+                </div>
+              </div>
+
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="email" className="form-label">Email Address</label>
@@ -114,7 +136,7 @@ const LoginPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="form-row">
+              <div className="form-row form-row-split">
                 <div className="form-group">
                   <label htmlFor="password" className="form-label">Password</label>
                   <input
@@ -123,32 +145,34 @@ const LoginPage: React.FC = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    placeholder="Enter your password"
+                    placeholder="Create password"
+                    className="form-input"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    placeholder="Confirm password"
                     className="form-input"
                     required
                   />
                 </div>
               </div>
 
-              <div className="form-options">
-                <label className="remember-me">
-                  <input type="checkbox" className="checkbox" />
-                  <span className="checkmark"></span>
-                  Remember me
-                </label>
-                <a href="/forgot-password" className="forgot-password-link">
-                  Forgot password?
-                </a>
-              </div>
-
-              <button type="submit" className="login-button">
-                Sign In
+              <button type="submit" className="register-button">
+                Sign Up
               </button>
             </form>
 
             <div className="form-footer">
-              <p className="register-link">
-                Don't have an account? <a href="/register" className="link">Sign up</a>
+              <p className="login-link">
+                Already have an account? <a href="/login" className="link">Login</a>
               </p>
 
               <div className="divider">
@@ -159,7 +183,7 @@ const LoginPage: React.FC = () => {
                 <button
                   type="button"
                   className="social-btn google-btn"
-                  onClick={() => handleSocialLogin('google')}
+                  onClick={() => handleSocialRegister('google')}
                 >
                   <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
                     <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/>
@@ -173,7 +197,7 @@ const LoginPage: React.FC = () => {
                 <button
                   type="button"
                   className="social-btn github-btn"
-                  onClick={() => handleSocialLogin('github')}
+                  onClick={() => handleSocialRegister('github')}
                 >
                   <SiGithub size={18} color="#181717" />
                   GitHub
@@ -187,4 +211,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+export default RegisterPage;

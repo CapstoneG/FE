@@ -7,6 +7,10 @@
   padding-top: 70px; /* Space for fixed header */
 }
 
+.app.no-header {
+  padding-top: 0; /* Remove padding for login page */
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;
