@@ -1,13 +1,10 @@
 import { useState, useEffect, createContext, useContext } from 'react';
+import { authService } from '../services/authService';
+import type { User as ApiUser } from '../services/authService';
 
-// Types
-interface User {
-  id: string;
-  email: string;
-  username: string;
-  avatar?: string;
-  learningLevel: 'beginner' | 'intermediate' | 'advanced';
-  progress: {
+interface User extends ApiUser {
+  learningLevel?: 'beginner' | 'intermediate' | 'advanced';
+  progress?: {
     completedLessons: number;
     totalPoints: number;
     streak: number;
@@ -28,13 +25,10 @@ interface RegisterData {
   email: string;
   password: string;
   username: string;
-  learningLevel: 'beginner' | 'intermediate' | 'advanced';
 }
 
-// Auth Context
 export const AuthContext = createContext<AuthContextType | null>(null);
 
-// useAuth Hook
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -43,24 +37,27 @@ export const useAuth = () => {
   return context;
 };
 
-// Custom Hook for Authentication Logic
 export const useAuthLogic = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check if user is authenticated on mount
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = localStorage.getItem('auth_token');
-        if (token) {
-          // Simulate API call to verify token and get user data
-          const userData = await verifyToken(token);
-          setUser(userData);
+        const userData = await authService.getCurrentUser();
+        if (userData) {
+          setUser({
+            ...userData,
+            learningLevel: (userData as any).learningLevel || 'beginner',
+            progress: (userData as any).progress || {
+              completedLessons: 0,
+              totalPoints: 0,
+              streak: 0,
+            },
+          });
         }
       } catch (error) {
         console.error('Auth check failed:', error);
-        localStorage.removeItem('auth_token');
       } finally {
         setIsLoading(false);
       }
@@ -72,35 +69,61 @@ export const useAuthLogic = () => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      const response = await apiLogin(email, password);
-      const { user: userData, token } = response;
+      const { user: userData } = await authService.loginAndGetUser({ email, password });
       
-      localStorage.setItem('auth_token', token);
-      setUser(userData);
-    } catch (error) {
-      throw new Error('Login failed. Please check your credentials.');
+      setUser({
+        ...userData,
+        learningLevel: (userData as any).learningLevel || 'beginner',
+        progress: (userData as any).progress || {
+          completedLessons: 0,
+          totalPoints: 0,
+          streak: 0,
+        },
+      });
+    } catch (error: any) {
+      throw new Error(error.message || 'Login failed. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('auth_token');
-    setUser(null);
+  const logout = async () => {
+    setIsLoading(true);
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      setIsLoading(false);
+    }
   };
 
   const register = async (userData: RegisterData) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      const response = await apiRegister(userData);
+      const response = await authService.register({
+        email: userData.email,
+        password: userData.password,
+        username: userData.username,
+      });
       const { user: newUser, token } = response;
       
-      localStorage.setItem('auth_token', token);
-      setUser(newUser);
-    } catch (error) {
-      throw new Error('Registration failed. Please try again.');
+      authService.setToken(token);
+      setUser({
+        id: newUser.id,
+        email: newUser.email,
+        username: newUser.username,
+        avatar: newUser.avatar,
+        learningLevel: 'beginner', // Default to beginner
+        progress: {
+          completedLessons: 0,
+          totalPoints: 0,
+          streak: 1,
+        },
+      });
+    } catch (error: any) {
+      throw new Error(error.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -110,9 +133,7 @@ export const useAuthLogic = () => {
     if (!user) return;
     
     try {
-      // Simulate API call
-      const updatedUser = await apiUpdateProfile(user.id, data);
-      setUser(updatedUser);
+      setUser({ ...user, ...data });
     } catch (error) {
       throw new Error('Profile update failed.');
     }
@@ -129,81 +150,3 @@ export const useAuthLogic = () => {
   };
 };
 
-// Mock API functions (replace with real API calls)
-const verifyToken = async (_token: string): Promise<User> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Mock user data
-  return {
-    id: '1',
-    email: 'user@example.com',
-    username: 'learner123',
-    learningLevel: 'intermediate',
-    progress: {
-      completedLessons: 25,
-      totalPoints: 1250,
-      streak: 7
-    }
-  };
-};
-
-const apiLogin = async (email: string, _password: string) => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  // Mock successful login
-  return {
-    token: 'mock_jwt_token_' + Date.now(),
-    user: {
-      id: '1',
-      email,
-      username: email.split('@')[0],
-      learningLevel: 'intermediate' as const,
-      progress: {
-        completedLessons: 25,
-        totalPoints: 1250,
-        streak: 7
-      }
-    }
-  };
-};
-
-const apiRegister = async (userData: RegisterData) => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  return {
-    token: 'mock_jwt_token_' + Date.now(),
-    user: {
-      id: Date.now().toString(),
-      email: userData.email,
-      username: userData.username,
-      learningLevel: userData.learningLevel,
-      progress: {
-        completedLessons: 0,
-        totalPoints: 0,
-        streak: 0
-      }
-    }
-  };
-};
-
-const apiUpdateProfile = async (userId: string, data: Partial<User>): Promise<User> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Mock updated user (merge with existing data)
-  return {
-    id: userId,
-    email: 'user@example.com',
-    username: 'learner123',
-    learningLevel: 'intermediate',
-    progress: {
-      completedLessons: 25,
-      totalPoints: 1250,
-      streak: 7
-    },
-    ...data
-  } as User;
-};

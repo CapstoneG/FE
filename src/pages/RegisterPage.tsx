@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import { SiGithub } from 'react-icons/si';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import './RegisterPage.css';
 
 const RegisterPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { register } = useAuth();
+  
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -10,21 +15,60 @@ const RegisterPage: React.FC = () => {
     confirmPassword: ''
   });
 
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+    // Clear error when user starts typing
+    if (error) setError('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+    
+    // Validation
+    if (!formData.fullName.trim()) {
+      setError('Full name is required');
       return;
     }
-    console.log('Register attempt:', formData);
+    
+    if (!formData.email.trim()) {
+      setError('Email is required');
+      return;
+    }
+    
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match!');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError('');
+    
+    try {
+      await register({
+        email: formData.email,
+        password: formData.password,
+        username: formData.fullName, 
+      });
+      
+      navigate('/login');
+    } catch (err: any) {
+      console.error('Registration failed:', err);
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSocialRegister = (provider: string) => {
@@ -104,6 +148,19 @@ const RegisterPage: React.FC = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="register-form">
+              {error && (
+                <div className="error-message" style={{
+                  background: '#fee',
+                  color: '#c33',
+                  padding: '10px',
+                  borderRadius: '4px',
+                  marginBottom: '15px',
+                  fontSize: '14px'
+                }}>
+                  {error}
+                </div>
+              )}
+
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="fullName" className="form-label">Full Name</label>
@@ -116,6 +173,7 @@ const RegisterPage: React.FC = () => {
                     placeholder="Enter your full name"
                     className="form-input"
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
@@ -132,9 +190,12 @@ const RegisterPage: React.FC = () => {
                     placeholder="Enter your email"
                     className="form-input"
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
+
+
 
               <div className="form-row form-row-split">
                 <div className="form-group">
@@ -145,9 +206,11 @@ const RegisterPage: React.FC = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    placeholder="Create password"
+                    placeholder="Enter your password"
                     className="form-input"
                     required
+                    disabled={isSubmitting}
+                    minLength={6}
                   />
                 </div>
                 <div className="form-group">
@@ -161,12 +224,21 @@ const RegisterPage: React.FC = () => {
                     placeholder="Confirm password"
                     className="form-input"
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
 
-              <button type="submit" className="register-button">
-                Sign Up
+              <button 
+                type="submit" 
+                className="register-button"
+                disabled={isSubmitting}
+                style={{
+                  opacity: isSubmitting ? 0.7 : 1,
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {isSubmitting ? 'Creating Account...' : 'Sign Up'}
               </button>
             </form>
 

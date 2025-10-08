@@ -487,6 +487,29 @@
   text-decoration: underline;
 }
 
+/* Error Message */
+.error-message {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  border: 1px solid #fecaca;
+  animation: errorSlideIn 0.3s ease-out;
+}
+
+@keyframes errorSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Login Button */
 .login-button {
   width: 100%;
@@ -502,10 +525,17 @@
   margin-top: 0.5rem;
 }
 
-.login-button:hover {
+.login-button:hover:not(:disabled) {
   background: #1d4ed8;
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
+}
+
+.login-button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Form Footer */

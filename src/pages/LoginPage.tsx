@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { SiGithub } from 'react-icons/si';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import './LoginPage.css';
 
 const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { login, isLoading } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  const [error, setError] = useState<string>('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -14,11 +19,24 @@ const LoginPage: React.FC = () => {
       ...prev,
       [name]: value
     }));
+    // Clear error when user types
+    if (error) setError('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login attempt:', formData);
+    setError('');
+
+    try {
+      await login(formData.email, formData.password);
+      
+      // Login successful - redirect to home
+      console.log('Login successful');
+      navigate('/', { replace: true });
+    } catch (error: any) {
+      console.error('Login error:', error);
+      setError(error.message || 'Login failed. Please check your credentials.');
+    }
   };
 
   const handleSocialLogin = (provider: string) => {
@@ -141,8 +159,14 @@ const LoginPage: React.FC = () => {
                 </a>
               </div>
 
-              <button type="submit" className="login-button">
-                Sign In
+              {error && (
+                <div className="error-message">
+                  {error}
+                </div>
+              )}
+
+              <button type="submit" className="login-button" disabled={isLoading}>
+                {isLoading ? 'Signing In...' : 'Sign In'}
               </button>
             </form>
 
