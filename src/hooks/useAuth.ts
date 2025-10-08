@@ -102,25 +102,10 @@ export const useAuthLogic = () => {
   const register = async (userData: RegisterData) => {
     setIsLoading(true);
     try {
-      const response = await authService.register({
+      await authService.register({
         email: userData.email,
         password: userData.password,
         username: userData.username,
-      });
-      const { user: newUser, token } = response;
-      
-      authService.setToken(token);
-      setUser({
-        id: newUser.id,
-        email: newUser.email,
-        username: newUser.username,
-        avatar: newUser.avatar,
-        learningLevel: 'beginner', // Default to beginner
-        progress: {
-          completedLessons: 0,
-          totalPoints: 0,
-          streak: 1,
-        },
       });
     } catch (error: any) {
       throw new Error(error.message || 'Registration failed. Please try again.');
