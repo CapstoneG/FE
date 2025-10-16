@@ -8,6 +8,7 @@ export { ProtectedRoute } from './common/ProtectedRoute';
 export { default as Course } from './common/Course';
 export { TestimonialCard } from './common/TestimonialCard';
 export { BlogCard } from './common/BlogCard';
+export { default as OverviewCard } from './common/OverviewCard';
 
 export { AuthProvider } from './providers/AuthProvider';
 

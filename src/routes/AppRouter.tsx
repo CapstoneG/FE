@@ -5,6 +5,10 @@ import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import ProfilePage from '../pages/ProfilePage';
+import BeginnerPage from '../pages/BeginnerPage';
+import IntermediatePage from '../pages/IntermediatePage';
+import AdvancedPage from '../pages/AdvancedPage';
+import BusinessPage from '../pages/BusinessPage';
 
 const AppRouter: React.FC = () => {
   return (
@@ -16,6 +20,26 @@ const AppRouter: React.FC = () => {
         </Layout>
       } />
       <Route path="/home" element={<Navigate to="/" replace />} />
+      <Route path="/courses/beginner" element={
+        <Layout>
+          <BeginnerPage />
+        </Layout>
+      } />
+      <Route path="/courses/intermediate" element={
+        <Layout>
+          <IntermediatePage />
+        </Layout>
+      } />
+      <Route path="/courses/advanced" element={
+        <Layout>
+          <AdvancedPage />
+        </Layout>
+      } />
+      <Route path="/courses/business" element={
+        <Layout>
+          <BusinessPage />
+        </Layout>
+      } />
       <Route path="/login" element={
         <AuthRedirect>
           <LoginPage />
