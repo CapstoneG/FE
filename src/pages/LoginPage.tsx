@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { SiGithub } from 'react-icons/si';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import './LoginPage.css';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login, isLoading } = useAuth();
+  const { login, loginWithGoogle, isLoading } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -39,8 +38,15 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  const handleSocialLogin = (provider: string) => {
-    console.log(`Login with ${provider}`);
+  const handleGoogleLogin = async () => {
+    try {
+      setError('');
+      await loginWithGoogle();
+      // User will be redirected to Google OAuth, then back to callback URL
+    } catch (error: any) {
+      console.error('Google login error:', error);
+      setError(error.message || 'Google login failed.');
+    }
   };
 
   return (
@@ -183,7 +189,7 @@ const LoginPage: React.FC = () => {
                 <button
                   type="button"
                   className="social-btn google-btn"
-                  onClick={() => handleSocialLogin('google')}
+                  onClick={handleGoogleLogin}
                 >
                   <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
                     <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/>
@@ -192,15 +198,6 @@ const LoginPage: React.FC = () => {
                     <path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8.15 8.15 0 0 0 8.98 1a8.1 8.1 0 0 0-7.15 4.52l2.63 2.07c.61-1.8 2.48-3.41 4.52-3.41z"/>
                   </svg>
                   Google
-                </button>
-
-                <button
-                  type="button"
-                  className="social-btn github-btn"
-                  onClick={() => handleSocialLogin('github')}
-                >
-                  <SiGithub size={18} color="#181717" />
-                  GitHub
                 </button>
               </div>
             </div>
