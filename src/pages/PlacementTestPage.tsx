@@ -46,7 +46,6 @@ const PlacementTestPage: React.FC = () => {
 
   // Comprehensive placement test questions
   const questions: Question[] = [
-    // GRAMMAR SECTION - Beginner
     {
       id: 1,
       type: 'grammar',
@@ -59,35 +58,6 @@ const PlacementTestPage: React.FC = () => {
     {
       id: 2,
       type: 'grammar',
-      question: 'She _____ to school every day.',
-      options: ['go', 'goes', 'going', 'gone'],
-      correctAnswer: 'goes',
-      level: 'beginner',
-      points: 1
-    },
-    {
-      id: 3,
-      type: 'grammar',
-      question: 'There _____ three books on the table.',
-      options: ['is', 'are', 'am', 'be'],
-      correctAnswer: 'are',
-      level: 'beginner',
-      points: 1
-    },
-    {
-      id: 4,
-      type: 'grammar',
-      question: 'I _____ breakfast at 7 AM yesterday.',
-      options: ['have', 'had', 'has', 'having'],
-      correctAnswer: 'had',
-      level: 'beginner',
-      points: 1
-    },
-
-    // GRAMMAR SECTION - Intermediate
-    {
-      id: 5,
-      type: 'grammar',
       question: 'If I _____ rich, I would travel the world.',
       options: ['am', 'was', 'were', 'be'],
       correctAnswer: 'were',
@@ -95,36 +65,7 @@ const PlacementTestPage: React.FC = () => {
       points: 2
     },
     {
-      id: 6,
-      type: 'grammar',
-      question: 'She has been studying English _____ three years.',
-      options: ['since', 'for', 'during', 'from'],
-      correctAnswer: 'for',
-      level: 'intermediate',
-      points: 2
-    },
-    {
-      id: 7,
-      type: 'grammar',
-      question: 'The project _____ by the team next month.',
-      options: ['will complete', 'will be completed', 'completes', 'completing'],
-      correctAnswer: 'will be completed',
-      level: 'intermediate',
-      points: 2
-    },
-    {
-      id: 8,
-      type: 'grammar',
-      question: 'I wish I _____ harder for the exam.',
-      options: ['study', 'studied', 'had studied', 'have studied'],
-      correctAnswer: 'had studied',
-      level: 'intermediate',
-      points: 2
-    },
-
-    // GRAMMAR SECTION - Advanced
-    {
-      id: 9,
+      id: 3,
       type: 'grammar',
       question: 'Scarcely _____ arrived when the meeting started.',
       options: ['I had', 'had I', 'I have', 'have I'],
@@ -133,18 +74,7 @@ const PlacementTestPage: React.FC = () => {
       points: 3
     },
     {
-      id: 10,
-      type: 'grammar',
-      question: 'The committee insisted that the proposal _____ immediately.',
-      options: ['is reviewed', 'be reviewed', 'was reviewed', 'reviews'],
-      correctAnswer: 'be reviewed',
-      level: 'advanced',
-      points: 3
-    },
-
-    // VOCABULARY SECTION - Beginner
-    {
-      id: 11,
+      id: 4,
       type: 'vocabulary',
       question: 'A place where you can buy books is called a _____.',
       options: ['bookstore', 'bakery', 'pharmacy', 'garage'],
@@ -153,27 +83,7 @@ const PlacementTestPage: React.FC = () => {
       points: 1
     },
     {
-      id: 12,
-      type: 'vocabulary',
-      question: 'The opposite of "hot" is _____.',
-      options: ['cold', 'warm', 'cool', 'frozen'],
-      correctAnswer: 'cold',
-      level: 'beginner',
-      points: 1
-    },
-    {
-      id: 13,
-      type: 'vocabulary',
-      question: 'What do you use to write on a blackboard?',
-      options: ['pen', 'pencil', 'chalk', 'marker'],
-      correctAnswer: 'chalk',
-      level: 'beginner',
-      points: 1
-    },
-
-    // VOCABULARY SECTION - Intermediate
-    {
-      id: 14,
+      id: 5,
       type: 'vocabulary',
       question: 'To "procrastinate" means to _____.',
       options: ['hurry', 'delay', 'complete', 'organize'],
@@ -182,27 +92,7 @@ const PlacementTestPage: React.FC = () => {
       points: 2
     },
     {
-      id: 15,
-      type: 'vocabulary',
-      question: 'An "ambiguous" statement is one that is _____.',
-      options: ['clear', 'unclear', 'long', 'short'],
-      correctAnswer: 'unclear',
-      level: 'intermediate',
-      points: 2
-    },
-    {
-      id: 16,
-      type: 'vocabulary',
-      question: 'A "meticulous" person pays attention to _____.',
-      options: ['nothing', 'details', 'colors', 'sounds'],
-      correctAnswer: 'details',
-      level: 'intermediate',
-      points: 2
-    },
-
-    // VOCABULARY SECTION - Advanced
-    {
-      id: 17,
+      id: 6,
       type: 'vocabulary',
       question: 'To "ameliorate" a situation means to _____.',
       options: ['worsen it', 'improve it', 'ignore it', 'describe it'],
@@ -211,18 +101,7 @@ const PlacementTestPage: React.FC = () => {
       points: 3
     },
     {
-      id: 18,
-      type: 'vocabulary',
-      question: 'A "sanguine" attitude is one that is _____.',
-      options: ['pessimistic', 'optimistic', 'neutral', 'aggressive'],
-      correctAnswer: 'optimistic',
-      level: 'advanced',
-      points: 3
-    },
-
-    // READING COMPREHENSION - Beginner
-    {
-      id: 19,
+      id: 7,
       type: 'reading',
       question: 'Reading: "Tom likes pizza. He eats pizza every Friday." - When does Tom eat pizza?',
       options: ['Every Monday', 'Every Friday', 'Every day', 'Every Sunday'],
@@ -231,18 +110,7 @@ const PlacementTestPage: React.FC = () => {
       points: 1
     },
     {
-      id: 20,
-      type: 'reading',
-      question: 'Reading: "The cat is on the mat. The dog is under the table." - Where is the dog?',
-      options: ['On the mat', 'Under the table', 'On the chair', 'Under the mat'],
-      correctAnswer: 'Under the table',
-      level: 'beginner',
-      points: 1
-    },
-
-    // READING COMPREHENSION - Intermediate
-    {
-      id: 21,
+      id: 8,
       type: 'reading',
       question: 'Reading: "Despite the challenges, the team managed to complete the project ahead of schedule." - What does this sentence suggest?',
       options: ['The project was easy', 'The team failed', 'The team succeeded despite difficulties', 'The project was late'],
@@ -251,18 +119,7 @@ const PlacementTestPage: React.FC = () => {
       points: 2
     },
     {
-      id: 22,
-      type: 'reading',
-      question: 'Reading: "The research indicates a correlation between exercise and mental health." - What does "correlation" mean here?',
-      options: ['No relationship', 'A connection', 'A contradiction', 'A conflict'],
-      correctAnswer: 'A connection',
-      level: 'intermediate',
-      points: 2
-    },
-
-    // READING COMPREHENSION - Advanced
-    {
-      id: 23,
+      id: 9,
       type: 'reading',
       question: 'Reading: "The author\'s nuanced perspective challenges conventional wisdom." - What does this suggest about the author?',
       options: ['They agree with common beliefs', 'They present a simple view', 'They offer a complex, subtle viewpoint', 'They have no opinion'],
@@ -271,18 +128,7 @@ const PlacementTestPage: React.FC = () => {
       points: 3
     },
     {
-      id: 24,
-      type: 'reading',
-      question: 'Reading: "The implications of this discovery are far-reaching and multifaceted." - What does this mean?',
-      options: ['The discovery has limited impact', 'The discovery affects many areas in various ways', 'The discovery is simple', 'The discovery is unimportant'],
-      correctAnswer: 'The discovery affects many areas in various ways',
-      level: 'advanced',
-      points: 3
-    },
-
-    // PRACTICAL USAGE - Intermediate
-    {
-      id: 25,
+      id: 10,
       type: 'grammar',
       question: 'Which sentence is correct?',
       options: [
@@ -296,7 +142,7 @@ const PlacementTestPage: React.FC = () => {
       points: 2
     },
     {
-      id: 26,
+      id: 11,
       type: 'vocabulary',
       question: 'In a business email, which is the most appropriate closing?',
       options: ['See ya!', 'Best regards,', 'Bye!', 'Later,'],
@@ -304,10 +150,8 @@ const PlacementTestPage: React.FC = () => {
       level: 'intermediate',
       points: 2
     },
-
-    // IDIOMS AND EXPRESSIONS - Advanced
     {
-      id: 27,
+      id: 12,
       type: 'vocabulary',
       question: '"Break the ice" means to _____.',
       options: ['Stop talking', 'Make people feel comfortable', 'Leave a party', 'Argue with someone'],
@@ -316,7 +160,7 @@ const PlacementTestPage: React.FC = () => {
       points: 2
     },
     {
-      id: 28,
+      id: 13,
       type: 'vocabulary',
       question: 'If something "costs an arm and a leg," it is _____.',
       options: ['free', 'cheap', 'very expensive', 'dangerous'],
@@ -324,10 +168,8 @@ const PlacementTestPage: React.FC = () => {
       level: 'intermediate',
       points: 2
     },
-
-    // COMPLEX GRAMMAR - Advanced
     {
-      id: 29,
+      id: 14,
       type: 'grammar',
       question: 'Choose the correct sentence with proper subjunctive mood:',
       options: [
@@ -341,7 +183,7 @@ const PlacementTestPage: React.FC = () => {
       points: 3
     },
     {
-      id: 30,
+      id: 15,
       type: 'grammar',
       question: 'Which sentence uses correct parallel structure?',
       options: [
@@ -406,10 +248,10 @@ const PlacementTestPage: React.FC = () => {
     let level = 'Beginner (A1-A2)';
     let apiLevel: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'PROFICIENCY' = 'BEGINNER';
     
-    if (percentage >= 65) {
+    if (percentage >= 30) {
       level = 'Advanced (B2-C1)';
       apiLevel = 'ADVANCED';
-    } else if (percentage >= 45) {
+    } else if (percentage >= 20) {
       level = 'Intermediate (B1)';
       apiLevel = 'INTERMEDIATE';
     } else {
@@ -417,7 +259,6 @@ const PlacementTestPage: React.FC = () => {
       apiLevel = 'BEGINNER';
     }
 
-    // Identify strengths and weaknesses
     const strengths: string[] = [];
     const weaknesses: string[] = [];
 

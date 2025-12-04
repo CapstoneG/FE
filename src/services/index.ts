@@ -6,3 +6,6 @@ export type {
   ApiError,
   User 
 } from './authService.js';
+
+export { notificationService } from './notificationService';
+export type { Notification } from './notificationService';

@@ -1,7 +1,9 @@
 .vocabulary-lesson {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
 }
 
 .vocabulary-header {
@@ -62,10 +64,10 @@
 }
 
 .progress-section {
-  background: white;
+  background: #f8fafc;
   padding: 1.5rem;
   border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
   margin-bottom: 2rem;
 }
 
@@ -74,6 +76,8 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .progress-text {
@@ -106,7 +110,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 500px;
+  min-height: 600px;
 }
 
 .flashcard-container {
@@ -116,18 +120,26 @@
 
 .flashcard-counter {
   text-align: center;
-  font-weight: 600;
-  color: #6b7280;
-  margin-bottom: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 1.125rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #f1f5f9;
+  border-radius: 2rem;
+  display: inline-block;
+  width: auto;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .flashcard {
   position: relative;
   width: 100%;
-  height: 400px;
-  perspective: 1000px;
+  height: 550px;
+  transform-style: preserve-3d;
   cursor: pointer;
-  margin-bottom: 2rem;
+  transition: transform 0.6s;
 }
 
 .flashcard-front,
@@ -136,15 +148,16 @@
   width: 100%;
   height: 100%;
   background: white;
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 3rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 2.5rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   backface-visibility: hidden;
   transition: transform 0.6s;
+  overflow-y: auto;
 }
 
 .flashcard-front {
@@ -163,15 +176,41 @@
   transform: rotateY(0deg);
 }
 
+/* Word Image */
+.word-image-container {
+  width: 260px;
+  height: 260px;
+  margin-bottom: 1.25rem;
+  margin-top: 0.5rem;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+.word-image-container.small {
+  width: 140px;
+  height: 140px;
+  margin-bottom: 1rem;
+}
+
+.word-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .word-header {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
+  margin-top: 0.5rem;
 }
 
 .word {
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 700;
   color: #1f2937;
   margin: 0;
@@ -190,6 +229,7 @@
   cursor: pointer;
   color: #2563eb;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .speak-btn:hover {
@@ -202,16 +242,20 @@
 }
 
 .pronunciation {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   color: #6b7280;
   font-style: italic;
-  margin: 0.5rem 0;
+  margin: 0.5rem 0 0.75rem 0;
 }
 
 .flip-hint {
-  color: #9ca3af;
+  color: #94a3b8;
   font-size: 0.875rem;
-  margin-top: 2rem;
+  margin-top: auto;
+  padding: 0.75rem 1.5rem;
+  background: #f8fafc;
+  border-radius: 2rem;
+  font-weight: 500;
 }
 
 .meaning-section,
@@ -267,6 +311,8 @@
   justify-content: center;
   align-items: center;
   gap: 1rem;
+  margin-top: 0.5rem;
+  padding-top: 1.5rem;
 }
 
 .nav-btn {
@@ -341,6 +387,8 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.3s;
   border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
 }
 
 .vocabulary-card:hover {
@@ -351,6 +399,23 @@
 .vocabulary-card.learned {
   border-color: #10b981;
   background: #f0fdf4;
+}
+
+/* Card Image */
+.card-image-container {
+  width: 100%;
+  height: 220px;
+  margin: -1.5rem -1.5rem 1rem -1.5rem;
+  overflow: hidden;
+  position: relative;
+  background: #f8fafc;
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .card-header {

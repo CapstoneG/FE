@@ -302,7 +302,6 @@ const ExerciseLesson: React.FC<ExerciseLessonProps> = ({
       </div>
 
       <div className="exercise-instructions">
-        <div className="instructions-icon">📝</div>
         <div className="instructions-content">
           <strong>Hướng dẫn:</strong>
           <p>{instructions}</p>

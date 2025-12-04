@@ -231,7 +231,6 @@ const GrammarLesson: React.FC<GrammarLessonProps> = ({
       {/* Tips Section */}
       <div className="grammar-tips">
         <div className="tip-card">
-          <FaLightbulb className="tip-icon" />
           <div className="tip-content">
             <h4>Mẹo học tập</h4>
             <ul>

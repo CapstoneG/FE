@@ -8,7 +8,8 @@ export interface LoginCredentials {
 export interface RegisterData {
   email: string;
   password: string;
-  username: string;
+  firstName: string;
+  lastName: string;
 }
 
 export interface User {
@@ -42,7 +43,7 @@ export interface ApiError {
 }
 
 class AuthService {
-  async login(credentials: LoginCredentials): Promise<LoginResponse> {
+  async login(credentials: LoginCredentials): Promise<string> {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
@@ -60,8 +61,17 @@ class AuthService {
           status: response.status,
         } as ApiError;
       }
+      if (data.result && data.result.token) {
+        if (data.result.refreshToken) {
+          this.setRefreshToken(data.result.refreshToken);
+        }
+        return data.result.token;
+      }
 
-      return data;
+      throw {
+        message: 'Invalid response format - token not found',
+        status: 500,
+      } as ApiError;
     } catch (error) {
       if (error instanceof Error) {
         throw {
@@ -76,10 +86,7 @@ class AuthService {
   // Login and get user info
   async loginAndGetUser(credentials: LoginCredentials): Promise<{ token: string; user: User }> {
     try {
-      const loginResponse = await this.login(credentials);
-      console.log('Login response:', loginResponse);
-      
-      const token = loginResponse.data.token;
+      const token = await this.login(credentials);
       
       if (!token) {
         throw {
@@ -87,8 +94,6 @@ class AuthService {
           status: 500,
         } as ApiError;
       }
-
-      console.log('Received token:', token);
       this.setToken(token);
 
       const user = await this.getCurrentUser();
@@ -107,7 +112,122 @@ class AuthService {
     }
   }
 
-  // Register
+  // Login with Google
+  async loginWithGoogle(): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/google/url`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw {
+          message: 'Failed to get Google login URL',
+          status: response.status,
+        } as ApiError;
+      }
+      
+      if (!data.url) {
+        throw {
+          message: 'Invalid response - URL not found',
+          status: 500,
+        } as ApiError;
+      }
+
+      // Redirect user đến Google OAuth URL
+      window.location.href = data.url;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw {
+          message: 'Failed to initiate Google login',
+          status: 0,
+        } as ApiError;
+      }
+      throw error;
+    }
+  }
+
+  async exchangeGoogleCode(code: string): Promise<string> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/google`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw {
+          message: 'Failed to exchange Google code for token',
+          status: response.status,
+        } as ApiError;
+      }
+
+      if (data && data.token) {
+        if (data.refreshToken) {
+          this.setRefreshToken(data.refreshToken);
+        }
+        return data.token;
+      }
+      throw {
+        message: 'Invalid response format - token not found',
+        status: 500,
+      } as ApiError;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw {
+          message: 'Network error during Google authentication',
+          status: 0,
+        } as ApiError;
+      }
+      throw error;
+    }
+  }
+
+  async handleOAuthCallback(code: string): Promise<{ token: string; user: User }> {
+    try {
+      if (!code) {
+        throw {
+          message: 'No code received from OAuth callback',
+          status: 400,
+        } as ApiError;
+      }
+      
+      this.removeToken();
+      
+      const token = await this.exchangeGoogleCode(code);
+
+      if (!token) {
+        throw {
+          message: 'Failed to get token from Google authentication',
+          status: 500,
+        } as ApiError;
+      }
+
+      this.setToken(token);
+      const user = await this.getCurrentUser();
+
+      if (!user) {
+        throw {
+          message: 'Failed to get user information after OAuth',
+          status: 500,
+        } as ApiError;
+      }
+
+      return { token, user };
+    } catch (error) {
+      this.removeToken();
+      throw error;
+    }
+  }
+
   async register(userData: RegisterData): Promise<AuthResponse> {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -141,10 +261,10 @@ class AuthService {
           status: response.status,
         } as ApiError;
       }
+
       return data;
     } catch (error) {
       if (error instanceof Error && !error.hasOwnProperty('status')) {
-        console.error('Network error during registration:', error);
         throw {
           message: 'Network error. Please check your connection.',
           status: 0,
@@ -154,9 +274,10 @@ class AuthService {
     }
   }
 
-  // Logout
   async logout(): Promise<void> {
     try {
+
+      // const user = await this.getCurrentUser();
       // const token = this.getToken();
       // if (token) {
       //   await fetch(`${API_BASE_URL}/auth/logout`, {
@@ -177,10 +298,12 @@ class AuthService {
   async getCurrentUser(): Promise<User | null> {
     try {
       const token = this.getToken();
-      console.log('Getting current user with token:', token);
-      if (!token) return null;
+      
+      if (!token) {
+        return null;
+      }
 
-      const response = await fetch(`${API_BASE_URL}/users/me`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/info`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -190,8 +313,28 @@ class AuthService {
 
       if (!response.ok) {
         if (response.status === 401) {
+          const newToken = await this.refreshAccessToken();
+          
+          if (newToken) {
+            const retryResponse = await fetch(`${API_BASE_URL}/api/users/info`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${newToken}`,
+                'Content-Type': 'application/json',
+              },
+            });
+            
+            if (retryResponse.ok) {
+              const userData = await retryResponse.json();
+              return userData;
+            }
+          }
+          
           this.removeToken();
-          return null;
+          throw {
+            message: 'Authentication expired. Please login again.',
+            status: 401,
+          } as ApiError;
         }
         throw {
           message: 'Failed to get user info',
@@ -202,7 +345,50 @@ class AuthService {
       const userData = await response.json();
       return userData;
     } catch (error) {
-      console.error('Get current user error:', error);
+      if ((error as ApiError).status === 401) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw {
+          message: 'Network error. Please check your connection.',
+          status: 0,
+        } as ApiError;
+      }
+      throw error;
+    }
+  }
+
+  // Update user level after placement test
+  async updateUserLevel(level: string): Promise<User | null> {
+    try {
+      const token = this.getToken();
+      
+      if (!token) {
+        throw {
+          message: 'Not authenticated',
+          status: 401,
+        } as ApiError;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/users/update-level`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ level }),
+      });
+
+      if (!response.ok) {
+        throw {
+          message: 'Failed to update user level',
+          status: response.status,
+        } as ApiError;
+      }
+
+      const userData = await response.json();
+      return userData;
+    } catch (error) {
       if (error instanceof Error) {
         throw {
           message: 'Network error. Please check your connection.',
@@ -223,6 +409,54 @@ class AuthService {
 
   removeToken(): void {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refreshToken');
+  }
+
+  setRefreshToken(refreshToken: string): void {
+    localStorage.setItem('refreshToken', refreshToken);
+  }
+
+  async refreshAccessToken(): Promise<string | null> {
+    try {
+      const refreshToken = this.getRefreshToken();
+      
+      if (!refreshToken) {
+        return null;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        this.removeToken();
+        return null;
+      }
+
+      if (data.result && data.result.token) {
+        this.setToken(data.result.token);
+        if (data.result.refreshToken) {
+          this.setRefreshToken(data.result.refreshToken);
+        }
+        return data.result.token;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      this.removeToken();
+      return null;
+    }
   }
 
   isAuthenticated(): boolean {

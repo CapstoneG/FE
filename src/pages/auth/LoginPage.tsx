@@ -1,16 +1,79 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import './LoginPage.css';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { authService } from '@/services/authService';
+import '@/styles/auth/LoginPage.css';
+import '@/styles/auth/OAuthLoading.css';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login, loginWithGoogle, isLoading } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [error, setError] = useState<string>('');
+  const [oauthLoading, setOauthLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  // Load saved credentials on mount
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('rememberedEmail');
+    const savedPassword = localStorage.getItem('rememberedPassword');
+    
+    if (savedEmail && savedPassword) {
+      setFormData({
+        email: savedEmail,
+        password: savedPassword
+      });
+      setRememberMe(true);
+    }
+  }, []);
+
+  // Handle OAuth callback when redirected back from Google
+  useEffect(() => {
+    const handleOAuthCallback = async () => {
+      const code = searchParams.get('code');
+      const errorParam = searchParams.get('error');
+
+      if (errorParam) {
+        setOauthLoading(false);
+        return;
+      }
+
+      if (code) {
+        setOauthLoading(true);
+        try {
+          const existingToken = authService.getToken();
+          if (existingToken) {
+            window.location.href = '/';
+            return;
+          }
+
+          await authService.handleOAuthCallback(code);
+          await new Promise(resolve => setTimeout(resolve, 150));
+          window.location.href = '/';
+        } catch (error: any) {
+          console.error('OAuth callback error:', error);
+          
+          // Check if token was saved despite the error
+          const tokenAfterError = authService.getToken();
+          if (tokenAfterError) {
+            console.log('Token exists after error, redirecting anyway...');
+            window.location.href = '/';
+            return;
+          }
+          setOauthLoading(false);
+          
+          // Clear URL params
+          navigate('/login', { replace: true });
+        }
+      }
+    };
+
+    handleOAuthCallback();
+  }, [searchParams, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -29,6 +92,16 @@ const LoginPage: React.FC = () => {
     try {
       await login(formData.email, formData.password);
       
+      // Save credentials if Remember Me is checked
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', formData.email);
+        localStorage.setItem('rememberedPassword', formData.password);
+      } else {
+        // Clear saved credentials if Remember Me is not checked
+        localStorage.removeItem('rememberedEmail');
+        localStorage.removeItem('rememberedPassword');
+      }
+      
       // Login successful - redirect to home
       console.log('Login successful');
       navigate('/', { replace: true });
@@ -41,16 +114,30 @@ const LoginPage: React.FC = () => {
   const handleGoogleLogin = async () => {
     try {
       setError('');
+      authService.removeToken();
+      setOauthLoading(true); 
       await loginWithGoogle();
-      // User will be redirected to Google OAuth, then back to callback URL
     } catch (error: any) {
       console.error('Google login error:', error);
-      setError(error.message || 'Google login failed.');
+      setOauthLoading(false);
     }
   };
 
   return (
     <div className="login-page">
+      {/* OAuth Loading Popup */}
+      {oauthLoading && (
+        <div className="oauth-loading-overlay">
+          <div className="oauth-loading-popup">
+            <div className="spinner-container">
+              <div className="spinner"></div>
+            </div>
+            <h2>Completing Sign In...</h2>
+            <p>Please wait while we authenticate you with Google</p>
+          </div>
+        </div>
+      )}
+
       {/* Background patterns */}
       <div className="background-pattern">
         <div className="pattern-item pattern-1">📚</div>
@@ -156,7 +243,12 @@ const LoginPage: React.FC = () => {
 
               <div className="form-options">
                 <label className="remember-me">
-                  <input type="checkbox" className="checkbox" />
+                  <input 
+                    type="checkbox" 
+                    className="checkbox" 
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                  />
                   <span className="checkmark"></span>
                   Remember me
                 </label>

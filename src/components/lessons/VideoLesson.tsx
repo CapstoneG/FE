@@ -1,336 +1,363 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { FaArrowLeft, FaCheckCircle, FaClock, FaChevronRight } from 'react-icons/fa';
+import React, { useEffect, useRef, useState } from 'react';
 import './VideoLesson.css';
 
-interface LearningObjective {
-  id: string;
+// Định nghĩa type cho note
+interface VideoNote {
+  time: number;
   text: string;
 }
 
-interface NextLesson {
-  id: number;
-  title: string;
+// Định nghĩa type cho Cloudinary Player
+interface CloudinaryPlayer {
+  currentTime(time?: number): number;
+  play(): void;
+  pause(): void;
+  on(event: string, callback: () => void): void;
+}
+
+interface CloudinaryInstance {
+  videoPlayer(
+    elementId: string,
+    options: { publicId: string; profile?: string }
+  ): CloudinaryPlayer;
+}
+
+interface CloudinaryInstance {
+  videoPlayer(
+    elementId: string,
+    options: { publicId: string; profile?: string }
+  ): CloudinaryPlayer;
+}
+
+interface CloudinaryStatic {
+  new(config: { cloud_name: string }): CloudinaryInstance;
+}
+
+declare global {
+  interface Window {
+    cloudinary?: {
+      Cloudinary?: CloudinaryStatic;
+    };
+  }
+  // eslint-disable-next-line no-var
+  var cloudinary: {
+    Cloudinary: {
+      new(config: { cloud_name: string }): CloudinaryInstance;
+    };
+  };
 }
 
 interface VideoLessonProps {
-  lesson: {
+  publicId?: string;
+  cloudName?: string;
+  videoUrl?: string;
+  lesson?: {
     id: number;
     title: string;
+    videoUrl: string;
     description: string;
     duration: string;
-    videoUrl: string;
-    completed?: boolean;
-    learningObjectives?: LearningObjective[];
-    nextLesson?: NextLesson;
+    completed: boolean;
   };
   courseTitle?: string;
-  onBack: () => void;
-  onComplete?: (lessonId: number) => void;
-  onNextLesson?: (lessonId: number) => void;
+  onBack?: () => void;
+  hideHeader?: boolean;
+  onComplete?: () => void;
 }
 
 const VideoLesson: React.FC<VideoLessonProps> = ({
+  publicId,
+  cloudName = 'dc5glptng',
   lesson,
-  courseTitle = "Khóa học của tôi",
-  onBack,
-  onComplete,
-  onNextLesson,
 }) => {
-  const [completed, setCompleted] = useState(lesson.completed || false);
-  const [showCompletionMessage, setShowCompletionMessage] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [videoLoading, setVideoLoading] = useState(true);
-  const [videoProgress, setVideoProgress] = useState(0);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const autoCompleteTriggered = useRef(false);
+  // Determine the actual publicId to use
+  const actualPublicId = publicId || (lesson?.videoUrl ? extractPublicId(lesson.videoUrl) : '');
 
-  // Load completion status from localStorage
-  useEffect(() => {
-    const storageKey = `lesson_${lesson.id}_completed`;
-    const savedStatus = localStorage.getItem(storageKey);
-    if (savedStatus === 'true') {
-      setCompleted(true);
+  // Helper function to extract publicId from URL or use as-is
+  function extractPublicId(url: string): string {
+    // If it's already a publicId (no http/https), return as-is
+    if (!url.startsWith('http')) {
+      return url;
     }
     
-    // Load progress
-    const savedProgress = localStorage.getItem(`lesson_${lesson.id}_progress`);
-    if (savedProgress) {
-      setProgress(parseInt(savedProgress, 10));
+    // Check if it's a Cloudinary embed URL
+    if (url.includes('player.cloudinary.com/embed')) {
+      // Extract public_id from embed URL query params
+      const urlObj = new URL(url);
+      const publicIdParam = urlObj.searchParams.get('public_id');
+      if (publicIdParam) {
+        return decodeURIComponent(publicIdParam);
+      }
     }
-  }, [lesson.id]);
+    
+    // Extract publicId from standard Cloudinary video URL
+    const match = url.match(/\/video\/upload\/(?:v\d+\/)?(.*?)(?:\.[^.]+)?$/);
+    return match ? match[1] : url;
+  }
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const playerRef = useRef<CloudinaryPlayer | null>(null);
+  const isInitializedRef = useRef(false); // Track if player is already initialized
+  const [notes, setNotes] = useState<VideoNote[]>([]);
+  const [noteText, setNoteText] = useState('');
+  const [isPlayerReady, setIsPlayerReady] = useState(false);
+  const [showNoteInput, setShowNoteInput] = useState(false);
 
-  // Listen to video player events via postMessage
+  // Load Cloudinary Player script
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      // Accept messages from Cloudinary
-      if (!event.origin.includes('cloudinary.com') && !event.origin.includes('player.cloudinary')) {
-        return;
+    // Load CSS
+    const cssLink = document.createElement('link');
+    cssLink.rel = 'stylesheet';
+    cssLink.href =
+      'https://unpkg.com/cloudinary-video-player/dist/cld-video-player.min.css';
+    document.head.appendChild(cssLink);
+
+    // Load JS
+    const script = document.createElement('script');
+    script.src =
+      'https://unpkg.com/cloudinary-video-player/dist/cld-video-player.min.js';
+    script.async = true;
+    script.onload = () => {
+      // Wait for DOM to be fully ready
+      setTimeout(() => {
+        initializePlayer();
+      }, 200);
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      // Don't cleanup - let player stay initialized
+      // Cleanup only on unmount
+    };
+  }, [actualPublicId]); // Add dependency to re-initialize when publicId changes
+
+  // Khởi tạo Cloudinary Player
+  const initializePlayer = () => {
+    // Prevent re-initialization
+    if (isInitializedRef.current) {
+      console.log('Player already initialized, skipping...');
+      return;
+    }
+
+    console.log('Initializing player...', {
+      hasVideoRef: !!videoRef.current,
+      hasCloudinary: typeof cloudinary !== 'undefined',
+      actualPublicId,
+    });
+
+    // Wait for video element to be in DOM
+    const videoElement = document.getElementById('cloudinary-video-player');
+    console.log('Video element:', videoElement, 'Tag:', videoElement?.tagName);
+
+    if (!videoElement || videoElement.tagName !== 'VIDEO') {
+      console.error('Video element not found or not a VIDEO tag');
+      return;
+    }
+
+    // Check if cloudinary is available globally
+    if (typeof cloudinary === 'undefined' || !cloudinary.Cloudinary) {
+      console.error('Cloudinary library not loaded');
+      return;
+    }
+
+    if (!actualPublicId) {
+      console.error('No publicId provided for video player');
+      return;
+    }
+
+    try {
+      // Use global cloudinary object like in HTML example
+      // @ts-ignore - Cloudinary library exposes .new() as static method
+      const cld = cloudinary.Cloudinary.new({
+        cloud_name: cloudName,
+      });
+
+      console.log('Cloudinary instance created, initializing player...');
+
+      // Use ID string like in HTML example
+      const player = cld.videoPlayer('cloudinary-video-player', {
+        publicId: actualPublicId,
+        cloudName: cloudName,
+        controls: true,
+        autoplay: false,
+        muted: false,
+        sourceTypes: ['mp4', 'webm', 'ogv'],
+        transformation: { quality: 'auto' },
+      });
+
+      console.log('Player initialized successfully', player);
+
+      playerRef.current = player;
+      isInitializedRef.current = true; // Mark as initialized
+      setIsPlayerReady(true);
+
+      // Add event listeners for debugging
+      player.on('loadstart', () => console.log('Video load started'));
+      player.on('loadeddata', () => console.log('Video data loaded'));
+      player.on('canplay', () => console.log('Video can play'));
+      player.on('error', (e: any) => console.error('Video error:', e));
+      player.on('play', () => console.log('Video playing'));
+      player.on('pause', () => console.log('Video paused'));
+    } catch (error) {
+      console.error('Error initializing Cloudinary player:', error);
+    }
+  };
+
+  // Thêm note mới
+  const handleAddNote = () => {
+    const text = noteText.trim();
+    if (!text) {
+      alert('Vui lòng nhập nội dung ghi chú');
+      return;
+    }
+
+    if (!playerRef.current) {
+      alert('Video player chưa sẵn sàng');
+      return;
+    }
+
+    const time = Math.floor(playerRef.current.currentTime());
+    const newNote: VideoNote = { time, text };
+
+    setNotes((prevNotes) => [...prevNotes, newNote]);
+    setNoteText('');
+    setShowNoteInput(false);
+  };
+
+  // Click vào note để nhảy đến thời điểm đó
+  const handleNoteClick = (time: number) => {
+    if (!playerRef.current) return;
+
+    console.log('Seeking to time:', time);
+    
+    try {
+      // Try different methods to seek
+      const player = playerRef.current as any;
+      
+      // Method 1: Direct currentTime setter
+      if (typeof player.currentTime === 'function') {
+        player.currentTime(time);
+      } else {
+        // Method 2: Access underlying video element
+        const videoEl = player.videojs?.el()?.querySelector('video') || 
+                       document.querySelector('#cloudinary-video-player video');
+        if (videoEl) {
+          videoEl.currentTime = time;
+        }
       }
       
-      try {
-        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-        
-        // Handle different event formats
-        const eventType = data.eventType || data.event || data.type;
-        const currentTime = data.currentTime || data.time || 0;
-        const duration = data.duration || data.totalTime || 1;
-        
-        // Handle video progress
-        if (eventType === 'timeupdate' || eventType === 'progress' || eventType === 'playing') {
-          const progressPercent = Math.min(100, Math.floor((currentTime / duration) * 100));
-          
-          if (progressPercent > 0) {
-            setVideoProgress(progressPercent);
-            setProgress(progressPercent);
-            
-            // Save progress to localStorage
-            localStorage.setItem(`lesson_${lesson.id}_progress`, String(progressPercent));
-            
-            // Auto complete when video reaches 90%
-            if (progressPercent >= 90 && !completed && !autoCompleteTriggered.current) {
-              autoCompleteTriggered.current = true;
-              handleAutoComplete();
-            }
-          }
-        }
-        
-        // Handle video ended event
-        if (eventType === 'ended' || eventType === 'end' || eventType === 'complete') {
-          if (!completed && !autoCompleteTriggered.current) {
-            autoCompleteTriggered.current = true;
-            handleAutoComplete();
-          }
-        }
-      } catch (error) {
-        console.error('Error handling video message:', error);
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    
-    // Try to initialize Cloudinary player events
-    setTimeout(() => {
-      if (iframeRef.current?.contentWindow) {
-        try {
-          iframeRef.current.contentWindow.postMessage({
-            type: 'subscribe',
-            events: ['play', 'pause', 'timeupdate', 'ended', 'progress']
-          }, '*');
-        } catch (e) {
-          console.error('Failed to subscribe to player events:', e);
-        }
-      }
-    }, 2000);
-    
-    // Also add a fallback timer to track video watching time
-    let watchTime = 0;
-    const watchInterval = setInterval(() => {
-      if (!completed && !autoCompleteTriggered.current) {
-        watchTime += 1;
-        // Assume lesson duration is in "X phút" format, extract the number
-        const durationMatch = lesson.duration.match(/(\d+)/);
-        const estimatedDuration = durationMatch ? parseInt(durationMatch[1]) * 60 : 600; // default 10 minutes
-        
-        const watchProgress = Math.min(100, Math.floor((watchTime / estimatedDuration) * 100));
-        
-        // Update progress every 5 seconds
-        if (watchTime % 5 === 0 && watchProgress > progress) {
-          setProgress(watchProgress);
-          localStorage.setItem(`lesson_${lesson.id}_progress`, String(watchProgress));
-        }
-        
-        // Auto complete after watching for estimated duration
-        if (watchTime >= estimatedDuration * 0.9 && !autoCompleteTriggered.current) {
-          autoCompleteTriggered.current = true;
-          handleAutoComplete();
-        }
-      }
-    }, 1000);
-    
-    return () => {
-      window.removeEventListener('message', handleMessage);
-      clearInterval(watchInterval);
-    };
-  }, [lesson.id, completed, progress]);
-
-  const handleAutoComplete = () => {
-    console.log('handleAutoComplete called');
-    setCompleted(true);
-    setProgress(100);
-    
-    // Save to localStorage
-    const storageKey = `lesson_${lesson.id}_completed`;
-    localStorage.setItem(storageKey, 'true');
-    localStorage.setItem(`lesson_${lesson.id}_progress`, '100');
-    
-    // Show completion message
-    setShowCompletionMessage(true);
-    console.log('Showing completion message');
-    setTimeout(() => {
-      setShowCompletionMessage(false);
-      console.log('Hiding completion message');
-    }, 5000); // Increased to 5 seconds for visibility
-    
-    // Callback to parent component
-    if (onComplete) {
-      onComplete(lesson.id);
+      console.log('New time:', player.currentTime());
+      player.play();
+    } catch (error) {
+      console.error('Error seeking:', error);
     }
   };
 
-  const handleMarkComplete = () => {
-    const newStatus = !completed;
-    setCompleted(newStatus);
-    
-    // Save to localStorage
-    const storageKey = `lesson_${lesson.id}_completed`;
-    localStorage.setItem(storageKey, String(newStatus));
-    
-    // Update progress to 100% when completed
-    if (newStatus) {
-      setProgress(100);
-      localStorage.setItem(`lesson_${lesson.id}_progress`, '100');
-      setShowCompletionMessage(true);
-      setTimeout(() => setShowCompletionMessage(false), 3000);
-      autoCompleteTriggered.current = true;
-    } else {
-      // Reset auto complete trigger if uncompleted
-      autoCompleteTriggered.current = false;
-    }
-    
-    // Callback to parent component
-    if (onComplete) {
-      onComplete(lesson.id);
-    }
+  // Format giây thành mm:ss
+  const formatTime = (seconds: number): string => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  const handleNextLesson = () => {
-    if (lesson.nextLesson && onNextLesson) {
-      onNextLesson(lesson.nextLesson.id);
-    }
+  // Xóa note
+  const handleDeleteNote = (index: number) => {
+    setNotes((prevNotes) => prevNotes.filter((_, i) => i !== index));
   };
 
   return (
     <div className="video-lesson-container">
-      {/* Completion Message Toast */}
-      {showCompletionMessage && (
-        <div className="video-lesson-toast">
-          <FaCheckCircle style={{ fontSize: 24 }} />
-          <span>🎉 Bạn đã hoàn thành bài học!</span>
+      <div className="video-wrapper">
+        <video
+          ref={videoRef}
+          id="cloudinary-video-player"
+          className="video-player"
+        />
+      </div>
+
+      {/* Video Description */}
+      {lesson?.description && (
+        <div className="video-description">
+          <h3>Mô tả video</h3>
+          <p>{lesson.description}</p>
         </div>
       )}
 
-      {/* Header */}
-      <header className="video-lesson-header">
-        <button onClick={onBack} className="video-lesson-back-button">
-          <FaArrowLeft />
-          <span>Quay lại {courseTitle}</span>
-        </button>
-        
-        <div className="video-lesson-header-right">
-          <div className="video-lesson-duration-badge">
-            <FaClock />
-            <span>{lesson.duration}</span>
-          </div>
-        </div>
-      </header>
-
-
-      {/* Main Content */}
-      <main className="video-lesson-main">
-        {/* Title Section */}
-        <div className="video-lesson-title-section">
-          <h1 className="video-lesson-title">{lesson.title}</h1>
-          <button
-            onClick={handleMarkComplete}
-            className={`video-lesson-complete-button ${completed ? 'completed' : ''}`}
-          >
-            <FaCheckCircle />
-            <span>{completed ? 'Đã hoàn thành' : 'Đánh dấu hoàn thành'}</span>
-          </button>
-        </div>
-        
-
-        {/* Video Player */}
-        <div className="video-lesson-video-section">
-          <div className="video-lesson-video-wrapper">
-            {videoLoading && (
-              <div className="video-lesson-video-loading">
-                <div className="video-lesson-spinner" />
-                <p>Đang tải video...</p>
-              </div>
-            )}
-            <iframe
-              ref={iframeRef}
-              src={lesson.videoUrl}
-              className="video-lesson-video-iframe"
-              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-              allowFullScreen
-              loading="lazy"
-              onLoad={() => setVideoLoading(false)}
-              title={lesson.title}
-            />
-          </div>
-        </div>
-
-        {/* Description Section */}
-        <div className="video-lesson-description-section">
-          <h2 className="video-lesson-section-title">📖 Về bài học này</h2>
-          <p className="video-lesson-description">{lesson.description}</p>
-        </div>
-
-        {/* Learning Objectives */}
-        {lesson.learningObjectives && lesson.learningObjectives.length > 0 && (
-          <div className="video-lesson-objectives-section">
-            <h2 className="video-lesson-section-title">🎯 Mục tiêu học tập</h2>
-            <ul className="video-lesson-objectives-list">
-              {lesson.learningObjectives.map((objective) => (
-                <li key={objective.id} className="video-lesson-objective-item">
-                  <FaCheckCircle className="video-lesson-objective-icon" />
-                  <span>{objective.text}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Next Lesson Section */}
-        {lesson.nextLesson && (
-          <div className="video-lesson-next-lesson-section">
-            <div className="video-lesson-next-lesson-card">
-              <div className="video-lesson-next-lesson-content">
-                <p className="video-lesson-next-lesson-label">Bài học tiếp theo</p>
-                <h3 className="video-lesson-next-lesson-title">{lesson.nextLesson.title}</h3>
-              </div>
-              <button
-                onClick={handleNextLesson}
-                className="video-lesson-next-lesson-button"
-                disabled={!completed}
-              >
-                <span>Tiếp tục</span>
-                <FaChevronRight />
-              </button>
-            </div>
-            {!completed && (
-              <p className="video-lesson-next-lesson-hint">
-                💡 Hoàn thành bài học hiện tại để mở khóa bài tiếp theo
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="video-lesson-action-buttons">
-          <button onClick={onBack} className="video-lesson-secondary-button">
-            Quay lại danh sách
-          </button>
-          {lesson.nextLesson && completed && (
-            <button onClick={handleNextLesson} className="video-lesson-primary-button">
-              <span>Bài tiếp theo</span>
-              <FaChevronRight />
+      <div className="video-controls">
+        <div className="add-note-section">
+          {!showNoteInput ? (
+            <button
+              className="show-note-input-btn"
+              onClick={() => setShowNoteInput(true)}
+            >
+              Thêm ghi chú mới
             </button>
+          ) : (
+            <div className="note-input-wrapper">
+              <input
+                type="text"
+                className="note-input"
+                placeholder="Nhập nội dung ghi chú của bạn..."
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') handleAddNote();
+                }}
+                autoFocus
+              />
+              <div className="note-actions">
+                <button
+                  className="cancel-note-btn"
+                  onClick={() => {
+                    setShowNoteInput(false);
+                    setNoteText('');
+                  }}
+                >
+                  Hủy
+                </button>
+                <button
+                  className="add-note-btn"
+                  onClick={handleAddNote}
+                >
+                  Lưu ghi chú
+                </button>
+              </div>
+            </div>
           )}
         </div>
-      </main>
+      </div>
+
+      <div className="notes-section">
+        <h3 className="notes-title">
+          Ghi chú của bạn ({notes.length})
+        </h3>
+        <div className="notes-list">
+          {notes.length === 0 ? (
+            <p className="no-notes">Chưa có ghi chú nào</p>
+          ) : (
+            notes.map((note, index) => (
+              <div
+                key={index}
+                className="note-item"
+                onClick={() => handleNoteClick(note.time)}
+              >
+                <div className="note-content">
+                  <span className="note-time">[{formatTime(note.time)}]</span>
+                  <span className="note-text">{note.text}</span>
+                </div>
+                <button
+                  className="delete-note-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteNote(index);
+                  }}
+                >
+                  Xóa
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 };

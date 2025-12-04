@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { SiGithub } from 'react-icons/si';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import './RegisterPage.css';
+import { useAuth } from '@/hooks/useAuth';
+import '@/styles/auth/RegisterPage.css';
+import '@/styles/auth/RegisterSuccessPopup.css'
+import '@/styles/auth/OAuthLoading.css';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
   
   const [formData, setFormData] = useState({
-    fullName: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -17,6 +19,8 @@ const RegisterPage: React.FC = () => {
 
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -32,8 +36,13 @@ const RegisterPage: React.FC = () => {
     e.preventDefault();
     
     // Validation
-    if (!formData.fullName.trim()) {
-      setError('Full name is required');
+    if (!formData.firstName.trim()) {
+      setError('First name is required');
+      return;
+    }
+    
+    if (!formData.lastName.trim()) {
+      setError('Last name is required');
       return;
     }
     
@@ -59,10 +68,13 @@ const RegisterPage: React.FC = () => {
       await register({
         email: formData.email,
         password: formData.password,
-        username: formData.fullName, 
+        firstName: formData.firstName,
+        lastName: formData.lastName
       });
       
-      navigate('/login');
+      // Show success popup instead of immediate redirect
+      setRegisteredEmail(formData.email);
+      setShowSuccessPopup(true);
     } catch (err: any) {
       console.error('Registration failed:', err);
       setError(err.message || 'Registration failed. Please try again.');
@@ -71,12 +83,28 @@ const RegisterPage: React.FC = () => {
     }
   };
 
-  const handleSocialRegister = (provider: string) => {
-    console.log(`Register with ${provider}`);
-  };
-
   return (
     <div className="register-page">
+      {/* Success Popup */}
+      {showSuccessPopup && (
+        <div className="oauth-loading-overlay">
+          <div className="success-popup">
+            <div className="success-icon">✉️</div>
+            <h2>Registration Successful!</h2>
+            <p className="success-message">
+              We've sent a verification email to:
+            </p>
+            <p className="email-highlight">{registeredEmail}</p>
+            <button 
+              className="goto-login-btn"
+              onClick={() => navigate('/login')}
+            >
+              Go to Login
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Background patterns */}
       <div className="background-pattern">
         <div className="pattern-item pattern-1">📚</div>
@@ -161,16 +189,30 @@ const RegisterPage: React.FC = () => {
                 </div>
               )}
 
-              <div className="form-row">
+              <div className="form-row form-row-split">
                 <div className="form-group">
-                  <label htmlFor="fullName" className="form-label">Full Name</label>
+                  <label htmlFor="firstName" className="form-label">First Name</label>
                   <input
                     type="text"
-                    id="fullName"
-                    name="fullName"
-                    value={formData.fullName}
+                    id="firstName"
+                    name="firstName"
+                    value={formData.firstName}
                     onChange={handleInputChange}
-                    placeholder="Enter your full name"
+                    placeholder="Enter your first name"
+                    className="form-input"
+                    required
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="lastName" className="form-label">Last Name</label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    placeholder="Enter your last name"
                     className="form-input"
                     required
                     disabled={isSubmitting}
@@ -246,35 +288,6 @@ const RegisterPage: React.FC = () => {
               <p className="login-link">
                 Already have an account? <a href="/login" className="link">Login</a>
               </p>
-
-              <div className="divider">
-                <span>or continue with</span>
-              </div>
-
-              <div className="social-buttons">
-                <button
-                  type="button"
-                  className="social-btn google-btn"
-                  onClick={() => handleSocialRegister('google')}
-                >
-                  <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
-                    <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/>
-                    <path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2.04a4.8 4.8 0 0 1-2.7.75 4.8 4.8 0 0 1-4.52-3.36H1.83v2.07A8.1 8.1 0 0 0 8.98 17z"/>
-                    <path fill="#FBBC05" d="M4.46 10.41a5.07 5.07 0 0 1 0-2.82V5.52H1.83a8.1 8.1 0 0 0 0 6.96l2.63-2.07z"/>
-                    <path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8.15 8.15 0 0 0 8.98 1a8.1 8.1 0 0 0-7.15 4.52l2.63 2.07c.61-1.8 2.48-3.41 4.52-3.41z"/>
-                  </svg>
-                  Google
-                </button>
-
-                <button
-                  type="button"
-                  className="social-btn github-btn"
-                  onClick={() => handleSocialRegister('github')}
-                >
-                  <SiGithub size={18} color="#181717" />
-                  GitHub
-                </button>
-              </div>
             </div>
           </div>
         </div>

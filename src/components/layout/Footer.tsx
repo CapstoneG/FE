@@ -69,6 +69,7 @@ export const Footer: React.FC<FooterProps> = ({ children, className = '' }) => {
               <div className="footer-section">
                 <h4 className="footer-heading">Hỗ trợ</h4>
                 <ul className="footer-links">
+                  <li><a href="/about" className="footer-link">Về chúng tôi</a></li>
                   <li><a href="/faq" className="footer-link">FAQs</a></li>
                   <li><a href="/how-it-works" className="footer-link">Hướng dẫn sử dụng</a></li>
                   <li><a href="/contact" className="footer-link">Liên hệ</a></li>

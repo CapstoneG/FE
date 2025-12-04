@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Header.css';
 import logoImg from '../../assets/logo.png';
+import notificationIcon from '../../assets/notification-icon.jpg';
 import { useAuth } from '../../hooks/useAuth';
+import { notificationService, type Notification } from '../../services';
 
 interface HeaderProps {
   className?: string;
@@ -88,12 +90,77 @@ const MenuItem: React.FC<MenuItemProps> = ({
 export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [notificationList, setNotificationList] = useState<Notification[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
+  const notificationListRef = useRef<HTMLDivElement>(null);
   
   // Mock user data - in real app, this would come from useAuth hook
   const { user, logout } = useAuth();
   const isAuthenticated = !!user;
+
+  // WebSocket connection for real-time notifications
+  useEffect(() => {
+    if (!user?.id) return;
+
+    // Connect to WebSocket
+    notificationService.connect(user.id.toString());
+
+    // Subscribe to new notifications
+    const unsubscribe = notificationService.subscribe((notification) => {
+      console.log('New notification received:', notification);
+      
+      // Add to notification list
+      setNotificationList(prev => [notification, ...prev]);
+      
+      // Increment unread count if unread
+      if (!notification.read) {
+        setNotificationCount(prev => prev + 1);
+      }
+
+      // Optional: Show browser notification
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(notification.title, {
+          body: notification.content,
+          icon: '/favicon.ico'
+        });
+      }
+    });
+
+    // Request browser notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    // Cleanup on unmount
+    return () => {
+      unsubscribe();
+      notificationService.disconnect();
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const data = await notificationService.getNotifications(0, 20);
+        setNotificationList(data.notifications || []);
+        setNotificationCount(data.unreadCount || 0);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+        // Fallback to mock data
+        setNotificationList(allNotifications);
+        setNotificationCount(2);
+      }
+    };
+
+    if (isAuthenticated) {
+      fetchNotifications();
+    }
+  }, [isAuthenticated]);
 
   const handleToggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -103,16 +170,81 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
     setActiveDropdown(activeDropdown === dropdownName ? null : dropdownName);
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle search logic here
-    console.log('Searching for:', searchQuery);
-  };
+  // const handleSearch = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   // Handle search logic here
+  //   console.log('Searching for:', searchQuery);
+  // };
 
   const handleLogout = () => {
     logout();
     setIsUserDropdownOpen(false);
   };
+
+  // Handle scroll to load more notifications
+  const handleNotificationScroll = async (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const scrollPosition = target.scrollTop + target.clientHeight;
+    const scrollHeight = target.scrollHeight;
+    
+    // Load more when scrolled to 80% of the list
+    if (scrollPosition >= scrollHeight * 0.8 && !isLoadingMore) {
+      setIsLoadingMore(true);
+      
+      try {
+        const data = await notificationService.getNotifications(notificationList.length, 10);
+        setNotificationList(prev => [...prev, ...data.notifications]);
+      } catch (error) {
+        console.error('Error loading more notifications:', error);
+      } finally {
+        setIsLoadingMore(false);
+      }
+    }
+  };
+
+  // Mark notification as read - REST API
+  const handleMarkAsRead = async (notificationId: string) => {
+    try {
+      await notificationService.markAsRead(notificationId);
+      setNotificationList(prev => 
+        prev.map(n => n.id === notificationId ? { ...n, read: true, readAt: new Date().toISOString() } : n)
+      );
+      setNotificationCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
+  };
+
+  // Mark all as read - REST API
+  const handleMarkAllAsRead = async () => {
+    try {
+      await notificationService.markAllAsRead();
+      setNotificationList(prev => prev.map(n => ({ ...n, read: true, readAt: new Date().toISOString() })));
+      setNotificationCount(0);
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
+  };
+
+  // Close user dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserDropdownOpen(false);
+      }
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setIsNotificationOpen(false);
+      }
+    };
+
+    if (isUserDropdownOpen || isNotificationOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isUserDropdownOpen, isNotificationOpen]);
 
   const coursesDropdown: DropdownItem[] = [
     { label: 'Beginner', href: '/courses/beginner' },
@@ -126,6 +258,14 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
     { label: 'Speaking', href: '/skills/speaking' },
     { label: 'Reading', href: '/skills/reading' },
     { label: 'Writing', href: '/skills/writing' }
+  ];
+
+  // Mock notification data (fallback)
+  const allNotifications: Notification[] = [
+    { id: '1', userId: '1', type: 'LESSON', title: 'New lesson available', content: 'Advanced Grammar Unit 5 is now available', createdAt: new Date(Date.now() - 2*60*60*1000).toISOString(), readAt: null, read: false },
+    { id: '2', userId: '1', type: 'ACHIEVEMENT', title: 'Achievement unlocked', content: "You've completed 10 lessons this week!", createdAt: new Date(Date.now() - 5*60*60*1000).toISOString(), readAt: null, read: false },
+    { id: '3', userId: '1', type: 'REMINDER', title: 'Reminder', content: "Don't forget to practice speaking today", createdAt: new Date(Date.now() - 24*60*60*1000).toISOString(), readAt: new Date(Date.now() - 12*60*60*1000).toISOString(), read: true },
+    { id: '4', userId: '1', type: 'COURSE', title: 'New course available', content: 'Business English for Professionals', createdAt: new Date(Date.now() - 2*24*60*60*1000).toISOString(), readAt: new Date(Date.now() - 1*24*60*60*1000).toISOString(), read: true },
   ];
 
   return (
@@ -153,14 +293,15 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
             onToggleDropdown={() => handleToggleDropdown('courses')}
           />
           
-          <MenuItem 
+          {/* <MenuItem 
             label="Skills" 
             dropdownItems={skillsDropdown}
             isDropdownOpen={activeDropdown === 'skills'}
             onToggleDropdown={() => handleToggleDropdown('skills')}
-          />
+          /> */}
           
-          <MenuItem label="Resources" href="/resources" />
+          {/* <MenuItem label="Resources" href="/resources" /> */}
+          <MenuItem label="Speaking Training" href="/speaking-training" />
           <MenuItem label="About Us" href="/about" />
           <MenuItem label="Contact" href="/contact" />
         </nav>
@@ -168,7 +309,7 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
         {/* Right Section */}
         <div className="header-actions">
           {/* Search Bar */}
-          <form className="search-form" onSubmit={handleSearch}>
+          {/* <form className="search-form" onSubmit={handleSearch}>
             <div className="search-container">
               <input
                 type="text"
@@ -183,12 +324,78 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
                 </svg>
               </button>
             </div>
-          </form>
+          </form> */}
+
+          {/* Notifications */}
+          <div className="notification-container" ref={notificationRef}>
+            <button 
+              className="notification-btn"
+              aria-label="Notifications"
+              onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+            >
+              <img src={notificationIcon} alt="Notifications" className="notification-icon" />
+              {isAuthenticated && notificationCount > 0 && (
+                <span className="notification-badge">{notificationCount}</span>
+              )}
+            </button>
+            
+            {isNotificationOpen && (
+              <div className="notification-dropdown">
+                <div className="notification-header">
+                  <h3>Notifications</h3>
+                  <button className="mark-all-read" onClick={handleMarkAllAsRead}>
+                    Mark all as read
+                  </button>
+                </div>
+                <div 
+                  className="notification-list" 
+                  ref={notificationListRef}
+                  onScroll={handleNotificationScroll}
+                >
+                  {notificationList.length > 0 ? (
+                    notificationList.map((notif) => (
+                      <div 
+                        key={notif.id} 
+                        className={`notification-item ${!notif.read ? 'unread' : 'read'}`}
+                        onClick={() => !notif.read && handleMarkAsRead(notif.id)}
+                      >
+                        <div className="notification-content">
+                          {!notif.read && <span className="unread-dot"></span>}
+                          <div className="notification-text-wrapper">
+                            <p className="notification-title">{notif.title}</p>
+                            <p className="notification-text">{notif.content}</p>
+                            <span className="notification-time">
+                              {new Date(notif.createdAt).toLocaleString('vi-VN', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="notification-empty">
+                      <p>No notifications yet</p>
+                    </div>
+                  )}
+                  {isLoadingMore && (
+                    <div className="notification-loading">
+                      <span>Loading more...</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* User Authentication */}
           <div className="auth-section">
             {isAuthenticated ? (
-              <div className="user-menu">
+              <div className="user-menu" ref={userMenuRef}>
                 <button 
                   className="user-avatar-btn"
                   onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}

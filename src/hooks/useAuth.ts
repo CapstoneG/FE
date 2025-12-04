@@ -3,6 +3,7 @@ import { authService } from '../services/authService';
 import type { User as ApiUser } from '../services/authService';
 
 interface User extends ApiUser {
+  level?: string | null; // User's English level from placement test (e.g., "Intermediate (B1)")
   learningLevel?: 'beginner' | 'intermediate' | 'advanced';
   progress?: {
     completedLessons: number;
@@ -16,6 +17,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => void;
   register: (userData: RegisterData) => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
@@ -24,7 +26,8 @@ interface AuthContextType {
 interface RegisterData {
   email: string;
   password: string;
-  username: string;
+  firstName: string;
+  lastName: string;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -42,10 +45,12 @@ export const useAuthLogic = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const checkAuth = async () => {
       try {
         const userData = await authService.getCurrentUser();
-        if (userData) {
+        if (userData && isMounted) {
           setUser({
             ...userData,
             learningLevel: (userData as any).learningLevel || 'beginner',
@@ -59,11 +64,17 @@ export const useAuthLogic = () => {
       } catch (error) {
         console.error('Auth check failed:', error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     checkAuth();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -87,6 +98,15 @@ export const useAuthLogic = () => {
     }
   };
 
+  const loginWithGoogle = async () => {
+    try {
+      await authService.loginWithGoogle();
+      // Redirect will happen in authService.loginWithGoogle()
+    } catch (error: any) {
+      throw new Error(error.message || 'Google login failed.');
+    }
+  };
+
   const logout = async () => {
     setIsLoading(true);
     try {
@@ -105,7 +125,8 @@ export const useAuthLogic = () => {
       await authService.register({
         email: userData.email,
         password: userData.password,
-        username: userData.username,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
       });
     } catch (error: any) {
       throw new Error(error.message || 'Registration failed. Please try again.');
@@ -129,6 +150,7 @@ export const useAuthLogic = () => {
     isLoading,
     isAuthenticated: !!user,
     login,
+    loginWithGoogle,
     logout,
     register,
     updateProfile,

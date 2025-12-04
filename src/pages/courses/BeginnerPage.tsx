@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import './BeginnerPage.css';
+import React, { useState, useEffect } from 'react';
+import '@/styles/courses/BeginnerPage.css'
 import { FaBook, FaHeadphones, FaPencilAlt, FaComments, FaStar, FaClock, FaCheckCircle, FaPlay } from 'react-icons/fa';
 import { MdQuiz } from 'react-icons/md';
 import { BiTrophy } from 'react-icons/bi';
-import begginer from '../assets/beginner.jpg';
-import { OverviewCard } from '../components';
+import begginer from '@/assets/beginner.jpg';
+import { OverviewCard } from '@/components';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import LessonDetail from '@/pages/lesson/LessonDetail';
 
 interface Lesson {
   id: number;
@@ -25,70 +27,91 @@ interface Module {
 
 const BeginnerPage: React.FC = () => {
   const [activeModule, setActiveModule] = useState<number | null>(null);
+  const [modules, setModules] = useState<Module[]>([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const lessonParam = searchParams.get('lesson');
+  const activeLessonId = lessonParam ? parseInt(lessonParam, 10) : null;
 
-  const modules: Module[] = [
-    {
-      id: 1,
-      title: "Bảng chữ cái & Phát âm",
-      description: "Học 26 chữ cái tiếng Anh và cách phát âm chuẩn",
-      icon: <FaBook size={32} />,
-      progress: 75,
-      lessons: [
-        { id: 1, title: "Giới thiệu bảng chữ cái A-G", duration: "10 phút", completed: true, type: "video" },
-        { id: 2, title: "Thực hành phát âm A-G", duration: "15 phút", completed: true, type: "exercise" },
-        { id: 3, title: "Bảng chữ cái H-N", duration: "10 phút", completed: true, type: "video" },
-        { id: 4, title: "Thực hành phát âm H-N", duration: "15 phút", completed: false, type: "exercise" },
-        { id: 5, title: "Bảng chữ cái O-Z", duration: "10 phút", completed: false, type: "video" },
-        { id: 6, title: "Kiểm tra tổng hợp", duration: "20 phút", completed: false, type: "quiz" },
-      ]
-    },
-    {
-      id: 2,
-      title: "Từ vựng cơ bản",
-      description: "200+ từ vựng thiết yếu cho người mới bắt đầu",
-      icon: <FaPencilAlt size={32} />,
-      progress: 45,
-      lessons: [
-        { id: 1, title: "Số đếm 1-100", duration: "12 phút", completed: true, type: "video" },
-        { id: 2, title: "Luyện tập số đếm", duration: "10 phút", completed: true, type: "exercise" },
-        { id: 3, title: "Màu sắc", duration: "8 phút", completed: true, type: "video" },
-        { id: 4, title: "Thành viên gia đình", duration: "15 phút", completed: false, type: "video" },
-        { id: 5, title: "Đồ vật xung quanh", duration: "12 phút", completed: false, type: "video" },
-        { id: 6, title: "Kiểm tra từ vựng", duration: "15 phút", completed: false, type: "quiz" },
-      ]
-    },
-    {
-      id: 3,
-      title: "Ngữ pháp căn bản",
-      description: "Các cấu trúc câu đơn giản và thì hiện tại đơn",
-      icon: <FaComments size={32} />,
-      progress: 30,
-      lessons: [
-        { id: 1, title: "Cấu trúc câu cơ bản", duration: "15 phút", completed: true, type: "video" },
-        { id: 2, title: "Động từ TO BE", duration: "12 phút", completed: true, type: "video" },
-        { id: 3, title: "Bài tập TO BE", duration: "20 phút", completed: false, type: "exercise" },
-        { id: 4, title: "Thì hiện tại đơn", duration: "18 phút", completed: false, type: "video" },
-        { id: 5, title: "Luyện tập hiện tại đơn", duration: "25 phút", completed: false, type: "exercise" },
-      ]
-    },
-    {
-      id: 4,
-      title: "Giao tiếp hàng ngày",
-      description: "Các câu giao tiếp thông dụng trong cuộc sống",
-      icon: <FaHeadphones size={32} />,
-      progress: 0,
-      lessons: [
-        { id: 1, title: "Chào hỏi và giới thiệu", duration: "10 phút", completed: false, type: "video" },
-        { id: 2, title: "Hỏi về thông tin cá nhân", duration: "12 phút", completed: false, type: "video" },
-        { id: 3, title: "Thực hành hội thoại", duration: "15 phút", completed: false, type: "exercise" },
-        { id: 4, title: "Mua sắm cơ bản", duration: "14 phút", completed: false, type: "video" },
-        { id: 5, title: "Hỏi đường", duration: "10 phút", completed: false, type: "video" },
-      ]
-    }
-  ];
+  const getIconByName = (iconName: string) => {
+    const iconMap: Record<string, React.ReactNode> = {
+      'FaBook': <FaBook size={32} />,
+      'FaPencilAlt': <FaPencilAlt size={32} />,
+      'FaComments': <FaComments size={32} />,
+      'FaHeadphones': <FaHeadphones size={32} />,
+    };
+    return iconMap[iconName] || <FaBook size={32} />;
+  };
+
+  const calculateProgress = (lessons: Lesson[]): number => {
+    if (lessons.length === 0) return 0;
+    const completedCount = lessons.filter(lesson => lesson.completed).length;
+    return Math.round((completedCount / lessons.length) * 100);
+  };
+
+  useEffect(() => {
+    const fetchModules = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('http://localhost:8080/api/v1/courses/1/units', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch modules');
+        }
+        
+        const responseData = await response.json();
+        const data = responseData.result;
+
+        const transformedModules: Module[] = data.map((module: any) => {
+          const transformedLessons: Lesson[] = module.lessons.map((lesson: any) => ({
+            id: lesson.id,
+            title: lesson.title,
+            duration: `${lesson.duration} phút`,
+            completed: lesson.completed,
+            type: lesson.type as 'video' | 'exercise' | 'quiz'
+          }));
+
+          return {
+            id: module.id,
+            title: module.title,
+            description: module.description,
+            icon: getIconByName(module.icon),
+            progress: calculateProgress(transformedLessons),
+            lessons: transformedLessons
+          };
+        });
+
+        setModules(transformedModules);
+      } catch (error) {
+        console.error('Error fetching modules:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchModules();
+  }, []);
 
   const toggleModule = (moduleId: number) => {
     setActiveModule(activeModule === moduleId ? null : moduleId);
+  };
+
+  // Start lesson: if not authenticated, redirect to login and preserve return URL
+  const handleStartLesson = (lessonId: number) => {
+    const token = localStorage.getItem('authToken');
+    const returnUrl = `/courses/beginner?lesson=${lessonId}`;
+    if (!token) {
+      navigate(`/login?next=${encodeURIComponent(returnUrl)}`);
+      return;
+    }
+    navigate(returnUrl);
   };
 
   const getLessonIcon = (type: string) => {
@@ -99,6 +122,32 @@ const BeginnerPage: React.FC = () => {
       default: return <FaBook size={16} />;
     }
   };
+  if (activeLessonId) {
+    return (
+      <div className="beginner-page">
+        <LessonDetail
+          lessonId={activeLessonId}
+          onBack={() => navigate('/courses/beginner')}
+        />
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="beginner-page">
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '100vh' 
+        }}>
+          <div className="video-lesson-spinner" />
+          <p style={{ marginLeft: '16px' }}>Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="beginner-page">
@@ -232,28 +281,40 @@ const BeginnerPage: React.FC = () => {
                 
                 {activeModule === module.id && (
                   <div className="module-lessons">
-                    {module.lessons.map((lesson) => (
-                      <div key={lesson.id} className={`lesson-item ${lesson.completed ? 'completed' : ''}`}>
-                        <div className="lesson-info">
-                          <div className="lesson-icon">
-                            {getLessonIcon(lesson.type)}
+                    {module.lessons.map((lesson, index) => {
+                      // Check if previous lesson is completed
+                      const isLocked = index > 0 && !module.lessons[index - 1].completed;
+                      
+                      return (
+                        <div key={lesson.id} className={`lesson-item ${lesson.completed ? 'completed' : ''} ${isLocked ? 'locked' : ''}`}>
+                          <div className="lesson-info">
+                            <div className="lesson-icon">
+                              {getLessonIcon(lesson.type)}
+                            </div>
+                            <div className="lesson-text">
+                              <h4>{lesson.title}</h4>
+                              <span className="lesson-duration">
+                                <FaClock size={12} /> {lesson.duration}
+                              </span>
+                            </div>
                           </div>
-                          <div className="lesson-text">
-                            <h4>{lesson.title}</h4>
-                            <span className="lesson-duration">
-                              <FaClock size={12} /> {lesson.duration}
-                            </span>
+                          <div className="lesson-status">
+                            {lesson.completed ? (
+                              <FaCheckCircle size={20} color="#10b981" />
+                            ) : (
+                              <button
+                                className={`start-lesson-btn ${isLocked ? 'locked' : ''}`}
+                                disabled={isLocked}
+                                onClick={() => !isLocked && handleStartLesson(lesson.id)}
+                                title={isLocked ? "Hoàn thành bài trước để mở khóa" : ""}
+                              >
+                                Bắt đầu
+                              </button>
+                            )}
                           </div>
                         </div>
-                        <div className="lesson-status">
-                          {lesson.completed ? (
-                            <FaCheckCircle size={20} color="#10b981" />
-                          ) : (
-                            <button className="start-lesson-btn">Bắt đầu</button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -262,7 +323,6 @@ const BeginnerPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Why Choose Section */}
       <section className="why-choose">
         <div className="why-choose-container">
           <h2 className="section-title">Tại sao chọn khóa Beginner?</h2>
@@ -291,14 +351,6 @@ const BeginnerPage: React.FC = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="cta-section">
-        <div className="cta-content">
-          <h2>Sẵn sàng bắt đầu hành trình của bạn?</h2>
-          <p>Tham gia cùng hàng nghìn học viên đã thành công với EngHub</p>
-          <button className="cta-button">Bắt đầu học ngay</button>
-        </div>
-      </section>
     </div>
   );
 };

@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import './BusinessPage.css';
+import React, { useState, useEffect } from 'react';
+import '@/styles/courses/BusinessPage.css'
 import { FaBook, FaPencilAlt, FaComments, FaStar, FaClock, FaCheckCircle, FaPlay, FaGlobe, FaBriefcase, FaHandshake, FaChartLine, FaUsers, FaLaptopCode, FaChalkboardTeacher } from 'react-icons/fa';
 import { MdQuiz, MdEmail, MdPhone } from 'react-icons/md';
 import { BiTrophy } from 'react-icons/bi';
 import { IoMdCheckmarkCircleOutline } from 'react-icons/io';
 import { HiDocumentText } from 'react-icons/hi';
-import { OverviewCard } from '../components';
+import { OverviewCard } from '@/components';
 
 interface Lesson {
   id: number;
@@ -26,95 +26,78 @@ interface Module {
 
 const BusinessPage: React.FC = () => {
   const [activeModule, setActiveModule] = useState<number | null>(null);
+  const [modules, setModules] = useState<Module[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const modules: Module[] = [
-    {
-      id: 1,
-      title: "Business Communication Fundamentals",
-      description: "Các kỹ năng giao tiếp cơ bản trong môi trường doanh nghiệp",
-      icon: <FaComments size={32} />,
-      progress: 65,
-      lessons: [
-        { id: 1, title: "Professional Email Writing", duration: "20 phút", completed: true, type: "video" },
-        { id: 2, title: "Phone Etiquette & Calls", duration: "18 phút", completed: true, type: "video" },
-        { id: 3, title: "Practice: Email Templates", duration: "25 phút", completed: true, type: "exercise" },
-        { id: 4, title: "Business Meeting Vocabulary", duration: "22 phút", completed: false, type: "video" },
-        { id: 5, title: "Role-play: Client Call", duration: "30 phút", completed: false, type: "roleplay" },
-        { id: 6, title: "Communication Skills Test", duration: "35 phút", completed: false, type: "quiz" },
-      ]
-    },
-    {
-      id: 2,
-      title: "Presentations & Public Speaking",
-      description: "Thuyết trình và diễn thuyết trước đám đông chuyên nghiệp",
-      icon: <FaChalkboardTeacher size={32} />,
-      progress: 45,
-      lessons: [
-        { id: 1, title: "Structuring Your Presentation", duration: "25 phút", completed: true, type: "video" },
-        { id: 2, title: "Body Language & Delivery", duration: "20 phút", completed: true, type: "video" },
-        { id: 3, title: "PowerPoint Best Practices", duration: "18 phút", completed: true, type: "video" },
-        { id: 4, title: "Handling Q&A Sessions", duration: "22 phút", completed: false, type: "video" },
-        { id: 5, title: "Practice: Product Pitch", duration: "40 phút", completed: false, type: "roleplay" },
-        { id: 6, title: "Presentation Assessment", duration: "45 phút", completed: false, type: "quiz" },
-      ]
-    },
-    {
-      id: 3,
-      title: "Negotiations & Meetings",
-      description: "Đàm phán và tổ chức cuộc họp hiệu quả",
-      icon: <FaHandshake size={32} />,
-      progress: 30,
-      lessons: [
-        { id: 1, title: "Negotiation Strategies", duration: "28 phút", completed: true, type: "video" },
-        { id: 2, title: "Win-Win Solutions", duration: "22 phút", completed: true, type: "video" },
-        { id: 3, title: "Meeting Agenda & Minutes", duration: "20 phút", completed: false, type: "video" },
-        { id: 4, title: "Conflict Resolution", duration: "25 phút", completed: false, type: "video" },
-        { id: 5, title: "Role-play: Negotiation", duration: "50 phút", completed: false, type: "roleplay" },
-      ]
-    },
-    {
-      id: 4,
-      title: "Business Writing & Reports",
-      description: "Viết báo cáo, đề xuất và tài liệu kinh doanh",
-      icon: <HiDocumentText size={32} />,
-      progress: 40,
-      lessons: [
-        { id: 1, title: "Business Report Writing", duration: "30 phút", completed: true, type: "video" },
-        { id: 2, title: "Writing Proposals", duration: "28 phút", completed: true, type: "video" },
-        { id: 3, title: "Executive Summaries", duration: "20 phút", completed: false, type: "video" },
-        { id: 4, title: "Formal vs Informal Style", duration: "18 phút", completed: false, type: "video" },
-        { id: 5, title: "Practice: Business Plan", duration: "60 phút", completed: false, type: "exercise" },
-      ]
-    },
-    {
-      id: 5,
-      title: "International Business Culture",
-      description: "Văn hóa kinh doanh và giao tiếp đa văn hóa",
-      icon: <FaGlobe size={32} />,
-      progress: 20,
-      lessons: [
-        { id: 1, title: "Cross-Cultural Communication", duration: "25 phút", completed: true, type: "video" },
-        { id: 2, title: "Business Etiquette Worldwide", duration: "30 phút", completed: false, type: "video" },
-        { id: 3, title: "Working with International Teams", duration: "22 phút", completed: false, type: "video" },
-        { id: 4, title: "Cultural Sensitivity", duration: "20 phút", completed: false, type: "video" },
-        { id: 5, title: "Case Study: Global Project", duration: "45 phút", completed: false, type: "exercise" },
-      ]
-    },
-    {
-      id: 6,
-      title: "Industry-Specific English",
-      description: "Tiếng Anh chuyên ngành cho các lĩnh vực cụ thể",
-      icon: <FaLaptopCode size={32} />,
-      progress: 0,
-      lessons: [
-        { id: 1, title: "Finance & Banking English", duration: "28 phút", completed: false, type: "video" },
-        { id: 2, title: "Marketing & Sales English", duration: "25 phút", completed: false, type: "video" },
-        { id: 3, title: "IT & Technology English", duration: "30 phút", completed: false, type: "video" },
-        { id: 4, title: "HR & Management English", duration: "22 phút", completed: false, type: "video" },
-        { id: 5, title: "Industry Project", duration: "90 phút", completed: false, type: "exercise" },
-      ]
-    }
-  ];
+  // Icon mapping
+  const getIconByName = (iconName: string) => {
+    const iconMap: Record<string, React.ReactNode> = {
+      'FaBook': <FaBook size={32} />,
+      'FaPencilAlt': <FaPencilAlt size={32} />,
+      'FaComments': <FaComments size={32} />,
+      'FaGlobe': <FaGlobe size={32} />,
+      'FaBriefcase': <FaBriefcase size={32} />,
+      'FaHandshake': <FaHandshake size={32} />,
+      'FaChalkboardTeacher': <FaChalkboardTeacher size={32} />,
+      'HiDocumentText': <HiDocumentText size={32} />,
+      'FaLaptopCode': <FaLaptopCode size={32} />,
+    };
+    return iconMap[iconName] || <FaBook size={32} />;
+  };
+
+  // Calculate progress for each module based on completed lessons
+  const calculateProgress = (lessons: Lesson[]): number => {
+    if (lessons.length === 0) return 0;
+    const completedCount = lessons.filter(lesson => lesson.completed).length;
+    return Math.round((completedCount / lessons.length) * 100);
+  };
+
+  // Fetch modules data
+  useEffect(() => {
+    const fetchModules = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:8080/api/v1/courses/4/units');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch modules');
+        }
+        
+        const responseData = await response.json();
+        const data = responseData.result; // Lấy result từ response
+
+        // Transform API data to component format
+        const transformedModules: Module[] = data.map((module: any) => {
+          // Transform lessons first
+          const transformedLessons: Lesson[] = module.lessons.map((lesson: any) => ({
+            id: lesson.id,
+            title: lesson.title,
+            duration: `${lesson.duration} phút`,
+            completed: lesson.completed,
+            type: lesson.type as 'video' | 'exercise' | 'quiz' | 'roleplay'
+          }));
+
+          // Then calculate progress based on transformed lessons
+          return {
+            id: module.id,
+            title: module.title,
+            description: module.description,
+            icon: getIconByName(module.icon),
+            progress: calculateProgress(transformedLessons),
+            lessons: transformedLessons
+          };
+        });
+
+        setModules(transformedModules);
+      } catch (error) {
+        console.error('Error fetching modules:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchModules();
+  }, []);
 
   const toggleModule = (moduleId: number) => {
     setActiveModule(activeModule === moduleId ? null : moduleId);
@@ -129,6 +112,23 @@ const BusinessPage: React.FC = () => {
       default: return <FaBook size={16} />;
     }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="business-page">
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '100vh' 
+        }}>
+          <div className="video-lesson-spinner" />
+          <p style={{ marginLeft: '16px' }}>Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="business-page">
@@ -442,14 +442,6 @@ const BusinessPage: React.FC = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="cta-section">
-        <div className="cta-content">
-          <h2>Sẵn sàng thành công trong sự nghiệp?</h2>
-          <p>Đăng ký ngay để nhận ưu đãi đặc biệt cho doanh nghiệp</p>
-          <button className="cta-button">Đăng ký tư vấn miễn phí</button>
-        </div>
-      </section>
     </div>
   );
 };

@@ -27,7 +27,6 @@ const DialogueLesson: React.FC<DialogueLessonProps> = ({
   const [viewMode, setViewMode] = useState<'conversation' | 'roleplay'>('conversation');
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
-  const progress = (playedLines.size / dialogue.length) * 100;
   const speakers = Array.from(new Set(dialogue.map(line => line.speaker)));
 
   const handleSpeak = (text: string, lineIndex?: number) => {
@@ -137,20 +136,7 @@ const DialogueLesson: React.FC<DialogueLessonProps> = ({
         </div>
       </div>
 
-      <div className="progress-section">
-        <div className="progress-info">
-          <span className="progress-text">
-            Đã nghe: {playedLines.size}/{dialogue.length} câu
-          </span>
-          <span className="progress-percent">{Math.round(progress)}%</span>
-        </div>
-        <div className="progress-bar">
-          <div 
-            className="progress-fill" 
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
+
 
       {viewMode === 'conversation' ? (
         <div className="conversation-mode">
@@ -306,7 +292,7 @@ const DialogueLesson: React.FC<DialogueLessonProps> = ({
 
       <div className="dialogue-tips">
         <div className="tip-card">
-          <h4>💡 Mẹo luyện tập</h4>
+          <h4>Mẹo luyện tập</h4>
           <ul>
             <li><strong>Nghe nhiều lần:</strong> Lặp lại hội thoại để quen với phát âm và ngữ điệu</li>
             <li><strong>Bắt chước:</strong> Cố gắng phát âm giống như bản gốc nhất có thể</li>

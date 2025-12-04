@@ -7,6 +7,7 @@ interface VocabularyItem {
   meaning: string;
   example: string;
   pronunciation?: string;
+  imageUrl?: string;
 }
 
 interface VocabularyLessonProps {
@@ -28,7 +29,6 @@ const VocabularyLesson: React.FC<VocabularyLessonProps> = ({
   const [viewMode, setViewMode] = useState<'flashcard' | 'list'>('flashcard');
 
   const currentWord = vocabulary[currentIndex];
-  const progress = (learnedWords.size / vocabulary.length) * 100;
 
   const handleNext = () => {
     if (currentIndex < vocabulary.length - 1) {
@@ -96,20 +96,7 @@ const VocabularyLesson: React.FC<VocabularyLessonProps> = ({
         </div>
       </div>
 
-      <div className="progress-section">
-        <div className="progress-info">
-          <span className="progress-text">
-            Đã học: {learnedWords.size}/{vocabulary.length} từ
-          </span>
-          <span className="progress-percent">{Math.round(progress)}%</span>
-        </div>
-        <div className="progress-bar">
-          <div 
-            className="progress-fill" 
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
+
 
       {viewMode === 'flashcard' ? (
         <div className="flashcard-mode">
@@ -123,6 +110,15 @@ const VocabularyLesson: React.FC<VocabularyLessonProps> = ({
               onClick={handleFlipCard}
             >
               <div className="flashcard-front">
+                {currentWord.imageUrl && (
+                  <div className="word-image-container">
+                    <img 
+                      src={currentWord.imageUrl} 
+                      alt={currentWord.word}
+                      className="word-image"
+                    />
+                  </div>
+                )}
                 <div className="word-header">
                   <h2 className="word">{currentWord.word}</h2>
                   <button
@@ -142,6 +138,15 @@ const VocabularyLesson: React.FC<VocabularyLessonProps> = ({
               </div>
               
               <div className="flashcard-back">
+                {currentWord.imageUrl && (
+                  <div className="word-image-container small">
+                    <img 
+                      src={currentWord.imageUrl} 
+                      alt={currentWord.word}
+                      className="word-image"
+                    />
+                  </div>
+                )}
                 <div className="meaning-section">
                   <h3>Nghĩa:</h3>
                   <p className="meaning">{currentWord.meaning}</p>
@@ -204,6 +209,15 @@ const VocabularyLesson: React.FC<VocabularyLessonProps> = ({
                 key={index} 
                 className={`vocabulary-card ${learnedWords.has(index) ? 'learned' : ''}`}
               >
+                {item.imageUrl && (
+                  <div className="card-image-container">
+                    <img 
+                      src={item.imageUrl} 
+                      alt={item.word}
+                      className="card-image"
+                    />
+                  </div>
+                )}
                 <div className="card-header">
                   <div className="word-section">
                     <h3 className="word">{item.word}</h3>

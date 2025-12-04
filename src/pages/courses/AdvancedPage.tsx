@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import './AdvancedPage.css';
+import React, { useState, useEffect } from 'react';
+import '@/styles/courses/AdvancedPage.css'
 import { FaBook, FaHeadphones, FaPencilAlt, FaComments, FaStar, FaClock, FaCheckCircle, FaPlay, FaGlobe, FaBriefcase, FaGraduationCap, FaAward } from 'react-icons/fa';
 import { MdQuiz } from 'react-icons/md';
 import { BiTrophy } from 'react-icons/bi';
 import { IoMdCheckmarkCircleOutline } from 'react-icons/io';
 import { RiEnglishInput } from 'react-icons/ri';
-import { OverviewCard } from '../components';
+import { OverviewCard } from '@/components';
 
 interface Lesson {
   id: number;
@@ -26,95 +26,76 @@ interface Module {
 
 const AdvancedPage: React.FC = () => {
   const [activeModule, setActiveModule] = useState<number | null>(null);
+  const [modules, setModules] = useState<Module[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const modules: Module[] = [
-    {
-      id: 1,
-      title: "Advanced Grammar & Syntax",
-      description: "Cấu trúc ngữ pháp phức tạp và phong cách viết học thuật",
-      icon: <FaBook size={32} />,
-      progress: 50,
-      lessons: [
-        { id: 1, title: "Inversion & Emphasis", duration: "25 phút", completed: true, type: "video" },
-        { id: 2, title: "Cleft Sentences", duration: "20 phút", completed: true, type: "video" },
-        { id: 3, title: "Subjunctive Mood", duration: "22 phút", completed: true, type: "video" },
-        { id: 4, title: "Advanced Conditionals", duration: "28 phút", completed: false, type: "video" },
-        { id: 5, title: "Participle Clauses", duration: "30 phút", completed: false, type: "exercise" },
-        { id: 6, title: "Grammar Mastery Test", duration: "45 phút", completed: false, type: "quiz" },
-      ]
-    },
-    {
-      id: 2,
-      title: "Academic & Professional Vocabulary",
-      description: "2000+ từ vựng học thuật, chuyên ngành và thành ngữ cao cấp",
-      icon: <FaGraduationCap size={32} />,
-      progress: 35,
-      lessons: [
-        { id: 1, title: "Academic Word List", duration: "30 phút", completed: true, type: "video" },
-        { id: 2, title: "Collocations & Expressions", duration: "25 phút", completed: true, type: "video" },
-        { id: 3, title: "Advanced Idioms", duration: "20 phút", completed: false, type: "video" },
-        { id: 4, title: "Technical Vocabulary", duration: "28 phút", completed: false, type: "video" },
-        { id: 5, title: "Vocabulary in Context", duration: "35 phút", completed: false, type: "exercise" },
-        { id: 6, title: "Vocabulary Assessment", duration: "40 phút", completed: false, type: "quiz" },
-      ]
-    },
-    {
-      id: 3,
-      title: "Advanced Listening & Speaking",
-      description: "Nghe hiểu native speakers và thảo luận các chủ đề phức tạp",
-      icon: <FaHeadphones size={32} />,
-      progress: 30,
-      lessons: [
-        { id: 1, title: "Understanding Accents & Dialects", duration: "28 phút", completed: true, type: "video" },
-        { id: 2, title: "Academic Lectures", duration: "35 phút", completed: true, type: "video" },
-        { id: 3, title: "Debate & Argumentation", duration: "40 phút", completed: false, type: "exercise" },
-        { id: 4, title: "Public Speaking Skills", duration: "32 phút", completed: false, type: "video" },
-        { id: 5, title: "Presentation Project", duration: "60 phút", completed: false, type: "project" },
-      ]
-    },
-    {
-      id: 4,
-      title: "Academic Writing & Critical Analysis",
-      description: "Viết luận, phân tích và nghiên cứu ở trình độ cao",
-      icon: <FaPencilAlt size={32} />,
-      progress: 25,
-      lessons: [
-        { id: 1, title: "Essay Writing Techniques", duration: "35 phút", completed: true, type: "video" },
-        { id: 2, title: "Critical Reading & Analysis", duration: "30 phút", completed: false, type: "video" },
-        { id: 3, title: "Research Paper Structure", duration: "40 phút", completed: false, type: "video" },
-        { id: 4, title: "Citation & Referencing", duration: "25 phút", completed: false, type: "video" },
-        { id: 5, title: "Writing Portfolio Project", duration: "90 phút", completed: false, type: "project" },
-      ]
-    },
-    {
-      id: 5,
-      title: "Business & Professional Communication",
-      description: "Giao tiếp chuyên nghiệp trong môi trường doanh nghiệp quốc tế",
-      icon: <FaBriefcase size={32} />,
-      progress: 20,
-      lessons: [
-        { id: 1, title: "Executive Communication", duration: "30 phút", completed: true, type: "video" },
-        { id: 2, title: "Negotiation Strategies", duration: "35 phút", completed: false, type: "video" },
-        { id: 3, title: "Business Correspondence", duration: "28 phút", completed: false, type: "video" },
-        { id: 4, title: "Corporate Presentations", duration: "40 phút", completed: false, type: "exercise" },
-        { id: 5, title: "Business Case Study", duration: "75 phút", completed: false, type: "project" },
-      ]
-    },
-    {
-      id: 6,
-      title: "Test Preparation (IELTS/TOEFL/CAE)",
-      description: "Chuẩn bị các kỳ thi tiếng Anh quốc tế cao cấp",
-      icon: <FaAward size={32} />,
-      progress: 0,
-      lessons: [
-        { id: 1, title: "IELTS Strategy & Tips", duration: "35 phút", completed: false, type: "video" },
-        { id: 2, title: "TOEFL iBT Overview", duration: "30 phút", completed: false, type: "video" },
-        { id: 3, title: "CAE Exam Format", duration: "28 phút", completed: false, type: "video" },
-        { id: 4, title: "Practice Tests", duration: "120 phút", completed: false, type: "quiz" },
-        { id: 5, title: "Mock Examination", duration: "180 phút", completed: false, type: "quiz" },
-      ]
-    }
-  ];
+  // Icon mapping
+  const getIconByName = (iconName: string) => {
+    const iconMap: Record<string, React.ReactNode> = {
+      'FaBook': <FaBook size={32} />,
+      'FaPencilAlt': <FaPencilAlt size={32} />,
+      'FaComments': <FaComments size={32} />,
+      'FaHeadphones': <FaHeadphones size={32} />,
+      'FaGraduationCap': <FaGraduationCap size={32} />,
+      'FaBriefcase': <FaBriefcase size={32} />,
+      'FaAward': <FaAward size={32} />,
+    };
+    return iconMap[iconName] || <FaBook size={32} />;
+  };
+
+  // Calculate progress for each module based on completed lessons
+  const calculateProgress = (lessons: Lesson[]): number => {
+    if (lessons.length === 0) return 0;
+    const completedCount = lessons.filter(lesson => lesson.completed).length;
+    return Math.round((completedCount / lessons.length) * 100);
+  };
+
+  // Fetch modules data
+  useEffect(() => {
+    const fetchModules = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:8080/api/v1/courses/3/units');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch modules');
+        }
+        
+        const responseData = await response.json();
+        const data = responseData.result; // Lấy result từ response
+
+        // Transform API data to component format
+        const transformedModules: Module[] = data.map((module: any) => {
+          // Transform lessons first
+          const transformedLessons: Lesson[] = module.lessons.map((lesson: any) => ({
+            id: lesson.id,
+            title: lesson.title,
+            duration: `${lesson.duration} phút`,
+            completed: lesson.completed,
+            type: lesson.type as 'video' | 'exercise' | 'quiz' | 'project'
+          }));
+
+          // Then calculate progress based on transformed lessons
+          return {
+            id: module.id,
+            title: module.title,
+            description: module.description,
+            icon: getIconByName(module.icon),
+            progress: calculateProgress(transformedLessons),
+            lessons: transformedLessons
+          };
+        });
+
+        setModules(transformedModules);
+      } catch (error) {
+        console.error('Error fetching modules:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchModules();
+  }, []);
 
   const toggleModule = (moduleId: number) => {
     setActiveModule(activeModule === moduleId ? null : moduleId);
@@ -130,9 +111,25 @@ const AdvancedPage: React.FC = () => {
     }
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="advanced-page">
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '100vh' 
+        }}>
+          <div className="video-lesson-spinner" />
+          <p style={{ marginLeft: '16px' }}>Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="advanced-page">
-      {/* Hero Section */}
+    <div className="advanced-page">{/* Hero Section */}
       <section className="advanced-hero">
         <div className="advanced-hero-content">
           <div className="hero-badge">
@@ -414,14 +411,6 @@ const AdvancedPage: React.FC = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="cta-section">
-        <div className="cta-content">
-          <h2>Sẵn sàng đạt đỉnh cao tiếng Anh?</h2>
-          <p>Tham gia khóa Advanced và trở thành chuyên gia thực thụ</p>
-          <button className="cta-button">Đăng ký tư vấn</button>
-        </div>
-      </section>
     </div>
   );
 };

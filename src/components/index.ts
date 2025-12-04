@@ -5,6 +5,7 @@ export { Layout, AuthLayout } from './layout/Layout';
 export { Loading, LoadingOverlay } from './common/Loading';
 export { AuthRedirect } from './common/AuthRedirect';
 export { ProtectedRoute } from './common/ProtectedRoute';
+export { default as PlacementTestRedirect } from './common/PlacementTestRedirect';
 export { default as Course } from './common/Course';
 export { TestimonialCard } from './common/TestimonialCard';
 export { BlogCard } from './common/BlogCard';

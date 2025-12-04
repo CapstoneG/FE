@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import './IntermediatePage.css';
+import React, { useState, useEffect } from 'react';
+import '@/styles/courses/IntermediatePage.css';
 import { FaBook, FaHeadphones, FaPencilAlt, FaComments, FaStar, FaClock, FaCheckCircle, FaPlay, FaGlobe, FaBriefcase } from 'react-icons/fa';
 import { MdQuiz } from 'react-icons/md';
 import { BiTrophy } from 'react-icons/bi';
 import { IoMdCheckmarkCircleOutline } from 'react-icons/io';
-import { OverviewCard } from '../components';
+import { OverviewCard } from '@/components';
 
 interface Lesson {
   id: number;
@@ -25,81 +25,73 @@ interface Module {
 
 const IntermediatePage: React.FC = () => {
   const [activeModule, setActiveModule] = useState<number | null>(null);
+  const [modules, setModules] = useState<Module[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const modules: Module[] = [
-    {
-      id: 1,
-      title: "Ngữ pháp nâng cao",
-      description: "Các thì phức tạp và cấu trúc câu nâng cao",
-      icon: <FaBook size={32} />,
-      progress: 60,
-      lessons: [
-        { id: 1, title: "Thì hiện tại hoàn thành", duration: "18 phút", completed: true, type: "video" },
-        { id: 2, title: "Thực hành hiện tại hoàn thành", duration: "20 phút", completed: true, type: "exercise" },
-        { id: 3, title: "Thì quá khứ hoàn thành", duration: "16 phút", completed: true, type: "video" },
-        { id: 4, title: "Câu điều kiện loại 1 & 2", duration: "22 phút", completed: false, type: "video" },
-        { id: 5, title: "Bài tập câu điều kiện", duration: "25 phút", completed: false, type: "exercise" },
-        { id: 6, title: "Kiểm tra tổng hợp", duration: "30 phút", completed: false, type: "quiz" },
-      ]
-    },
-    {
-      id: 2,
-      title: "Từ vựng chuyên sâu",
-      description: "1000+ từ vựng theo chủ đề và idioms phổ biến",
-      icon: <FaPencilAlt size={32} />,
-      progress: 40,
-      lessons: [
-        { id: 1, title: "Từ vựng công việc", duration: "15 phút", completed: true, type: "video" },
-        { id: 2, title: "Idioms thông dụng Part 1", duration: "18 phút", completed: true, type: "video" },
-        { id: 3, title: "Luyện tập idioms", duration: "12 phút", completed: false, type: "exercise" },
-        { id: 4, title: "Phrasal verbs quan trọng", duration: "20 phút", completed: false, type: "video" },
-        { id: 5, title: "Từ vựng du lịch", duration: "16 phút", completed: false, type: "video" },
-        { id: 6, title: "Kiểm tra từ vựng", duration: "25 phút", completed: false, type: "quiz" },
-      ]
-    },
-    {
-      id: 3,
-      title: "Luyện nghe - Nói",
-      description: "Rèn luyện kỹ năng giao tiếp tự tin và lưu loát",
-      icon: <FaHeadphones size={32} />,
-      progress: 35,
-      lessons: [
-        { id: 1, title: "Nghe hiểu hội thoại thực tế", duration: "20 phút", completed: true, type: "video" },
-        { id: 2, title: "Phát âm và ngữ điệu", duration: "15 phút", completed: true, type: "video" },
-        { id: 3, title: "Thực hành hội thoại", duration: "25 phút", completed: false, type: "exercise" },
-        { id: 4, title: "Nghe tin tức BBC", duration: "18 phút", completed: false, type: "video" },
-        { id: 5, title: "Thảo luận nhóm", duration: "30 phút", completed: false, type: "exercise" },
-      ]
-    },
-    {
-      id: 4,
-      title: "Đọc - Viết",
-      description: "Nâng cao khả năng đọc hiểu và viết học thuật",
-      icon: <FaComments size={32} />,
-      progress: 25,
-      lessons: [
-        { id: 1, title: "Đọc hiểu bài báo", duration: "20 phút", completed: true, type: "video" },
-        { id: 2, title: "Kỹ thuật skimming & scanning", duration: "15 phút", completed: false, type: "video" },
-        { id: 3, title: "Viết email chuyên nghiệp", duration: "18 phút", completed: false, type: "video" },
-        { id: 4, title: "Viết essay cơ bản", duration: "25 phút", completed: false, type: "video" },
-        { id: 5, title: "Luyện tập viết", duration: "30 phút", completed: false, type: "exercise" },
-      ]
-    },
-    {
-      id: 5,
-      title: "English for Business",
-      description: "Tiếng Anh thương mại và giao tiếp công sở",
-      icon: <FaBriefcase size={32} />,
-      progress: 0,
-      lessons: [
-        { id: 1, title: "Giao tiếp qua điện thoại", duration: "16 phút", completed: false, type: "video" },
-        { id: 2, title: "Thuyết trình công việc", duration: "22 phút", completed: false, type: "video" },
-        { id: 3, title: "Đàm phán cơ bản", duration: "20 phút", completed: false, type: "video" },
-        { id: 4, title: "Viết báo cáo", duration: "25 phút", completed: false, type: "video" },
-        { id: 5, title: "Meeting & Discussion", duration: "18 phút", completed: false, type: "exercise" },
-      ]
-    }
-  ];
+  // Icon mapping
+  const getIconByName = (iconName: string) => {
+    const iconMap: Record<string, React.ReactNode> = {
+      'FaBook': <FaBook size={32} />,
+      'FaPencilAlt': <FaPencilAlt size={32} />,
+      'FaComments': <FaComments size={32} />,
+      'FaHeadphones': <FaHeadphones size={32} />,
+    };
+    return iconMap[iconName] || <FaBook size={32} />;
+  };
+
+  // Calculate progress for each module based on completed lessons
+  const calculateProgress = (lessons: Lesson[]): number => {
+    if (lessons.length === 0) return 0;
+    const completedCount = lessons.filter(lesson => lesson.completed).length;
+    return Math.round((completedCount / lessons.length) * 100);
+  };
+
+  // Fetch modules data
+  useEffect(() => {
+    const fetchModules = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:8080/api/v1/courses/2/units');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch modules');
+        }
+        
+        const responseData = await response.json();
+        const data = responseData.result; // Lấy result từ response
+
+        // Transform API data to component format
+        const transformedModules: Module[] = data.map((module: any) => {
+          // Transform lessons first
+          const transformedLessons: Lesson[] = module.lessons.map((lesson: any) => ({
+            id: lesson.id,
+            title: lesson.title,
+            duration: `${lesson.duration} phút`,
+            completed: lesson.completed,
+            type: lesson.type as 'video' | 'exercise' | 'quiz'
+          }));
+
+          // Then calculate progress based on transformed lessons
+          return {
+            id: module.id,
+            title: module.title,
+            description: module.description,
+            icon: getIconByName(module.icon),
+            progress: calculateProgress(transformedLessons),
+            lessons: transformedLessons
+          };
+        });
+
+        setModules(transformedModules);
+      } catch (error) {
+        console.error('Error fetching modules:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchModules();
+  }, []);
 
   const toggleModule = (moduleId: number) => {
     setActiveModule(activeModule === moduleId ? null : moduleId);
@@ -113,6 +105,23 @@ const IntermediatePage: React.FC = () => {
       default: return <FaBook size={16} />;
     }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="intermediate-page">
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '100vh' 
+        }}>
+          <div className="video-lesson-spinner" />
+          <p style={{ marginLeft: '16px' }}>Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="intermediate-page">
@@ -343,14 +352,6 @@ const IntermediatePage: React.FC = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="cta-section">
-        <div className="cta-content">
-          <h2>Sẵn sàng nâng cấp trình độ của bạn?</h2>
-          <p>Tham gia khóa Intermediate và đạt mục tiêu tiếng Anh của bạn</p>
-          <button className="cta-button">Đăng ký ngay</button>
-        </div>
-      </section>
     </div>
   );
 };

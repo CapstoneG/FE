@@ -6,10 +6,13 @@ import './App.css';
 function AppContent() {
   const location = useLocation();
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const isPlacementTest = location.pathname === '/placement-test';
+  const isAdminPage = location.pathname.startsWith('/admin');
+  const hideHeader = isAuthPage || isPlacementTest || isAdminPage;
 
   return (
-    <div className={`app ${isAuthPage ? 'no-header' : ''}`}>
-      {!isAuthPage && <Header />}
+    <div className={`app ${hideHeader ? 'no-header' : ''}`}>
+      {!hideHeader && <Header />}
       <AppRouter />
     </div>
   );
