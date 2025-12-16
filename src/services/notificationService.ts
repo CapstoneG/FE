@@ -2,8 +2,8 @@
 import { Client } from '@stomp/stompjs';
 import type { IMessage } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import { API_BASE_URL } from '../config/index';
 
-const API_BASE_URL = 'http://localhost:8080/api';
 
 export interface Notification {
   id: string;
@@ -131,9 +131,9 @@ class NotificationService {
   /**
    * Lấy danh sách notifications
    */
-  async getNotifications(offset: number = 0, limit: number = 20) {
+  async getNotifications(page: number = 0, size: number = 20) {
     try {
-      const url = `${API_BASE_URL}/notifications?offset=${offset}&limit=${limit}`;
+      const url = `${API_BASE_URL}/notifications?page=${page}&size=${size}`;
       console.log('[NotificationService] Fetching notifications from:', url);
       
       const response = await this.fetchWithAuth(url);

@@ -18,7 +18,9 @@ import AboutUsPage from '@/pages/AboutUsPage';
 import ContactPage from '@/pages/ContactPage';
 import SpeakingTrainingPage from '@/pages/SpeakingTrainingPage';
 import SpeakingPracticePage from '@/pages/SpeakingPracticePage';
-import AdminDashboard from '@/pages/admin/AdminDashboard';
+import DashboardPage from '@/pages/DashboardPage';
+import FlashcardDeckList from '@/pages/flashcards/FlashcardDeckList';
+import FlashcardStudy from '@/pages/flashcards/FlashcardStudy';
 
 const AppRouter: React.FC = () => {
   return (
@@ -70,6 +72,12 @@ const AppRouter: React.FC = () => {
       <Route path="/speaking-training/practice" element={
         <SpeakingPracticePage />
       } />
+      <Route path="/flashcard" element={
+        <FlashcardDeckList />
+      } />
+      <Route path="/flashcard/study/:deckId" element={
+        <FlashcardStudy />
+      } />
       <Route path="/skills/listening" element={
         <Layout>
           <ListeningPage />
@@ -105,18 +113,16 @@ const AppRouter: React.FC = () => {
       } />
       
       {/* Protected Routes - Require authentication */}
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <DashboardPage />
+        </ProtectedRoute>
+      } />
       <Route path="/profile" element={
         <ProtectedRoute>
           <Layout>
             <ProfilePage />
           </Layout>
-        </ProtectedRoute>
-      } />
-      
-      {/* Admin Routes - Require authentication and admin role */}
-      <Route path="/admin" element={
-        <ProtectedRoute>
-          <AdminDashboard />
         </ProtectedRoute>
       } />
       

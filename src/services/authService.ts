@@ -12,6 +12,10 @@ export interface RegisterData {
   lastName: string;
 }
 
+export interface Role {
+  name: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -21,7 +25,9 @@ export interface User {
   createdAt?: string;
   updatedAt?: string;
   isActive?: boolean;
+  status?: string; // 'ACTIVE' | 'INACTIVE'
   role?: string;
+  roles?: Role[];
 }
 
 export interface AuthResponse {
@@ -57,10 +63,20 @@ class AuthService {
 
       if (!response.ok) {
         throw {
-          message: data.message || 'Login failed',
+          message: data.result?.message || data.message || 'Login failed',
           status: response.status,
         } as ApiError;
       }
+
+      // Check if authentication was successful
+      if (data.result && !data.result.authenticated) {
+        throw {
+          message: data.result.message || 'Login failed',
+          status: 401,
+        } as ApiError;
+      }
+
+      // Check if token exists
       if (data.result && data.result.token) {
         if (data.result.refreshToken) {
           this.setRefreshToken(data.result.refreshToken);
@@ -73,6 +89,11 @@ class AuthService {
         status: 500,
       } as ApiError;
     } catch (error) {
+      // If it's already an ApiError object, throw it as-is
+      if (error && typeof error === 'object' && 'status' in error) {
+        throw error;
+      }
+      // If it's a network Error, wrap it
       if (error instanceof Error) {
         throw {
           message: 'Network error. Please check your connection.',
@@ -102,6 +123,15 @@ class AuthService {
         throw {
           message: 'Failed to get user information',
           status: 500,
+        } as ApiError;
+      }
+
+      // Check if account is inactive (check both isActive and status fields)
+      if (user.isActive === false || user.status === 'INACTIVE') {
+        this.removeToken();
+        throw {
+          message: 'Tài khoản không hoạt động',
+          status: 403,
         } as ApiError;
       }
 
@@ -165,22 +195,40 @@ class AuthService {
 
       if (!response.ok) {
         throw {
-          message: 'Failed to exchange Google code for token',
+          message: data.result?.message || data.message || 'Failed to exchange Google code for token',
           status: response.status,
         } as ApiError;
       }
 
-      if (data && data.token) {
-        if (data.refreshToken) {
-          this.setRefreshToken(data.refreshToken);
-        }
-        return data.token;
+      // Check if authentication was successful (for backends that return authenticated flag)
+      if (data.result && !data.result.authenticated) {
+        throw {
+          message: data.result.message || 'Google authentication failed',
+          status: 401,
+        } as ApiError;
       }
+
+      // Support both formats: data.token and data.result.token
+      const token = data.result?.token || data.token;
+      const refreshToken = data.result?.refreshToken || data.refreshToken;
+
+      if (token) {
+        if (refreshToken) {
+          this.setRefreshToken(refreshToken);
+        }
+        return token;
+      }
+
       throw {
         message: 'Invalid response format - token not found',
         status: 500,
       } as ApiError;
     } catch (error) {
+      // If it's already an ApiError object, throw it as-is
+      if (error && typeof error === 'object' && 'status' in error) {
+        throw error;
+      }
+      // If it's a network Error, wrap it
       if (error instanceof Error) {
         throw {
           message: 'Network error during Google authentication',
@@ -218,6 +266,15 @@ class AuthService {
         throw {
           message: 'Failed to get user information after OAuth',
           status: 500,
+        } as ApiError;
+      }
+
+      // Check if account is inactive (check both isActive and status fields)
+      if (user.isActive === false || user.status === 'INACTIVE') {
+        this.removeToken();
+        throw {
+          message: 'Tài khoản không hoạt động',
+          status: 403,
         } as ApiError;
       }
 
@@ -289,7 +346,7 @@ class AuthService {
       //   });
       // }
     } catch (error) {
-      console.error('Logout error:', error);
+      // Silent fail on logout
     } finally {
       this.removeToken();
     }
@@ -453,7 +510,6 @@ class AuthService {
 
       return null;
     } catch (error) {
-      console.error('Token refresh failed:', error);
       this.removeToken();
       return null;
     }

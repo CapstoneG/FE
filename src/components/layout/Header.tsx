@@ -95,6 +95,9 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   const [notificationCount, setNotificationCount] = useState(0);
   const [notificationList, setNotificationList] = useState<Notification[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMoreNotifications, setHasMoreNotifications] = useState(true);
+  const [currentPage, setCurrentPage] = useState(0);
+  const PAGE_SIZE = 10;
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
   const notificationListRef = useRef<HTMLDivElement>(null);
@@ -114,12 +117,17 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
     const unsubscribe = notificationService.subscribe((notification) => {
       console.log('New notification received:', notification);
       
-      // Add to notification list
+      // Add to notification list (new notification at the top)
       setNotificationList(prev => [notification, ...prev]);
       
       // Increment unread count if unread
       if (!notification.read) {
         setNotificationCount(prev => prev + 1);
+      }
+
+      // Scroll notification list to top when new notification arrives
+      if (notificationListRef.current) {
+        notificationListRef.current.scrollTop = 0;
       }
 
       // Optional: Show browser notification
@@ -146,14 +154,17 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const data = await notificationService.getNotifications(0, 20);
+        const data = await notificationService.getNotifications(0, PAGE_SIZE);
         setNotificationList(data.notifications || []);
         setNotificationCount(data.unreadCount || 0);
+        setCurrentPage(0);
+        setHasMoreNotifications((data.notifications || []).length < (data.total || 0));
       } catch (error) {
         console.error('Error fetching notifications:', error);
         // Fallback to mock data
         setNotificationList(allNotifications);
         setNotificationCount(2);
+        setHasMoreNotifications(false);
       }
     };
 
@@ -187,15 +198,30 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
     const scrollPosition = target.scrollTop + target.clientHeight;
     const scrollHeight = target.scrollHeight;
     
-    // Load more when scrolled to 80% of the list
-    if (scrollPosition >= scrollHeight * 0.8 && !isLoadingMore) {
+    // Load more when scrolled near bottom (within 50px) and has more data
+    if (scrollPosition >= scrollHeight - 50 && !isLoadingMore && hasMoreNotifications) {
       setIsLoadingMore(true);
       
       try {
-        const data = await notificationService.getNotifications(notificationList.length, 10);
-        setNotificationList(prev => [...prev, ...data.notifications]);
+        const nextPage = currentPage + 1;
+        console.log(`[Notifications] Loading page ${nextPage}, current items: ${notificationList.length}`);
+        
+        const data = await notificationService.getNotifications(nextPage, PAGE_SIZE);
+        
+        // Check if there's more data
+        if (data.notifications && data.notifications.length > 0) {
+          setNotificationList(prev => [...prev, ...data.notifications]);
+          setCurrentPage(nextPage);
+          // Update hasMore flag
+          const newTotal = notificationList.length + data.notifications.length;
+          setHasMoreNotifications(newTotal < (data.total || 0));
+        } else {
+          // No more data
+          setHasMoreNotifications(false);
+        }
       } catch (error) {
         console.error('Error loading more notifications:', error);
+        setHasMoreNotifications(false);
       } finally {
         setIsLoadingMore(false);
       }
@@ -292,13 +318,15 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
             isDropdownOpen={activeDropdown === 'courses'}
             onToggleDropdown={() => handleToggleDropdown('courses')}
           />
+
+          <MenuItem label="Flashcards" href="/flashcard" />
           
-          {/* <MenuItem 
+          <MenuItem 
             label="Skills" 
             dropdownItems={skillsDropdown}
             isDropdownOpen={activeDropdown === 'skills'}
             onToggleDropdown={() => handleToggleDropdown('skills')}
-          /> */}
+          />
           
           {/* <MenuItem label="Resources" href="/resources" /> */}
           <MenuItem label="Speaking Training" href="/speaking-training" />

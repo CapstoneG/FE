@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { authService } from '@/services/authService';
@@ -16,6 +16,7 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [oauthLoading, setOauthLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const oauthProcessedRef = useRef(false); // Prevent processing code multiple times
 
   // Load saved credentials on mount
   useEffect(() => {
@@ -42,8 +43,11 @@ const LoginPage: React.FC = () => {
         return;
       }
 
-      if (code) {
+      // Prevent processing the same code multiple times
+      if (code && !oauthProcessedRef.current) {
+        oauthProcessedRef.current = true; // Mark as processed immediately
         setOauthLoading(true);
+        
         try {
           const existingToken = authService.getToken();
           if (existingToken) {
@@ -55,19 +59,17 @@ const LoginPage: React.FC = () => {
           await new Promise(resolve => setTimeout(resolve, 150));
           window.location.href = '/';
         } catch (error: any) {
-          console.error('OAuth callback error:', error);
+          // Always clear token on error to prevent inactive account access
+          authService.removeToken();
           
-          // Check if token was saved despite the error
-          const tokenAfterError = authService.getToken();
-          if (tokenAfterError) {
-            console.log('Token exists after error, redirecting anyway...');
-            window.location.href = '/';
-            return;
-          }
           setOauthLoading(false);
           
-          // Clear URL params
-          navigate('/login', { replace: true });
+          // Set error message for inactive account or other errors
+          const errorMessage = error?.message || 'Google login failed. Please try again.';
+          setError(errorMessage);
+          
+          // Clear URL params without reloading
+          window.history.replaceState({}, '', '/login');
         }
       }
     };
@@ -89,6 +91,8 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setError('');
 
+    // Clear any existing token before login attempt
+    authService.removeToken();
     try {
       await login(formData.email, formData.password);
       
@@ -103,11 +107,10 @@ const LoginPage: React.FC = () => {
       }
       
       // Login successful - redirect to home
-      console.log('Login successful');
       navigate('/', { replace: true });
     } catch (error: any) {
-      console.error('Login error:', error);
-      setError(error.message || 'Login failed. Please check your credentials.');
+      const errorMessage = error.message || 'Login failed. Please check your credentials.';
+      setError(errorMessage);
     }
   };
 
@@ -118,7 +121,6 @@ const LoginPage: React.FC = () => {
       setOauthLoading(true); 
       await loginWithGoogle();
     } catch (error: any) {
-      console.error('Google login error:', error);
       setOauthLoading(false);
     }
   };

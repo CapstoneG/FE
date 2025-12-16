@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Loading } from '../common/Loading';
@@ -18,24 +18,27 @@ export const AuthRedirect: React.FC<AuthRedirectProps> = ({
 }) => {
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
 
   useEffect(() => {
-    // Nếu user đã authenticated và không đang loading, redirect về home
-    if (isAuthenticated && !isLoading) {
+    // Đánh dấu initial load hoàn tất
+    if (!isLoading) {
+      setInitialLoadDone(true);
+    }
+  }, [isLoading]);
+
+  useEffect(() => {
+    // Chỉ redirect nếu đã qua initial load và user authenticated
+    if (initialLoadDone && isAuthenticated && !isLoading) {
       navigate(redirectTo, { replace: true });
     }
-  }, [isAuthenticated, isLoading, navigate, redirectTo]);
+  }, [initialLoadDone, isAuthenticated, isLoading, navigate, redirectTo]);
 
-  // Hiển thị loading trong khi check authentication
-  if (isLoading) {
+  // Hiển thị loading CHỈ trong lần đầu check auth
+  if (!initialLoadDone && isLoading) {
     return <Loading />;
   }
 
-  // Nếu user chưa authenticated, hiển thị children (login/register form)
-  if (!isAuthenticated) {
-    return <>{children}</>;
-  }
-
-  // Nếu đã authenticated, không hiển thị gì (đang redirect)
-  return null;
+  // Luôn render children để không unmount form khi login fail
+  return <>{children}</>;
 };

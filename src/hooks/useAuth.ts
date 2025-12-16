@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { authService } from '../services/authService';
-import type { User as ApiUser } from '../services/authService';
+import type { User as ApiUser, Role } from '../services/authService';
 
 interface User extends ApiUser {
   level?: string | null; // User's English level from placement test (e.g., "Intermediate (B1)")
@@ -10,6 +10,7 @@ interface User extends ApiUser {
     totalPoints: number;
     streak: number;
   };
+  roles?: Role[];
 }
 
 interface AuthContextType {
@@ -51,6 +52,13 @@ export const useAuthLogic = () => {
       try {
         const userData = await authService.getCurrentUser();
         if (userData && isMounted) {
+          // Check if account is active
+          if (userData.isActive === false) {
+            // Logout if account is inactive
+            await authService.logout();
+            return;
+          }
+          
           setUser({
             ...userData,
             learningLevel: (userData as any).learningLevel || 'beginner',
@@ -79,8 +87,13 @@ export const useAuthLogic = () => {
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
+    // Clear any existing user state before login
+    setUser(null);
     try {
       const { user: userData } = await authService.loginAndGetUser({ email, password });
+      
+      // loginAndGetUser already checks if account is inactive
+      // No need to check again here
       
       setUser({
         ...userData,
@@ -92,6 +105,9 @@ export const useAuthLogic = () => {
         },
       });
     } catch (error: any) {
+      // Make sure user state is cleared on error
+      setUser(null);
+      setIsLoading(false);
       throw new Error(error.message || 'Login failed. Please check your credentials.');
     } finally {
       setIsLoading(false);
@@ -112,7 +128,6 @@ export const useAuthLogic = () => {
     try {
       await authService.logout();
     } catch (error) {
-      console.error('Logout error:', error);
     } finally {
       setUser(null);
       setIsLoading(false);
