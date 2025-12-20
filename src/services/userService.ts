@@ -16,6 +16,12 @@ export interface UpdateUserData {
   password?: string;
 }
 
+export interface ChangePasswordData {
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 interface ApiResponse<T> {
   code: number;
   message: string;
@@ -71,6 +77,61 @@ class UserService {
       }
     } catch (error) {
       console.error('Error updating profile:', error);
+      throw error;
+    }
+  }
+
+  async changePassword(data: ChangePasswordData): Promise<{ code: number; message: string }> {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/users/change-password`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result: ApiResponse<null> = await response.json();
+      
+      // Return both code and message for proper error handling
+      return { code: result.code, message: result.message };
+    } catch (error) {
+      console.error('Error changing password:', error);
+      throw error;
+    }
+  }
+
+  async deactivateAccount(): Promise<void> {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/users/status`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'INACTIVE' }),
+      });
+
+      if (!response.ok) {
+        const errorData: ApiResponse<null> = await response.json();
+        throw new Error(errorData.message || 'Failed to deactivate account');
+      }
+
+      // Clear token after successful deactivation
+      localStorage.removeItem('authToken');
+    } catch (error) {
+      console.error('Error deactivating account:', error);
       throw error;
     }
   }

@@ -57,9 +57,9 @@ export const ProfileBasicInfo: React.FC = () => {
       setToast({ message: 'Cập nhật thông tin thành công!', type: 'success' });
       
       setIsEditing(false);
-      setAvatarPreview(null);
       setNewAvatarUrl(null);
       setNewAvatarPublicId(null);
+      setAvatarPreview(null);
     } catch (error) {
       console.error('Error updating profile:', error);
       setToast({ message: 'Có lỗi khi cập nhật thông tin. Vui lòng thử lại.', type: 'error' });
@@ -95,6 +95,49 @@ export const ProfileBasicInfo: React.FC = () => {
     }
   };
 
+  const processImageBeforeUpload = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          if (!ctx) {
+            reject(new Error('Cannot get canvas context'));
+            return;
+          }
+          const size = Math.min(img.width, img.height);
+          const x = (img.width - size) / 2;
+          const y = (img.height - size) / 2;
+
+          const targetSize = 1280;
+          canvas.width = targetSize;
+          canvas.height = targetSize;
+
+          ctx.drawImage(img, x, y, size, size, 0, 0, targetSize, targetSize);
+
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const processedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+              });
+              resolve(processedFile);
+            } else {
+              reject(new Error('Failed to process image'));
+            }
+          }, 'image/jpeg', 0.9);
+        };
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -115,14 +158,23 @@ export const ProfileBasicInfo: React.FC = () => {
       reader.readAsDataURL(file);
 
       setIsUploading(true);
-      const uploadResult = await uploadService.uploadImage(file);
-      setIsUploading(false);
+      try {
+        const processedFile = await processImageBeforeUpload(file);
+        
+        const uploadResult = await uploadService.uploadImage(processedFile);
+        setIsUploading(false);
 
-      if (uploadResult) {
-        setNewAvatarUrl(uploadResult.url);
-        setNewAvatarPublicId(uploadResult.publicId);
-      } else {
+        if (uploadResult) {
+          setNewAvatarUrl(uploadResult.url);
+          setNewAvatarPublicId(uploadResult.publicId);   
+        } else {
+          setAvatarPreview(null);
+          setToast({ message: 'Upload ảnh thất bại. Vui lòng thử lại!', type: 'error' });
+        }
+      } catch (error) {
+        setIsUploading(false);
         setAvatarPreview(null);
+        setToast({ message: 'Có lỗi khi xử lý ảnh. Vui lòng thử lại!', type: 'error' });
       }
     }
   };
@@ -139,14 +191,26 @@ export const ProfileBasicInfo: React.FC = () => {
       <div className="info-content">
         {/* Avatar Section */}
         <div className="avatar-section">
-          <div className="avatar-container">
+          <div className="avatar-container" style={{ position: 'relative' }}>
             <img 
-              src={avatarPreview || user?.avatar || user?.avatarUrl || '/src/assets/logo.png'} 
+              src={avatarPreview || user?.avatarUrl || user?.avatar || '/src/assets/logo.png'} 
               alt={user?.username || 'User'} 
               className="profile-avatar"
-              style={{ cursor: isEditing ? 'pointer' : 'default' }}
+              style={{ cursor: isEditing && !isUploading ? 'pointer' : 'default', opacity: isUploading ? 0.5 : 1 }}
               onClick={handleAvatarClick}
             />
+            {isUploading && (
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                color: '#2563eb',
+                fontWeight: 'bold',
+                fontSize: '0.9rem'
+              }}>
+              </div>
+            )}
             {isEditing && (
               <>
                 <input
@@ -155,13 +219,14 @@ export const ProfileBasicInfo: React.FC = () => {
                   onChange={handleAvatarChange}
                   accept="image/*"
                   style={{ display: 'none' }}
+                  disabled={isUploading}
                 />
               </>
             )}
           </div>
           {isEditing && (
-            <p style={{ textAlign: 'center', color: '#718096', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-              Click vào ảnh để thay đổi
+            <p style={{ textAlign: 'center', color: isUploading ? '#2563eb' : '#718096', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+              {isUploading ? 'Đang xử lý và upload ảnh...' : 'Click vào ảnh để thay đổi'}
             </p>
           )}
         </div>
@@ -248,10 +313,20 @@ export const ProfileBasicInfo: React.FC = () => {
         {/* Action Buttons */}
         {isEditing && (
           <div className="action-buttons">
-            <button className="btn btn-save" onClick={handleSave}>
-              Lưu thay đổi
+            <button 
+              className="btn btn-save" 
+              onClick={handleSave}
+              disabled={isUploading}
+              style={{ opacity: isUploading ? 0.6 : 1, cursor: isUploading ? 'not-allowed' : 'pointer' }}
+            >
+              {isUploading ? 'Đang upload ảnh...' : 'Lưu thay đổi'}
             </button>
-            <button className="btn btn-cancel" onClick={handleCancel}>
+            <button 
+              className="btn btn-cancel" 
+              onClick={handleCancel}
+              disabled={isUploading}
+              style={{ opacity: isUploading ? 0.6 : 1, cursor: isUploading ? 'not-allowed' : 'pointer' }}
+            >
               Hủy
             </button>
           </div>

@@ -142,7 +142,8 @@ export const useAuthLogic = () => {
       
       await userService.updateProfile(updateData);
       
-      setUser({ ...user, ...data });
+      // Merge updateData (actual data sent to API) instead of data to ensure correct update
+      setUser({ ...user, ...updateData });
     } catch (error) {
       console.error('Profile update failed:', error);
       throw error;
