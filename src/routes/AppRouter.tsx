@@ -4,7 +4,7 @@ import { Layout, AuthRedirect, ProtectedRoute, PlacementTestRedirect } from '@/c
 import HomePage from '@/pages/HomePage';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
-import ProfilePage from '@/pages/ProfilePage';
+import { ProfilePage } from '../pages/ProfilePage';
 import BeginnerPage from '@/pages/courses/BeginnerPage';
 import IntermediatePage from '@/pages/courses/IntermediatePage';
 import AdvancedPage from '@/pages/courses/AdvancedPage';

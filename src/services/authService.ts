@@ -16,18 +16,34 @@ export interface Role {
   name: string;
 }
 
+export interface LearningSettings {
+  dailyStudyReminder: boolean;
+  reminderTime: string;
+  emailNotification: boolean;
+  dailyStudyMinutes: number;
+  targetDaysPerWeek: number;
+}
+
 export interface User {
-  id: string;
+  id: string | number;
   email: string;
-  username: string;
+  username?: string;
   fullName?: string;
+  firstName?: string;
+  lastName?: string;
+  password?: string;
   avatar?: string;
+  avatarUrl?: string;
+  level?: string;
   createdAt?: string;
   updatedAt?: string;
+  lastLogin?: string;
   isActive?: boolean;
   status?: string; // 'ACTIVE' | 'INACTIVE'
   role?: string;
   roles?: Role[];
+  provider?: 'LOCAL' | 'GOOGLE';
+  learningSettings?: LearningSettings;
 }
 
 export interface AuthResponse {
@@ -383,6 +399,10 @@ class AuthService {
             
             if (retryResponse.ok) {
               const userData = await retryResponse.json();
+              // Map avatarUrl to avatar for consistency
+              if (userData.avatarUrl && !userData.avatar) {
+                userData.avatar = userData.avatarUrl;
+              }
               return userData;
             }
           }
@@ -400,6 +420,10 @@ class AuthService {
       }
 
       const userData = await response.json();
+      // Map avatarUrl to avatar for consistency
+      if (userData.avatarUrl && !userData.avatar) {
+        userData.avatar = userData.avatarUrl;
+      }
       return userData;
     } catch (error) {
       if ((error as ApiError).status === 401) {
@@ -427,7 +451,7 @@ class AuthService {
         } as ApiError;
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/users/update-level`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/update-user`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

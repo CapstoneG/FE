@@ -1,16 +1,9 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { authService } from '../services/authService';
-import type { User as ApiUser, Role } from '../services/authService';
+import { userService } from '../services/userService';
+import type { User as ApiUser } from '../services/authService';
 
 interface User extends ApiUser {
-  level?: string | null; // User's English level from placement test (e.g., "Intermediate (B1)")
-  learningLevel?: 'beginner' | 'intermediate' | 'advanced';
-  progress?: {
-    completedLessons: number;
-    totalPoints: number;
-    streak: number;
-  };
-  roles?: Role[];
 }
 
 interface AuthContextType {
@@ -53,21 +46,13 @@ export const useAuthLogic = () => {
         const userData = await authService.getCurrentUser();
         if (userData && isMounted) {
           // Check if account is active
-          if (userData.isActive === false) {
+          if (userData.isActive === false || userData.status === 'INACTIVE') {
             // Logout if account is inactive
             await authService.logout();
             return;
           }
           
-          setUser({
-            ...userData,
-            learningLevel: (userData as any).learningLevel || 'beginner',
-            progress: (userData as any).progress || {
-              completedLessons: 0,
-              totalPoints: 0,
-              streak: 0,
-            },
-          });
+          setUser(userData);
         }
       } catch (error) {
         console.error('Auth check failed:', error);
@@ -95,15 +80,7 @@ export const useAuthLogic = () => {
       // loginAndGetUser already checks if account is inactive
       // No need to check again here
       
-      setUser({
-        ...userData,
-        learningLevel: (userData as any).learningLevel || 'beginner',
-        progress: (userData as any).progress || {
-          completedLessons: 0,
-          totalPoints: 0,
-          streak: 0,
-        },
-      });
+      setUser(userData);
     } catch (error: any) {
       // Make sure user state is cleared on error
       setUser(null);
@@ -154,9 +131,21 @@ export const useAuthLogic = () => {
     if (!user) return;
     
     try {
+      const updateData: any = {};
+      
+      if (data.firstName !== undefined) updateData.firstName = data.firstName;
+      if (data.lastName !== undefined) updateData.lastName = data.lastName;
+      if (data.avatarUrl !== undefined) updateData.avatarUrl = data.avatarUrl;
+      if (data.avatar !== undefined && !data.avatarUrl) updateData.avatarUrl = data.avatar;
+      if (data.password !== undefined) updateData.password = data.password;
+      if (data.level !== undefined) updateData.level = data.level;
+      
+      await userService.updateProfile(updateData);
+      
       setUser({ ...user, ...data });
     } catch (error) {
-      throw new Error('Profile update failed.');
+      console.error('Profile update failed:', error);
+      throw error;
     }
   };
 

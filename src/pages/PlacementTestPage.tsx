@@ -244,7 +244,6 @@ const PlacementTestPage: React.FC = () => {
 
     const percentage = (score / totalPoints) * 100;
 
-    // Determine display level and API level (backend enum)
     let level = 'Beginner (A1-A2)';
     let apiLevel: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'PROFICIENCY' = 'BEGINNER';
     
@@ -325,29 +324,20 @@ const PlacementTestPage: React.FC = () => {
     setCurrentSection('test');
   };
 
-  // Submit test
   const handleSubmitTest = async () => {
     const result = calculateResults();
     setTestResult(result);
     setCurrentSection('result');
     setShowConfirmSubmit(false);
 
-    // Save result to localStorage (display level for UI)
     localStorage.setItem('placementTestCompleted', 'true');
-    localStorage.setItem('userLevel', result.level); // Display level
+    localStorage.setItem('userLevel', result.level); 
     localStorage.setItem('placementTestScore', result.percentage.toString());
 
-    // If user is authenticated, save level to backend
     if (isAuthenticated && user) {
       try {
-        // Call API to update user level in database with backend enum format
         await authService.updateUserLevel(result.apiLevel);
-        console.log('User level updated successfully:', result.apiLevel);
-        
-        // Update local user state with backend enum level
         await updateProfile({ level: result.apiLevel });
-        
-        console.log('User profile updated with new level');
       } catch (error) {
         console.error('Failed to update user level:', error);
       }
@@ -374,7 +364,7 @@ const PlacementTestPage: React.FC = () => {
           <div className="intro-content">
             <div className="intro-card main-overview">
               <div className="overview-header">
-                <h2>📋 Test Overview</h2>
+                <h2>Test Overview</h2>
                 <p className="overview-description">
                   Take this comprehensive test to determine your English proficiency level and get personalized course recommendations.
                 </p>
@@ -539,7 +529,7 @@ const PlacementTestPage: React.FC = () => {
               </p>
               {answeredCount < questions.length && (
                 <p className="warning-text">
-                  ⚠️ You have {questions.length - answeredCount} unanswered question(s).
+                  You have {questions.length - answeredCount} unanswered question(s).
                   Unanswered questions will be marked as incorrect.
                 </p>
               )}
