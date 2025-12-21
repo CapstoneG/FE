@@ -25,7 +25,7 @@ interface Module {
   progress: number;
 }
 
-const BeginnerPage: React.FC = () => {
+const BeginnerPage: React.FC = () => {  
   const [activeModule, setActiveModule] = useState<number | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FaArrowLeft, FaStar, FaThumbsUp, FaReply, FaPencilAlt } from 'react-icons/fa';
 import { VideoLesson, ExerciseLesson, VocabularyLesson, GrammarLesson, DialogueLesson } from '@/components/lessons';
+import { useStudyEvents } from '@/hooks';
 import '@/styles/lesson/LessonDetail.css';
 
 interface Props {
@@ -111,6 +112,16 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
   const [completed, setCompleted] = useState<boolean>(false);
 
   const STORAGE_KEY = `enghub.beginner.lesson${lessonId}.completed`;
+
+  useStudyEvents({
+    lessonId,
+    activityType: 'LESSON',
+    skill: 'VOCAB', 
+    autoStart: true,  
+    autoEnd: true,    
+    onStatsUpdate: (event) => {
+    },
+  });
 
   // Fetch comments from API
   useEffect(() => {

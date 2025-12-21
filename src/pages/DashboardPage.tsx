@@ -2,26 +2,18 @@ import React, { useState, useEffect } from 'react';
 import './DashboardPage.css';
 import { useAuth } from '../hooks/useAuth';
 
-interface LessonItem {
+// New interfaces for redesigned dashboard
+interface ContinueLearningItem {
   id: number;
   title: string;
-  type: string;
-  status: 'completed' | 'in-progress' | 'locked';
+  type: 'lesson' | 'flashcard' | 'test';
   progress: number;
-}
-
-interface PracticeCard {
-  id: number;
-  title: string;
   icon: string;
-  description: string;
-  count: number;
-  color: string;
 }
 
-interface WeeklyData {
-  day: string;
-  minutes: number;
+interface FlashcardStat {
+  total: number;
+  dueToday: number;
 }
 
 interface Badge {
@@ -29,327 +21,213 @@ interface Badge {
   name: string;
   icon: string;
   earned: boolean;
+  description: string;
 }
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
-  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Mock data - in real app, fetch from API
+  const mockData = {
+    user: {
+      name: user?.fullName || user?.username || 'Learner',
+      streak: 12
+    },
+    dailyGoal: {
+      target: 60,
+      current: 45,
+      percentage: 75
+    },
+    continueLearning: [
+      { id: 1, title: 'Business Vocabulary Unit 5', type: 'lesson' as const, progress: 65, icon: '📚' },
+      { id: 2, title: 'Daily Words Practice', type: 'flashcard' as const, progress: 30, icon: '🎴' }
+    ] as ContinueLearningItem[],
+    stats: {
+      lessonsCompleted: 34,
+      vocabularyLearned: 458,
+      strongSkills: ['Grammar', 'Reading'],
+      weakSkills: ['Speaking', 'Listening']
+    },
+    flashcards: {
+      total: 458,
+      dueToday: 23
+    } as FlashcardStat,
+    learningSettings: {
+      reminderTime: '19:00',
+      daysPerWeek: 5
+    },
+    badges: [
+      { id: 1, name: '7-Day Streak', icon: '🔥', earned: true, description: 'Study 7 days in a row' },
+      { id: 2, name: 'Fast Learner', icon: '⚡', earned: true, description: 'Complete 10 lessons' },
+      { id: 3, name: 'Vocabulary Master', icon: '📖', earned: false, description: 'Learn 500 words' },
+      { id: 4, name: 'Perfect Score', icon: '🎯', earned: false, description: 'Get 100% on a test' }
+    ] as Badge[],
+    recommendations: [
+      { id: 1, title: 'Intermediate Grammar Review', type: 'Lesson', level: 'B1' },
+      { id: 2, title: 'Business English Phrases', type: 'Vocabulary', level: 'B2' },
+      { id: 3, title: 'Conversation Practice', type: 'Speaking', level: 'B1' }
+    ]
+  };
 
   useEffect(() => {
-    // Mock data - in real app, fetch from API
-    const mockData = {
-      user: {
-        name: user?.fullName || user?.username || 'John Doe',
-        avatar: user?.avatar || 'https://ui-avatars.com/api/?name=John+Doe&background=4CAF50&color=fff&size=120',
-        level: 'Intermediate B1',
-        streak: 12,
-        xp: 2450,
-        nextLevelXp: 3000
-      },
-      progress: {
-        courseCompletion: 67,
-        lessonsCompleted: 34,
-        totalLessons: 51,
-        studyTimeToday: 45,
-        weeklyAverage: 38
-      },
-      learningPath: [
-        { id: 1, title: 'Present Perfect Tense', type: 'Grammar', status: 'completed', progress: 100 },
-        { id: 2, title: 'Business Vocabulary', type: 'Vocabulary', status: 'in-progress', progress: 65 },
-        { id: 3, title: 'Conversation Practice', type: 'Speaking', status: 'in-progress', progress: 30 },
-        { id: 4, title: 'Listening Comprehension', type: 'Listening', status: 'locked', progress: 0 },
-        { id: 5, title: 'Writing Email', type: 'Writing', status: 'locked', progress: 0 }
-      ] as LessonItem[],
-      practiceCards: [
-        { id: 1, title: 'Vocabulary', icon: '📚', description: 'Learn new words', count: 150, color: '#FF6B6B' },
-        { id: 2, title: 'Listening', icon: '🎧', description: 'Improve comprehension', count: 23, color: '#4ECDC4' },
-        { id: 3, title: 'Speaking', icon: '🎤', description: 'Practice pronunciation', count: 12, color: '#95E1D3' },
-        { id: 4, title: 'Grammar', icon: '✍️', description: 'Master rules', count: 45, color: '#F38181' }
-      ] as PracticeCard[],
-      weeklyStats: [
-        { day: 'Mon', minutes: 30 },
-        { day: 'Tue', minutes: 45 },
-        { day: 'Wed', minutes: 25 },
-        { day: 'Thu', minutes: 50 },
-        { day: 'Fri', minutes: 40 },
-        { day: 'Sat', minutes: 60 },
-        { day: 'Sun', minutes: 35 }
-      ] as WeeklyData[],
-      analytics: {
-        accuracyRate: 87,
-        totalStudyTime: 285,
-        averageScore: 92
-      },
-      dailyGoal: {
-        target: 60,
-        current: 45,
-        percentage: 75
-      },
-      badges: [
-        { id: 1, name: '7-Day Streak', icon: '🔥', earned: true },
-        { id: 2, name: 'Grammar Master', icon: '📖', earned: true },
-        { id: 3, name: 'Fast Learner', icon: '⚡', earned: true },
-        { id: 4, name: 'Perfect Score', icon: '🎯', earned: false },
-        { id: 5, name: 'Vocabulary Pro', icon: '🌟', earned: false },
-        { id: 6, name: 'Speaking Champion', icon: '🏆', earned: false }
-      ] as Badge[]
-    };
+    // Simulate loading
+    setTimeout(() => setLoading(false), 500);
+  }, []);
 
-    setDashboardData(mockData);
-  }, [user]);
-
-  if (!dashboardData) {
-    return <div className="dashboard-loading">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="dash-loading">
+        <div className="dash-loading-spinner"></div>
+        <p>Loading your dashboard...</p>
+      </div>
+    );
   }
 
-  const maxWeeklyMinutes = Math.max(...dashboardData.weeklyStats.map((d: WeeklyData) => d.minutes));
-
   return (
-    <div className="dashboard-page">
-      {/* Sidebar */}
-      <aside className="dashboard-sidebar">
-        <div className="sidebar-header">
-          <h2>📊 Dashboard</h2>
-        </div>
-        <nav className="sidebar-nav">
-          <a href="#overview" className="nav-item active">
-            <span className="nav-icon">🏠</span>
-            Overview
-          </a>
-          <a href="#lessons" className="nav-item">
-            <span className="nav-icon">📚</span>
-            My Lessons
-          </a>
-          <a href="#progress" className="nav-item">
-            <span className="nav-icon">📈</span>
-            Progress
-          </a>
-          <a href="#practice" className="nav-item">
-            <span className="nav-icon">✨</span>
-            Practice
-          </a>
-          <a href="#achievements" className="nav-item">
-            <span className="nav-icon">🏆</span>
-            Achievements
-          </a>
-          <a href="#settings" className="nav-item">
-            <span className="nav-icon">⚙️</span>
-            Settings
-          </a>
-        </nav>
-      </aside>
-
-      {/* Main Content */}
-      <main className="dashboard-main">
-        <div className="dashboard-container">
-          {/* Header Section */}
-          <section className="dashboard-header">
-            <h1>Welcome back, {dashboardData.user.name}! 👋</h1>
-            <p className="header-subtitle">Let's continue your learning journey</p>
-          </section>
-
-          {/* User Info Card */}
-          <section className="user-info-card">
-            <div className="user-avatar">
-              <img src={dashboardData.user.avatar} alt={dashboardData.user.name} />
-              <div className="streak-badge">
-                <span className="streak-icon">🔥</span>
-                <span className="streak-count">{dashboardData.user.streak}</span>
-              </div>
-            </div>
-            <div className="user-details">
-              <h2>{dashboardData.user.name}</h2>
-              <p className="user-level">{dashboardData.user.level}</p>
-              <div className="xp-bar">
-                <div className="xp-progress" style={{ width: `${(dashboardData.user.xp / dashboardData.user.nextLevelXp) * 100}%` }}></div>
-              </div>
-              <p className="xp-text">{dashboardData.user.xp} / {dashboardData.user.nextLevelXp} XP</p>
-            </div>
-            <div className="user-stats">
-              <div className="stat-item">
-                <div className="stat-value">{dashboardData.user.streak}</div>
-                <div className="stat-label">Day Streak</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-value">{dashboardData.user.xp}</div>
-                <div className="stat-label">Total XP</div>
-              </div>
-            </div>
-          </section>
-
-          {/* Progress Section */}
-          <section className="progress-section">
-            <h3 className="section-title">📊 Your Progress</h3>
-            <div className="progress-cards">
-              <div className="progress-card">
-                <div className="progress-card-header">
-                  <h4>Course Progress</h4>
-                  <span className="progress-percentage">{dashboardData.progress.courseCompletion}%</span>
-                </div>
-                <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${dashboardData.progress.courseCompletion}%` }}></div>
-                </div>
-                <p className="progress-detail">
-                  {dashboardData.progress.lessonsCompleted} of {dashboardData.progress.totalLessons} lessons completed
-                </p>
-              </div>
-
-              <div className="progress-card">
-                <div className="progress-card-icon">⏱️</div>
-                <h4>Study Time Today</h4>
-                <div className="progress-value">{dashboardData.progress.studyTimeToday} min</div>
-                <p className="progress-detail">Weekly avg: {dashboardData.progress.weeklyAverage} min</p>
-              </div>
-
-              <div className="progress-card">
-                <div className="progress-card-icon">🎯</div>
-                <h4>Accuracy Rate</h4>
-                <div className="progress-value">{dashboardData.analytics.accuracyRate}%</div>
-                <p className="progress-detail">Keep up the great work!</p>
-              </div>
-            </div>
-          </section>
-
-          {/* Learning Path Section */}
-          <section className="learning-path-section">
-            <div className="section-header">
-              <h3 className="section-title">🎓 Learning Path</h3>
-              <button className="continue-btn">Continue Learning →</button>
-            </div>
-            <div className="lessons-list">
-              {dashboardData.learningPath.map((lesson: LessonItem) => (
-                <div key={lesson.id} className={`lesson-item ${lesson.status}`}>
-                  <div className="lesson-status-icon">
-                    {lesson.status === 'completed' && '✅'}
-                    {lesson.status === 'in-progress' && '▶️'}
-                    {lesson.status === 'locked' && '🔒'}
-                  </div>
-                  <div className="lesson-content">
-                    <h4>{lesson.title}</h4>
-                    <p className="lesson-type">{lesson.type}</p>
-                    {lesson.status === 'in-progress' && (
-                      <div className="lesson-progress-bar">
-                        <div className="lesson-progress-fill" style={{ width: `${lesson.progress}%` }}></div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="lesson-action">
-                    {lesson.status === 'completed' && <span className="lesson-badge">100%</span>}
-                    {lesson.status === 'in-progress' && (
-                      <button className="lesson-continue-btn">Continue</button>
-                    )}
-                    {lesson.status === 'locked' && <span className="lesson-locked">Locked</span>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Practice Section */}
-          <section className="practice-section">
-            <h3 className="section-title">✨ Quick Practice</h3>
-            <div className="practice-grid">
-              {dashboardData.practiceCards.map((card: PracticeCard) => (
-                <div key={card.id} className="practice-card" style={{ borderColor: card.color }}>
-                  <div className="practice-icon" style={{ backgroundColor: card.color }}>
-                    {card.icon}
-                  </div>
-                  <h4>{card.title}</h4>
-                  <p>{card.description}</p>
-                  <div className="practice-count">{card.count} exercises</div>
-                  <button className="practice-btn" style={{ backgroundColor: card.color }}>
-                    Start Practice
-                  </button>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <div className="dashboard-row">
-            {/* Analytics Section */}
-            <section className="analytics-section">
-              <h3 className="section-title">📈 Weekly Activity</h3>
-              <div className="chart-container">
-                <div className="bar-chart">
-                  {dashboardData.weeklyStats.map((stat: WeeklyData, index: number) => (
-                    <div key={index} className="bar-wrapper">
-                      <div className="bar-container">
-                        <div
-                          className="bar"
-                          style={{ height: `${(stat.minutes / maxWeeklyMinutes) * 100}%` }}
-                          title={`${stat.minutes} minutes`}
-                        >
-                          <span className="bar-value">{stat.minutes}</span>
-                        </div>
-                      </div>
-                      <div className="bar-label">{stat.day}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="analytics-summary">
-                <div className="summary-item">
-                  <span className="summary-label">Total this week:</span>
-                  <span className="summary-value">{dashboardData.analytics.totalStudyTime} min</span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">Average score:</span>
-                  <span className="summary-value">{dashboardData.analytics.averageScore}%</span>
-                </div>
-              </div>
-            </section>
-
-            {/* Goals Section */}
-            <section className="goals-section">
-              <h3 className="section-title">🎯 Daily Goal</h3>
-              <div className="goal-card">
-                <div className="goal-circle">
-                  <svg className="goal-svg" viewBox="0 0 120 120">
-                    <circle
-                      className="goal-bg"
-                      cx="60"
-                      cy="60"
-                      r="54"
-                      fill="none"
-                      stroke="#e0e0e0"
-                      strokeWidth="8"
-                    />
-                    <circle
-                      className="goal-progress"
-                      cx="60"
-                      cy="60"
-                      r="54"
-                      fill="none"
-                      stroke="#4CAF50"
-                      strokeWidth="8"
-                      strokeDasharray={`${2 * Math.PI * 54}`}
-                      strokeDashoffset={`${2 * Math.PI * 54 * (1 - dashboardData.dailyGoal.percentage / 100)}`}
-                      transform="rotate(-90 60 60)"
-                    />
-                  </svg>
-                  <div className="goal-text">
-                    <div className="goal-percentage">{dashboardData.dailyGoal.percentage}%</div>
-                    <div className="goal-subtitle">Complete</div>
-                  </div>
-                </div>
-                <p className="goal-description">
-                  {dashboardData.dailyGoal.current} / {dashboardData.dailyGoal.target} minutes
-                </p>
-              </div>
-
-              <h4 className="badges-title">🏆 Badges & Achievements</h4>
-              <div className="badges-grid">
-                {dashboardData.badges.map((badge: Badge) => (
-                  <div key={badge.id} className={`badge-item ${badge.earned ? 'earned' : 'locked'}`}>
-                    <div className="badge-icon">{badge.icon}</div>
-                    <div className="badge-name">{badge.name}</div>
-                  </div>
-                ))}
-              </div>
-            </section>
+    <div className="dash-page">
+      <div className="dash-container">
+        {/* 1. Overview Section */}
+        <section className="dash-overview">
+          <div className="dash-greeting-card">
+            <h1>Xin chào, {mockData.user.name}! 👋</h1>
+            <p>Hãy tiếp tục hành trình học tập của bạn hôm nay</p>
           </div>
+
+          <div className="dash-quick-stats">
+            <div className="dash-stat-card">
+              <div className="dash-stat-icon">🔥</div>
+              <div className="dash-stat-content">
+                <div className="dash-stat-value">{mockData.user.streak} ngày</div>
+                <div className="dash-stat-label">Chuỗi học liên tục</div>
+              </div>
+            </div>
+
+            <div className="dash-stat-card">
+              <div className="dash-stat-icon">🎯</div>
+              <div className="dash-stat-content">
+                <div className="dash-stat-value">{mockData.dailyGoal.current}/{mockData.dailyGoal.target} phút</div>
+                <div className="dash-stat-label">Mục tiêu hôm nay</div>
+                <div className="dash-goal-progress-bar">
+                  <div 
+                    className="dash-goal-progress-fill" 
+                    style={{ width: `${mockData.dailyGoal.percentage}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 3 & 4. Two Column Grid */}
+        <div className="dash-grid-2col">
+          {/* 3. Progress Section */}
+          <section className="dash-progress">
+            <h2 className="dash-section-title">📊 Tiến độ học tập</h2>
+            <div className="dash-progress-stats">
+              <div className="dash-progress-stat-item">
+                <div className="dash-progress-stat-icon">✅</div>
+                <div className="dash-progress-stat-content">
+                  <div className="dash-progress-stat-value">{mockData.stats.lessonsCompleted}</div>
+                  <div className="dash-progress-stat-label">Bài học hoàn thành</div>
+                </div>
+              </div>
+
+              <div className="dash-progress-stat-item">
+                <div className="dash-progress-stat-icon">📝</div>
+                <div className="dash-progress-stat-content">
+                  <div className="dash-progress-stat-value">{mockData.stats.vocabularyLearned}</div>
+                  <div className="dash-progress-stat-label">Từ vựng đã học</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="dash-skill-analysis">
+              <h4>Phân tích kỹ năng</h4>
+              <div className="dash-skill-item dash-skill-strong">
+                <span className="dash-skill-icon">💪</span>
+                <span>Điểm mạnh: {mockData.stats.strongSkills.join(', ')}</span>
+              </div>
+              <div className="dash-skill-item dash-skill-weak">
+                <span className="dash-skill-icon">📈</span>
+                <span>Cần cải thiện: {mockData.stats.weakSkills.join(', ')}</span>
+              </div>
+            </div>
+          </section>
+
+          {/* 4. Flashcard Section */}
+          <section className="dash-flashcard">
+            <h2 className="dash-section-title">🎴 Flashcard</h2>
+            <div className="dash-flashcard-widget">
+              <div className="dash-flashcard-icon-lg">🎴</div>
+              <div className="dash-flashcard-count">{mockData.flashcards.dueToday}</div>
+              <div className="dash-flashcard-label">thẻ cần ôn hôm nay</div>
+              <div className="dash-flashcard-time">⏱️ Khoảng 5-10 phút</div>
+              <button className="dash-btn-flashcard">Bắt đầu ôn tập →</button>
+              <div className="dash-flashcard-total">Tổng: {mockData.flashcards.total} thẻ</div>
+            </div>
+          </section>
         </div>
-      </main>
+
+        {/* 5. Schedule Section */}
+        <section className="dash-schedule">
+          <h2 className="dash-section-title">⏰ Lịch học & Nhắc nhở</h2>
+          <div className="dash-schedule-info">
+            <div className="dash-schedule-item">
+              <div className="dash-schedule-icon">🔔</div>
+              <div className="dash-schedule-content">
+                <div className="dash-schedule-label">Nhắc nhở hàng ngày</div>
+                <div className="dash-schedule-value">{mockData.learningSettings.reminderTime}</div>
+              </div>
+            </div>
+
+            <div className="dash-schedule-item">
+              <div className="dash-schedule-icon">📅</div>
+              <div className="dash-schedule-content">
+                <div className="dash-schedule-label">Mục tiêu tuần</div>
+                <div className="dash-schedule-value">{mockData.learningSettings.daysPerWeek} ngày/tuần</div>
+              </div>
+            </div>
+          </div>
+          <button className="dash-btn-settings">⚙️ Cài đặt lịch học</button>
+        </section>
+
+        {/* 6. Achievements Section */}
+        <section className="dash-achievements">
+          <h2 className="dash-section-title">🏆 Thành tích</h2>
+          <div className="dash-badges-grid">
+            {mockData.badges.map((badge) => (
+              <div 
+                key={badge.id} 
+                className={`dash-badge-card ${badge.earned ? 'dash-badge-earned' : 'dash-badge-locked'}`}
+              >
+                {badge.earned && <div className="dash-badge-checkmark">✓</div>}
+                <div className="dash-badge-icon-lg">{badge.icon}</div>
+                <div className="dash-badge-name">{badge.name}</div>
+                <div className="dash-badge-desc">{badge.description}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 7. Recommendations Section */}
+        <section className="dash-recommendations">
+          <h2 className="dash-section-title">💡 Gợi ý cho bạn</h2>
+          <div className="dash-rec-grid">
+            {mockData.recommendations.map((rec) => (
+              <div key={rec.id} className="dash-rec-card">
+                <span className="dash-rec-badge">{rec.type}</span>
+                <h3>{rec.title}</h3>
+                <div className="dash-rec-level">
+                  <span className="dash-level-icon">📊</span>
+                  <span>Cấp độ: {rec.level}</span>
+                </div>
+                <button className="dash-btn-try">Thử ngay →</button>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
     </div>
   );
 };
