@@ -69,7 +69,7 @@
 }
 
 .dash-greeting-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #6e85ee;
   padding: 2rem;
   border-radius: 20px;
   color: white;
@@ -113,6 +113,30 @@
 .dash-stat-icon {
   font-size: 2.5rem;
   flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  background: #ff6b6b;
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+  transition: all 0.3s ease;
+}
+
+.dash-stat-icon:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 6px 25px rgba(255, 107, 107, 0.5);
+}
+
+.dash-stat-icon-fire {
+  background: #ff6b6b !important;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4) !important;
+}
+
+.dash-stat-icon-fire:hover {
+  box-shadow: 0 6px 25px rgba(255, 107, 107, 0.6) !important;
 }
 
 .dash-stat-content {
@@ -141,7 +165,7 @@
 
 .dash-goal-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #48bb78, #38a169);
+  background: #48bb78;
   border-radius: 10px;
   transition: width 0.5s ease;
 }
@@ -181,9 +205,6 @@
   border-radius: 12px;
 }
 
-.dash-progress-stat-icon {
-  font-size: 2rem;
-}
 
 .dash-progress-stat-content {
   flex: 1;
@@ -247,7 +268,7 @@
 .dash-flashcard-widget {
   text-align: center;
   padding: 1.5rem;
-  background: linear-gradient(135deg, #fef5e7 0%, #f9e79f 100%);
+  background: #fef5e7;
   border-radius: 15px;
   border: 2px dashed #f39c12;
 }
@@ -277,7 +298,7 @@
 
 .dash-btn-flashcard {
   padding: 0.875rem 2rem;
-  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  background: #f39c12;
   color: white;
   border: none;
   border-radius: 12px;
@@ -374,66 +395,133 @@
 
 .dash-badges-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
 }
 
 .dash-badge-card {
-  position: relative;
-  padding: 1.25rem;
-  background: #f7fafc;
-  border-radius: 12px;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
   text-align: center;
   transition: all 0.3s ease;
+  position: relative;
   border: 2px solid #e2e8f0;
 }
 
+.dash-badge-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: #60a5fa;
+}
+
 .dash-badge-earned {
-  background: linear-gradient(135deg, #fef5e7 0%, #f9e79f 100%);
-  border-color: #f39c12;
-}
-
-.dash-badge-locked {
-  opacity: 0.4;
-  filter: grayscale(100%);
-}
-
-.dash-badge-earned:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(243, 156, 18, 0.3);
-}
-
-.dash-badge-icon-lg {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
+  background: #dbeafe;
+  border-color: #60a5fa;
 }
 
 .dash-badge-name {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 0.25rem;
-}
-
-.dash-badge-desc {
-  font-size: 0.75rem;
-  color: #718096;
+  color: #334155;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
 }
 
 .dash-badge-checkmark {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
-  width: 24px;
-  height: 24px;
-  background: #48bb78;
+  width: 26px;
+  height: 26px;
+  background: #10b981;
   color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 700;
+}
+
+.dash-achievement-section {
+  margin-bottom: 2rem;
+}
+
+.dash-achievement-section:last-child {
+  margin-bottom: 0;
+}
+
+.dash-achievement-subtitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.dash-badge-icon-img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  margin-bottom: 0.75rem;
+}
+
+.dash-badge-progress {
+  background: #f8fafc;
+}
+
+.dash-badge-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.dash-badge-progress-fill {
+  height: 100%;
+  background: #60a5fa;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.dash-badge-progress-text {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.dash-badge-progress-complete {
+  font-size: 0.875rem;
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.dash-achievement-toggle {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.dash-btn-toggle-achievements {
+  padding: 0.75rem 2rem;
+  background: white;
+  border: 2px solid #60a5fa;
+  border-radius: 10px;
+  color: #2563eb;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.dash-btn-toggle-achievements:hover {
+  background: #60a5fa;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.4);
 }
 
 /* ============================================
@@ -454,7 +542,7 @@
 
 .dash-rec-card {
   padding: 1.5rem;
-  background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+  background: #ebf8ff;
   border-radius: 15px;
   border: 2px solid #90cdf4;
   transition: all 0.3s ease;
@@ -513,6 +601,189 @@
 }
 
 /* ============================================
+   STUDY TIME STATISTICS
+   ============================================ */
+.dash-study-time {
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.dash-time-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.dash-time-card {
+  background: #667eea;
+  padding: 1.5rem;
+  border-radius: 16px;
+  text-align: center;
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.dash-time-card:hover {
+  transform: translateY(-4px);
+}
+
+.dash-time-label {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  margin-bottom: 0.5rem;
+}
+
+.dash-time-value {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+/* ============================================
+   LEARNING CHART
+   ============================================ */
+.dash-chart {
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.dash-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.dash-chart-select-wrapper {
+  position: relative;
+}
+
+.dash-chart-select {
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  background: white;
+  color: #334155;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23334155' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  min-width: 280px;
+}
+
+.dash-chart-select:hover {
+  border-color: #60a5fa;
+  background-color: #f8fafc;
+}
+
+.dash-chart-select:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+.dash-chart-container {
+  background: #f8fafc;
+  padding: 2rem;
+  border-radius: 16px;
+  margin-bottom: 1rem;
+}
+
+.dash-chart-grid {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 250px;
+}
+
+.dash-chart-bar-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100px;
+}
+
+.dash-chart-bar-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.dash-chart-bar {
+  width: 100%;
+  background: #60a5fa;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 0.5rem;
+}
+
+.dash-chart-bar:hover {
+  opacity: 0.8;
+  transform: scaleY(1.02);
+}
+
+.dash-chart-value {
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.dash-chart-label {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.dash-chart-footer {
+  text-align: center;
+  padding-top: 1rem;
+  border-top: 2px solid #e2e8f0;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.dash-chart-loading,
+.dash-chart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  padding: 2rem;
+  color: #64748b;
+}
+
+.dash-chart-loading .dash-loading-spinner {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 1rem;
+}
+
+.dash-chart-empty p {
+  font-size: 1rem;
+  color: #94a3b8;
+}
+
+/* ============================================
    RESPONSIVE DESIGN
    ============================================ */
 @media (max-width: 768px) {
@@ -553,5 +824,32 @@
 
   .dash-rec-grid {
     grid-template-columns: 1fr;
+  }
+
+  .dash-time-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dash-chart-select {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .dash-chart-grid {
+    height: 200px;
+    gap: 0.5rem;
+  }
+
+  .dash-chart-bar-wrapper {
+    max-width: 50px;
+  }
+
+  .dash-chart-label {
+    font-size: 0.75rem;
   }
 }

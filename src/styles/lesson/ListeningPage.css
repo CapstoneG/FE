@@ -97,6 +97,10 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
 }
 
 .filter-btn:hover {
@@ -210,6 +214,21 @@
   font-size: 0.9rem;
   color: #667eea;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.accent-tag {
+  background: #fef3c7;
+  padding: 6px 14px;
+  border-radius: 15px;
+  font-size: 0.9rem;
+  color: #d97706;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .duration {
@@ -281,6 +300,34 @@
   font-size: 2rem;
   color: #333;
   margin: 0;
+  flex: 1 1 100%;
+}
+
+.header-badges {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.type-badge,
+.accent-badge {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.type-badge {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+
+.accent-badge {
+  background: #fef3c7;
+  color: #d97706;
 }
 
 /* Audio Player */
@@ -518,6 +565,192 @@
   color: #4ade80;
   font-size: 1.3rem;
   margin-left: 10px;
+}
+
+/* Fill-in-the-blank styles */
+.fill-blank-container {
+  margin-top: 15px;
+}
+
+.sentence-display {
+  font-size: 1.1rem;
+  line-height: 2;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.blank-input {
+  display: inline-block;
+  padding: 8px 16px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  margin: 0 8px;
+  min-width: 150px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.blank-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.blank-input.correct {
+  border-color: #4ade80;
+  background: #f0fdf4;
+}
+
+.blank-input.incorrect {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.correct-answers {
+  padding: 15px;
+  background: #f0fdf4;
+  border-left: 4px solid #4ade80;
+  border-radius: 8px;
+  margin-top: 15px;
+  color: #166534;
+}
+
+/* Sentence ordering styles */
+.order-container {
+  margin-top: 15px;
+}
+
+.sentences-to-order {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.order-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.order-item.correct {
+  border-color: #4ade80;
+  background: #f0fdf4;
+}
+
+.order-item.incorrect {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.order-number {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: #667eea;
+  min-width: 30px;
+}
+
+.order-text {
+  flex: 1;
+  font-size: 1.05rem;
+  color: #333;
+}
+
+.order-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.order-controls button {
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  width: 35px;
+  height: 35px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.order-controls button:hover {
+  background: #5568d3;
+  transform: scale(1.1);
+}
+
+.correct-order {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f0fdf4;
+  border-left: 4px solid #4ade80;
+  border-radius: 8px;
+  color: #166534;
+}
+
+.correct-order div {
+  padding: 8px 0;
+  font-size: 1.05rem;
+}
+
+/* Dictation styles */
+.dictation-container {
+  margin-top: 15px;
+}
+
+.dictation-input {
+  width: 100%;
+  padding: 15px;
+  border: 2px solid #d1d5db;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.3s ease;
+}
+
+.dictation-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.dictation-input.correct {
+  border-color: #4ade80;
+  background: #f0fdf4;
+}
+
+.dictation-input.incorrect {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.correct-text {
+  margin-top: 15px;
+  padding: 20px;
+  background: #f0fdf4;
+  border-left: 4px solid #4ade80;
+  border-radius: 8px;
+  color: #166534;
+}
+
+.correct-text p {
+  margin: 10px 0;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.similarity-score {
+  font-weight: 600;
+  color: #059669;
+  margin-top: 10px;
 }
 
 /* Submit Button */

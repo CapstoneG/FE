@@ -11,7 +11,8 @@ import {
 } from '@/services/studyService';
 
 interface UseStudyEventsOptions {
-  lessonId: number;
+  lessonId?: number;
+  deckId?: number;
   activityType: ActivityType;
   skill: SkillType;
   autoStart?: boolean;
@@ -33,6 +34,7 @@ interface UseStudyEventsReturn {
 
 export const useStudyEvents = ({
   lessonId,
+  deckId,
   activityType,
   skill,
   autoStart = false,
@@ -146,12 +148,11 @@ export const useStudyEvents = ({
 
     try {
       isStartingRef.current = true;
-      console.log('[Study] Starting session...', { lessonId, activityType, skill });
-      
       const response = await startStudySession({
         activityType,
         skill,
         lessonId,
+        deckId,
       });
 
       console.log('[Study] Session started:', response.sessionId);
@@ -173,7 +174,7 @@ export const useStudyEvents = ({
     } finally {
       isStartingRef.current = false;
     }
-  }, [lessonId, activityType, skill, onSessionStart, onError, connectWebSocket]);
+  }, [lessonId, deckId, activityType, skill, onSessionStart, onError, connectWebSocket]);
 
   const endSession = useCallback(async () => {
     if (!sessionId || !isActive) {

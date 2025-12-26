@@ -112,10 +112,10 @@ const DialogueLesson: React.FC<DialogueLessonProps> = ({
   return (
     <div className="dialogue-lesson">
       <div className="dialogue-header">
-        <div className="header-content">
+        <div className="header-content-dialogue-lesson">
           <FaComments className="header-icon" size={32} />
           <div>
-            <h1 className="lesson-title">{title}</h1>
+            <h1 className="lesson-title-dialogue-lesson">{title}</h1>
             {description && <p className="lesson-description">{description}</p>}
           </div>
         </div>

@@ -1,15 +1,45 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import '@/styles/lesson/ListeningPage.css';
-import { FaHeadphones, FaPlay, FaPause, FaRedo, FaCheckCircle, FaClock, FaVolumeUp, FaStar } from 'react-icons/fa';
-import { MdSpeed } from 'react-icons/md';
-import { BiTrophy } from 'react-icons/bi';
+import { FaHeadphones, FaPlay, FaPause, FaRedo, FaCheckCircle, FaClock, FaVolumeUp, FaStar, FaMicrophone, FaComments, FaSpellCheck } from 'react-icons/fa';
+import { MdSpeed, MdOutlineQuiz } from 'react-icons/md';
+import { BiTrophy, BiListOl } from 'react-icons/bi';
+import { BsFileText } from 'react-icons/bs';
+import { useStudyEvents } from '@/hooks';
 
-interface Question {
+type ListeningType = 'pronunciation' | 'word' | 'sentence' | 'conversation' | 'dictation' | 'quiz';
+type AccentType = 'American' | 'British' | 'Australian' | 'Canadian';
+type QuestionType = 'mcq' | 'fill-blank' | 'order' | 'dictation';
+
+interface BaseQuestion {
   id: number;
+  type: QuestionType;
   text: string;
+}
+
+interface MCQQuestion extends BaseQuestion {
+  type: 'mcq';
   options: string[];
   correctAnswer: number;
 }
+
+interface FillBlankQuestion extends BaseQuestion {
+  type: 'fill-blank';
+  sentence: string; // sentence with ___ for blanks
+  correctAnswers: string[]; // array of correct answers for each blank
+}
+
+interface OrderQuestion extends BaseQuestion {
+  type: 'order';
+  sentences: string[]; // shuffled sentences
+  correctOrder: number[]; // indices of correct order
+}
+
+interface DictationQuestion extends BaseQuestion {
+  type: 'dictation';
+  correctText: string; // the correct text to type
+}
+
+type Question = MCQQuestion | FillBlankQuestion | OrderQuestion | DictationQuestion;
 
 interface ListeningExercise {
   id: number;
@@ -21,6 +51,8 @@ interface ListeningExercise {
   questions: Question[];
   topic: string;
   thumbnail: string;
+  listeningType: ListeningType;
+  accent: AccentType;
 }
 
 const ListeningPage: React.FC = () => {
@@ -30,11 +62,38 @@ const ListeningPage: React.FC = () => {
   const [duration, setDuration] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [showTranscript, setShowTranscript] = useState(false);
-  const [userAnswers, setUserAnswers] = useState<{ [key: number]: number }>({});
+  const [userAnswers, setUserAnswers] = useState<{ [key: number]: any }>({});
   const [showResults, setShowResults] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<string>('All');
+  const [selectedType, setSelectedType] = useState<string>('All');
   
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Track study session for listening exercise (only when exercise is selected)
+  const { startSession, endSession } = useStudyEvents({
+    lessonId: selectedExercise?.id || 0,
+    activityType: 'SKILL',
+    skill: 'LISTENING', 
+    autoStart: false,  // Manual start when exercise is selected
+    autoEnd: false,    // Manual end when user goes back
+    onStatsUpdate: (event) => {
+      console.log('[Listening] Stats updated:', event);
+    },
+  });
+
+  // Start session when exercise is selected
+  useEffect(() => {
+    if (selectedExercise) {
+      startSession();
+    }
+    
+    // Cleanup: end session when component unmounts or exercise changes
+    return () => {
+      if (selectedExercise) {
+        endSession();
+      }
+    };
+  }, [selectedExercise?.id]);
 
   const exercises: ListeningExercise[] = [
     {
@@ -45,22 +104,27 @@ const ListeningPage: React.FC = () => {
       audioUrl: '/audio/introduction.mp3',
       topic: 'Daily Life',
       thumbnail: "https://i.pinimg.com/1200x/67/2a/04/672a04cf6ce8229352b269bf1774cd0d.jpg",
+      listeningType: 'conversation',
+      accent: 'American',
       transcript: `Hello, my name is Sarah. I'm 25 years old and I live in New York. I work as a teacher at a local school. In my free time, I like reading books and playing tennis. I have a small dog named Max. He's very friendly and loves to play in the park.`,
       questions: [
         {
           id: 1,
+          type: 'mcq',
           text: "What is Sarah's job?",
           options: ['Doctor', 'Teacher', 'Engineer', 'Chef'],
           correctAnswer: 1
         },
         {
           id: 2,
-          text: "What is the name of her dog?",
-          options: ['Max', 'Rex', 'Buddy', 'Charlie'],
-          correctAnswer: 0
+          type: 'fill-blank',
+          text: "Fill in the blanks from the audio",
+          sentence: "Hello, my name is Sarah. I'm ___ years old and I work as a ___ at a local school.",
+          correctAnswers: ['25', 'teacher']
         },
         {
           id: 3,
+          type: 'mcq',
           text: "Where does Sarah live?",
           options: ['London', 'Paris', 'New York', 'Tokyo'],
           correctAnswer: 2
@@ -69,159 +133,167 @@ const ListeningPage: React.FC = () => {
     },
     {
       id: 2,
-      title: "Đặt món ăn tại nhà hàng",
+      title: "Phát âm từ vựng cơ bản",
       level: 'Beginner',
-      duration: '3:15',
-      audioUrl: '/audio/restaurant.mp3',
-      topic: 'Food & Dining',
+      duration: '2:00',
+      audioUrl: '/audio/pronunciation.mp3',
+      topic: 'Pronunciation',
       thumbnail: "https://i.pinimg.com/1200x/67/2a/04/672a04cf6ce8229352b269bf1774cd0d.jpg",
-      transcript: `Waiter: Good evening! Welcome to our restaurant. Are you ready to order?\nCustomer: Yes, I'd like to have the grilled chicken with vegetables, please.\nWaiter: Excellent choice! Would you like anything to drink?\nCustomer: I'll have a glass of orange juice, please.\nWaiter: Perfect. Your order will be ready in about 15 minutes.`,
+      listeningType: 'pronunciation',
+      accent: 'British',
+      transcript: `Listen and repeat: Apple, Banana, Orange, Grape, Watermelon. Pay attention to the vowel sounds and stress patterns.`,
       questions: [
         {
           id: 1,
-          text: "What did the customer order?",
-          options: ['Grilled fish', 'Grilled chicken', 'Beef steak', 'Pasta'],
+          type: 'mcq',
+          text: "Which word has the stress on the second syllable?",
+          options: ['Apple', 'Banana', 'Orange', 'Grape'],
           correctAnswer: 1
         },
         {
           id: 2,
-          text: "What drink did the customer choose?",
-          options: ['Water', 'Coffee', 'Orange juice', 'Tea'],
-          correctAnswer: 2
-        },
-        {
-          id: 3,
-          text: "How long will the food take?",
-          options: ['10 minutes', '15 minutes', '20 minutes', '30 minutes'],
-          correctAnswer: 1
+          type: 'dictation',
+          text: "Listen and type what you hear",
+          correctText: "apple banana orange"
         }
       ]
     },
     {
       id: 3,
-      title: "Cuộc trò chuyện tại sân bay",
-      level: 'Intermediate',
-      duration: '4:20',
-      audioUrl: '/audio/airport.mp3',
-      topic: 'Travel',
+      title: "Luyện nghe từ đơn",
+      level: 'Beginner',
+      duration: '3:00',
+      audioUrl: '/audio/words.mp3',
+      topic: 'Vocabulary',
       thumbnail: "https://i.pinimg.com/1200x/67/2a/04/672a04cf6ce8229352b269bf1774cd0d.jpg",
-      transcript: `Officer: Good morning. May I see your passport, please?\nTraveler: Of course, here it is.\nOfficer: Thank you. What's the purpose of your visit?\nTraveler: I'm here for a business conference.\nOfficer: How long will you be staying?\nTraveler: About five days.\nOfficer: Where will you be staying?\nTraveler: At the Grand Hotel downtown.\nOfficer: Alright, everything looks good. Enjoy your stay!`,
+      listeningType: 'word',
+      accent: 'American',
+      transcript: `Listen carefully to these words: Beautiful, Comfortable, Interesting, Difficult, Important`,
       questions: [
         {
           id: 1,
-          text: "Why is the traveler visiting?",
-          options: ['Vacation', 'Business conference', 'Visiting family', 'Study'],
-          correctAnswer: 1
+          type: 'mcq',
+          text: "Which word did you hear first?",
+          options: ['Beautiful', 'Comfortable', 'Interesting', 'Difficult'],
+          correctAnswer: 0
         },
         {
           id: 2,
-          text: "How long will the traveler stay?",
-          options: ['Three days', 'Five days', 'One week', 'Two weeks'],
-          correctAnswer: 1
-        },
-        {
-          id: 3,
-          text: "Where will the traveler stay?",
-          options: ['Friends house', 'Hostel', 'Grand Hotel', 'Apartment'],
-          correctAnswer: 2
+          type: 'fill-blank',
+          text: "Complete the word you heard",
+          sentence: "The lesson is very ___ and ___.",
+          correctAnswers: ['interesting', 'important']
         }
       ]
     },
     {
       id: 4,
-      title: "Phỏng vấn xin việc",
+      title: "Sắp xếp câu theo thứ tự",
       level: 'Intermediate',
-      duration: '5:00',
-      audioUrl: '/audio/interview.mp3',
-      topic: 'Business',
+      duration: '3:30',
+      audioUrl: '/audio/sentence-order.mp3',
+      topic: 'Grammar',
       thumbnail: "https://i.pinimg.com/1200x/67/2a/04/672a04cf6ce8229352b269bf1774cd0d.jpg",
-      transcript: `Interviewer: Thank you for coming in today. Can you tell me about your previous work experience?\nCandidate: Certainly. I worked at Tech Solutions for three years as a software developer. I was responsible for developing mobile applications and working with a team of five developers.\nInterviewer: That's impressive. What made you interested in this position?\nCandidate: I'm looking for new challenges and your company's innovative approach to technology really appeals to me.\nInterviewer: What would you say is your greatest strength?\nCandidate: I believe my ability to work well under pressure and my strong problem-solving skills are my greatest strengths.`,
+      listeningType: 'sentence',
+      accent: 'British',
+      transcript: `First, I wake up at 7 AM. Then, I have breakfast with my family. After that, I go to work by bus. Finally, I arrive at the office at 9 AM.`,
       questions: [
         {
           id: 1,
-          text: "How long did the candidate work at Tech Solutions?",
-          options: ['Two years', 'Three years', 'Four years', 'Five years'],
-          correctAnswer: 1
+          type: 'order',
+          text: "Arrange the sentences in the correct order you heard",
+          sentences: [
+            'I arrive at the office at 9 AM',
+            'I wake up at 7 AM',
+            'I have breakfast with my family',
+            'I go to work by bus'
+          ],
+          correctOrder: [1, 2, 3, 0]
         },
         {
           id: 2,
-          text: "What was the candidate's role at Tech Solutions?",
-          options: ['Project Manager', 'Software Developer', 'Designer', 'Sales Representative'],
+          type: 'mcq',
+          text: "What time does the person wake up?",
+          options: ['6 AM', '7 AM', '8 AM', '9 AM'],
           correctAnswer: 1
-        },
-        {
-          id: 3,
-          text: "What does the candidate consider their greatest strength?",
-          options: ['Leadership', 'Creativity', 'Working under pressure', 'Public speaking'],
-          correctAnswer: 2
         }
       ]
     },
     {
       id: 5,
-      title: "Bài giảng về biến đổi khí hậu",
+      title: "Bài chính tả nâng cao",
       level: 'Advanced',
-      duration: '6:30',
-      audioUrl: '/audio/climate.mp3',
-      topic: 'Academic',
+      duration: '4:00',
+      audioUrl: '/audio/dictation.mp3',
+      topic: 'Dictation',
       thumbnail: "https://i.pinimg.com/1200x/67/2a/04/672a04cf6ce8229352b269bf1774cd0d.jpg",
-      transcript: `Today's lecture focuses on the impacts of climate change on global ecosystems. Scientific evidence shows that average temperatures have risen by approximately 1.1 degrees Celsius since the pre-industrial era. This warming has led to significant changes in weather patterns, including more frequent extreme weather events, rising sea levels, and shifts in precipitation patterns. The melting of polar ice caps is accelerating at an alarming rate, contributing to sea-level rise that threatens coastal communities worldwide. Additionally, many species are struggling to adapt to these rapid changes, leading to biodiversity loss. It's crucial that we take immediate action to reduce greenhouse gas emissions and implement sustainable practices to mitigate these effects.`,
+      listeningType: 'dictation',
+      accent: 'American',
+      transcript: `The rapid advancement of technology has transformed the way we communicate and interact with each other in modern society.`,
       questions: [
         {
           id: 1,
-          text: "By how much have average temperatures risen since the pre-industrial era?",
-          options: ['0.5°C', '1.1°C', '1.5°C', '2.0°C'],
-          correctAnswer: 1
+          type: 'dictation',
+          text: "Listen and type exactly what you hear",
+          correctText: "The rapid advancement of technology has transformed the way we communicate"
         },
         {
           id: 2,
-          text: "What is mentioned as a consequence of polar ice cap melting?",
-          options: ['Stronger winds', 'Sea-level rise', 'Increased rainfall', 'Colder winters'],
-          correctAnswer: 1
-        },
-        {
-          id: 3,
-          text: "What does the lecture emphasize we need to do?",
-          options: ['Build more cities', 'Reduce greenhouse gas emissions', 'Increase population', 'Develop new technologies only'],
-          correctAnswer: 1
+          type: 'fill-blank',
+          text: "Complete the sentence",
+          sentence: "The rapid ___ of technology has ___ the way we communicate.",
+          correctAnswers: ['advancement', 'transformed']
         }
       ]
     },
     {
       id: 6,
-      title: "Thảo luận về công nghệ AI",
+      title: "Quiz nghe hiểu tổng hợp",
       level: 'Advanced',
-      duration: '7:00',
-      audioUrl: '/audio/ai-discussion.mp3',
-      topic: 'Technology',
+      duration: '5:00',
+      audioUrl: '/audio/quiz.mp3',
+      topic: 'Mixed Skills',
       thumbnail: "https://i.pinimg.com/1200x/67/2a/04/672a04cf6ce8229352b269bf1774cd0d.jpg",
-      transcript: `In recent years, artificial intelligence has made remarkable progress, transforming various industries from healthcare to finance. Machine learning algorithms can now analyze vast amounts of data to identify patterns that humans might miss. However, this technological advancement also raises important ethical questions. Privacy concerns are paramount as AI systems often require access to personal data. There's also the question of bias in AI algorithms, which can perpetuate existing societal inequalities if not carefully addressed. Furthermore, the potential impact on employment is significant, as automation could displace workers in certain sectors. Despite these challenges, AI also offers tremendous opportunities for innovation and solving complex problems. The key is to develop and implement AI responsibly, with appropriate regulations and ethical guidelines in place.`,
+      listeningType: 'quiz',
+      accent: 'Australian',
+      transcript: `In recent years, artificial intelligence has made remarkable progress, transforming various industries from healthcare to finance. Machine learning algorithms can now analyze vast amounts of data to identify patterns that humans might miss.`,
       questions: [
         {
           id: 1,
-          text: "What is mentioned as a major concern regarding AI?",
-          options: ['Cost', 'Privacy', 'Speed', 'Size'],
+          type: 'mcq',
+          text: "What has made remarkable progress?",
+          options: ['Biology', 'Artificial Intelligence', 'Chemistry', 'Physics'],
           correctAnswer: 1
         },
         {
           id: 2,
-          text: "What can AI algorithms analyze?",
-          options: ['Only numbers', 'Vast amounts of data', 'Simple patterns', 'Text only'],
-          correctAnswer: 1
+          type: 'fill-blank',
+          text: "Fill in the missing words",
+          sentence: "Machine learning algorithms can analyze ___ amounts of data to identify ___.",
+          correctAnswers: ['vast', 'patterns']
         },
         {
           id: 3,
-          text: "What does the speaker emphasize about AI development?",
-          options: ['It should be fast', 'It should be cheap', 'It should be responsible', 'It should be unlimited'],
-          correctAnswer: 2
+          type: 'order',
+          text: "Order these industries mentioned",
+          sentences: ['Finance', 'Healthcare', 'Education', 'Technology'],
+          correctOrder: [1, 0, 2, 3]
+        },
+        {
+          id: 4,
+          type: 'dictation',
+          text: "Type what you hear about AI",
+          correctText: "artificial intelligence has made remarkable progress"
         }
       ]
     }
   ];
 
-  const filteredExercises = selectedLevel === 'All' 
-    ? exercises 
-    : exercises.filter(ex => ex.level === selectedLevel);
+  const filteredExercises = exercises.filter(ex => {
+    const levelMatch = selectedLevel === 'All' || ex.level === selectedLevel;
+    const typeMatch = selectedType === 'All' || ex.listeningType === selectedType;
+    return levelMatch && typeMatch;
+  });
 
   const handlePlayPause = () => {
     if (audioRef.current) {
@@ -277,19 +349,97 @@ const ListeningPage: React.FC = () => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleFillBlankAnswer = (questionId: number, blankIndex: number, value: string) => {
+    if (!showResults) {
+      const currentAnswers = userAnswers[questionId] || [];
+      const newAnswers = [...currentAnswers];
+      newAnswers[blankIndex] = value;
+      setUserAnswers({ ...userAnswers, [questionId]: newAnswers });
+    }
+  };
+
+  const handleDictationAnswer = (questionId: number, value: string) => {
+    if (!showResults) {
+      setUserAnswers({ ...userAnswers, [questionId]: value });
+    }
+  };
+
+  const handleOrderAnswer = (questionId: number, order: number[]) => {
+    if (!showResults) {
+      setUserAnswers({ ...userAnswers, [questionId]: order });
+    }
+  };
+
+  const handleSubmit = async () => {
     setShowResults(true);
+    await endSession();
   };
 
   const calculateScore = () => {
     if (!selectedExercise) return 0;
     let correct = 0;
     selectedExercise.questions.forEach(q => {
-      if (userAnswers[q.id] === q.correctAnswer) {
-        correct++;
+      if (q.type === 'mcq') {
+        if (userAnswers[q.id] === q.correctAnswer) {
+          correct++;
+        }
+      } else if (q.type === 'fill-blank') {
+        const userAns = userAnswers[q.id] || [];
+        const allCorrect = q.correctAnswers.every((ans, idx) => 
+          userAns[idx]?.toLowerCase().trim() === ans.toLowerCase().trim()
+        );
+        if (allCorrect) correct++;
+      } else if (q.type === 'order') {
+        const userOrder = userAnswers[q.id] || [];
+        const isCorrect = JSON.stringify(userOrder) === JSON.stringify(q.correctOrder);
+        if (isCorrect) correct++;
+      } else if (q.type === 'dictation') {
+        const userText = (userAnswers[q.id] || '').toLowerCase().trim();
+        const correctText = q.correctText.toLowerCase().trim();
+        // Allow some flexibility in dictation - check if 80% similar
+        const similarity = calculateSimilarity(userText, correctText);
+        if (similarity >= 0.8) correct++;
       }
     });
     return (correct / selectedExercise.questions.length) * 100;
+  };
+
+  const calculateSimilarity = (str1: string, str2: string): number => {
+    const words1 = str1.split(/\s+/);
+    const words2 = str2.split(/\s+/);
+    const maxLen = Math.max(words1.length, words2.length);
+    if (maxLen === 0) return 1;
+    
+    let matches = 0;
+    words1.forEach(word => {
+      if (words2.includes(word)) matches++;
+    });
+    
+    return matches / maxLen;
+  };
+
+  const getListeningTypeIcon = (type: ListeningType) => {
+    switch (type) {
+      case 'pronunciation': return <FaMicrophone />;
+      case 'word': return <FaSpellCheck />;
+      case 'sentence': return <BsFileText />;
+      case 'conversation': return <FaComments />;
+      case 'dictation': return <BiListOl />;
+      case 'quiz': return <MdOutlineQuiz />;
+      default: return <FaHeadphones />;
+    }
+  };
+
+  const getListeningTypeName = (type: ListeningType) => {
+    const names = {
+      'pronunciation': 'Phát âm',
+      'word': 'Từ vựng',
+      'sentence': 'Câu',
+      'conversation': 'Hội thoại',
+      'dictation': 'Chính tả',
+      'quiz': 'Quiz tổng hợp'
+    };
+    return names[type];
   };
 
   const formatTime = (time: number) => {
@@ -298,7 +448,7 @@ const ListeningPage: React.FC = () => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const resetExercise = () => {
+  const resetExercise = async (shouldStartNewSession: boolean = true) => {
     setUserAnswers({});
     setShowResults(false);
     setCurrentTime(0);
@@ -308,6 +458,10 @@ const ListeningPage: React.FC = () => {
       audioRef.current.pause();
     }
     setIsPlaying(false);
+    
+    if (shouldStartNewSession && selectedExercise) {
+      await startSession();
+    }
   };
 
   return (
@@ -351,6 +505,52 @@ const ListeningPage: React.FC = () => {
                   Advanced
                 </button>
               </div>
+
+              <h2 style={{ marginTop: '2rem' }}>Chọn loại bài nghe</h2>
+              <div className="level-filters">
+                <button 
+                  className={`filter-btn ${selectedType === 'All' ? 'active' : ''}`}
+                  onClick={() => setSelectedType('All')}
+                >
+                  Tất cả
+                </button>
+                <button 
+                  className={`filter-btn ${selectedType === 'pronunciation' ? 'active' : ''}`}
+                  onClick={() => setSelectedType('pronunciation')}
+                >
+                  <FaMicrophone /> Phát âm
+                </button>
+                <button 
+                  className={`filter-btn ${selectedType === 'word' ? 'active' : ''}`}
+                  onClick={() => setSelectedType('word')}
+                >
+                  <FaSpellCheck /> Từ vựng
+                </button>
+                <button 
+                  className={`filter-btn ${selectedType === 'sentence' ? 'active' : ''}`}
+                  onClick={() => setSelectedType('sentence')}
+                >
+                  <BsFileText /> Câu
+                </button>
+                <button 
+                  className={`filter-btn ${selectedType === 'conversation' ? 'active' : ''}`}
+                  onClick={() => setSelectedType('conversation')}
+                >
+                  <FaComments /> Hội thoại
+                </button>
+                <button 
+                  className={`filter-btn ${selectedType === 'dictation' ? 'active' : ''}`}
+                  onClick={() => setSelectedType('dictation')}
+                >
+                  <BiListOl /> Chính tả
+                </button>
+                <button 
+                  className={`filter-btn ${selectedType === 'quiz' ? 'active' : ''}`}
+                  onClick={() => setSelectedType('quiz')}
+                >
+                  <MdOutlineQuiz /> Quiz
+                </button>
+              </div>
             </div>
 
             <div className="exercises-grid">
@@ -360,7 +560,7 @@ const ListeningPage: React.FC = () => {
                   className="exercise-card"
                   onClick={() => {
                     setSelectedExercise(exercise);
-                    resetExercise();
+                    resetExercise(false); // Don't start session here, useEffect will handle it
                   }}
                 >
                   <div className="exercise-thumbnail">
@@ -375,10 +575,16 @@ const ListeningPage: React.FC = () => {
                   <div className="exercise-info">
                     <h3>{exercise.title}</h3>
                     <div className="exercise-meta">
-                      <span className="topic-tag">{exercise.topic}</span>
+                      <span className="topic-tag">
+                        {getListeningTypeIcon(exercise.listeningType)} {getListeningTypeName(exercise.listeningType)}
+                      </span>
+                      <span className="accent-tag">🗣️ {exercise.accent}</span>
+                    </div>
+                    <div className="exercise-meta">
                       <span className="duration">
                         <FaClock /> {exercise.duration}
                       </span>
+                      <span className="topic-tag">{exercise.topic}</span>
                     </div>
                     <button className="start-btn">
                       <FaPlay /> Bắt đầu
@@ -392,9 +598,10 @@ const ListeningPage: React.FC = () => {
           <div className="exercise-player">
             <button 
               className="back-btn"
-              onClick={() => {
+              onClick={async () => {
+                await endSession(); // End study session before going back
                 setSelectedExercise(null);
-                resetExercise();
+                resetExercise(false); // Just reset UI, no need to start session
               }}
             >
               ← Quay lại
@@ -402,9 +609,17 @@ const ListeningPage: React.FC = () => {
 
             <div className="player-header">
               <h2>{selectedExercise.title}</h2>
-              <span className={`level-badge ${selectedExercise.level.toLowerCase()}`}>
-                {selectedExercise.level}
-              </span>
+              <div className="header-badges">
+                <span className={`level-badge ${selectedExercise.level.toLowerCase()}`}>
+                  {selectedExercise.level}
+                </span>
+                <span className="type-badge">
+                  {getListeningTypeIcon(selectedExercise.listeningType)} {getListeningTypeName(selectedExercise.listeningType)}
+                </span>
+                <span className="accent-badge">
+                  🗣️ {selectedExercise.accent}
+                </span>
+              </div>
             </div>
 
             <div className="audio-player">
@@ -463,34 +678,156 @@ const ListeningPage: React.FC = () => {
                   <p className="question-text">
                     <strong>Câu {qIndex + 1}:</strong> {question.text}
                   </p>
-                  <div className="options-list">
-                    {question.options.map((option, oIndex) => (
-                      <label
-                        key={oIndex}
-                        className={`option-label ${
-                          userAnswers[question.id] === oIndex ? 'selected' : ''
-                        } ${
-                          showResults && oIndex === question.correctAnswer
-                            ? 'correct'
-                            : showResults && userAnswers[question.id] === oIndex
-                            ? 'incorrect'
+                  
+                  {question.type === 'mcq' && (
+                    <div className="options-list">
+                      {question.options.map((option, oIndex) => (
+                        <label
+                          key={oIndex}
+                          className={`option-label ${
+                            userAnswers[question.id] === oIndex ? 'selected' : ''
+                          } ${
+                            showResults && oIndex === question.correctAnswer
+                              ? 'correct'
+                              : showResults && userAnswers[question.id] === oIndex
+                              ? 'incorrect'
+                              : ''
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name={`question-${question.id}`}
+                            checked={userAnswers[question.id] === oIndex}
+                            onChange={() => handleAnswerSelect(question.id, oIndex)}
+                            disabled={showResults}
+                          />
+                          <span className="option-text">{option}</span>
+                          {showResults && oIndex === question.correctAnswer && (
+                            <FaCheckCircle className="correct-icon" />
+                          )}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+
+                  {question.type === 'fill-blank' && (
+                    <div className="fill-blank-container">
+                      <div className="sentence-display">
+                        {question.sentence.split('___').map((part, idx, arr) => (
+                          <React.Fragment key={idx}>
+                            <span>{part}</span>
+                            {idx < arr.length - 1 && (
+                              <input
+                                type="text"
+                                className={`blank-input ${
+                                  showResults 
+                                    ? (userAnswers[question.id]?.[idx]?.toLowerCase().trim() === question.correctAnswers[idx].toLowerCase().trim() 
+                                        ? 'correct' 
+                                        : 'incorrect')
+                                    : ''
+                                }`}
+                                value={userAnswers[question.id]?.[idx] || ''}
+                                onChange={(e) => handleFillBlankAnswer(question.id, idx, e.target.value)}
+                                disabled={showResults}
+                                placeholder={`Blank ${idx + 1}`}
+                              />
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                      {showResults && (
+                        <div className="correct-answers">
+                          <strong>Đáp án đúng:</strong> {question.correctAnswers.join(', ')}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {question.type === 'order' && (
+                    <div className="order-container">
+                      <div className="sentences-to-order">
+                        {(userAnswers[question.id] || question.sentences.map((_, i) => i)).map((sentenceIdx: number, position: number) => (
+                          <div 
+                            key={position} 
+                            className={`order-item ${
+                              showResults 
+                                ? (question.correctOrder[position] === sentenceIdx ? 'correct' : 'incorrect')
+                                : ''
+                            }`}
+                          >
+                            <span className="order-number">{position + 1}.</span>
+                            <span className="order-text">{question.sentences[sentenceIdx]}</span>
+                            {!showResults && (
+                              <div className="order-controls">
+                                {position > 0 && (
+                                  <button 
+                                    onClick={() => {
+                                      const newOrder = [...(userAnswers[question.id] || question.sentences.map((_, i) => i))];
+                                      [newOrder[position], newOrder[position - 1]] = [newOrder[position - 1], newOrder[position]];
+                                      handleOrderAnswer(question.id, newOrder);
+                                    }}
+                                  >
+                                    ↑
+                                  </button>
+                                )}
+                                {position < question.sentences.length - 1 && (
+                                  <button 
+                                    onClick={() => {
+                                      const newOrder = [...(userAnswers[question.id] || question.sentences.map((_, i) => i))];
+                                      [newOrder[position], newOrder[position + 1]] = [newOrder[position + 1], newOrder[position]];
+                                      handleOrderAnswer(question.id, newOrder);
+                                    }}
+                                  >
+                                    ↓
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      {showResults && (
+                        <div className="correct-order">
+                          <strong>Thứ tự đúng:</strong>
+                          {question.correctOrder.map((idx, pos) => (
+                            <div key={pos}>{pos + 1}. {question.sentences[idx]}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {question.type === 'dictation' && (
+                    <div className="dictation-container">
+                      <textarea
+                        className={`dictation-input ${
+                          showResults 
+                            ? (calculateSimilarity(
+                                (userAnswers[question.id] || '').toLowerCase().trim(),
+                                question.correctText.toLowerCase().trim()
+                              ) >= 0.8 ? 'correct' : 'incorrect')
                             : ''
                         }`}
-                      >
-                        <input
-                          type="radio"
-                          name={`question-${question.id}`}
-                          checked={userAnswers[question.id] === oIndex}
-                          onChange={() => handleAnswerSelect(question.id, oIndex)}
-                          disabled={showResults}
-                        />
-                        <span className="option-text">{option}</span>
-                        {showResults && oIndex === question.correctAnswer && (
-                          <FaCheckCircle className="correct-icon" />
-                        )}
-                      </label>
-                    ))}
-                  </div>
+                        value={userAnswers[question.id] || ''}
+                        onChange={(e) => handleDictationAnswer(question.id, e.target.value)}
+                        disabled={showResults}
+                        placeholder="Type what you hear..."
+                        rows={3}
+                      />
+                      {showResults && (
+                        <div className="correct-text">
+                          <strong>Đáp án đúng:</strong>
+                          <p>{question.correctText}</p>
+                          <p className="similarity-score">
+                            Độ chính xác: {(calculateSimilarity(
+                              (userAnswers[question.id] || '').toLowerCase().trim(),
+                              question.correctText.toLowerCase().trim()
+                            ) * 100).toFixed(0)}%
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -512,7 +849,7 @@ const ListeningPage: React.FC = () => {
                     {calculateScore().toFixed(0)}%
                   </div>
                   <p>
-                    Bạn đã trả lời đúng {Object.values(userAnswers).filter((ans, idx) => ans === selectedExercise.questions[idx].correctAnswer).length}/{selectedExercise.questions.length} câu
+                    Bạn đã trả lời đúng {Math.round(calculateScore() * selectedExercise.questions.length / 100)}/{selectedExercise.questions.length} câu
                   </p>
                   <div className="score-stars">
                     {[1, 2, 3].map(star => (
@@ -525,7 +862,7 @@ const ListeningPage: React.FC = () => {
                 </div>
                 <button 
                   className="retry-btn"
-                  onClick={resetExercise}
+                  onClick={() => resetExercise(true)} // Start new session when retry
                 >
                   <FaRedo /> Làm lại
                 </button>

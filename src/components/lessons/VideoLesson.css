@@ -1,9 +1,10 @@
 .video-lesson-container {
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 30px;
   background: white;
-  min-height: 100vh;
+  box-sizing: border-box;
+  border-radius: 20px;
 }
 
 .video-wrapper {

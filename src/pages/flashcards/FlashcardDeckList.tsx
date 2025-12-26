@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '@/styles/flashcards/FlashcardDeckList.css';
-import { FaPlus, FaCopy, FaBook, FaClock, FaChartLine, FaLightbulb, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaCopy, FaBook, FaClock, FaChartLine, FaLightbulb, FaTrash, FaUndo, FaChartBar } from 'react-icons/fa';
 import { MdSchool } from 'react-icons/md';
 import { flashcardService } from '@/services/flashcards';
+import type { DeckStudyStatsResponse } from '@/services/flashcards';
 
 interface Deck {
   id: number;
@@ -32,6 +33,9 @@ const FlashcardDeckList: React.FC = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
   const [popupType, setPopupType] = useState<'success' | 'error'>('success');
+  const [showStatsPopup, setShowStatsPopup] = useState(false);
+  const [deckStats, setDeckStats] = useState<DeckStudyStatsResponse | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
 
   useEffect(() => {
     const fetchDecks = async () => {
@@ -49,7 +53,7 @@ const FlashcardDeckList: React.FC = () => {
   }, []);
 
   const handleStudyDeck = (deckId: number) => {
-    navigate(`/flashcard/study/${deckId}`);
+    navigate(`/flashcard/lesson/${deckId}`);
   };
 
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
@@ -91,16 +95,61 @@ const FlashcardDeckList: React.FC = () => {
     }
   };
 
+  const handleResetDeck = async (deckId: number) => {
+    if (!confirm('Bạn có chắc muốn reset tiến độ học của deck này? Tất cả tiến độ sẽ bị xóa!')) return;
+    
+    try {
+      await flashcardService.resetDeckProgress(deckId);
+      showNotification('Tiến độ deck đã được reset thành công!', 'success');
+      const data = await flashcardService.getDashboard();
+      setDeckData(data);
+    } catch (error) {
+      console.error('Error resetting deck:', error);
+      showNotification('Có lỗi xảy ra khi reset deck!', 'error');
+    }
+  };
+
+  const handleShowStats = async (deckId: number) => {
+    setLoadingStats(true);
+    setShowStatsPopup(true);
+    try {
+      const stats = await flashcardService.getDeckStats(deckId);
+      setDeckStats(stats);
+    } catch (error) {
+      console.error('Error fetching deck stats:', error);
+      showNotification('Có lỗi xảy ra khi tải thống kê!', 'error');
+      setShowStatsPopup(false);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
+  const handleCloseStats = () => {
+    setShowStatsPopup(false);
+    setDeckStats(null);
+  };
+
   const renderDeckCard = (deck: Deck, isSystemDeck: boolean = false) => {
     return (
       <div key={deck.id} className="deck-card">
         <div className="deck-card-header">
           <h3 className="deck-name">{deck.name}</h3>
-          {isSystemDeck && <span className="system-badge">Hệ thống</span>}
+          <div className="deck-header-right">
+            {!isSystemDeck && (
+              <button 
+                className="btn-stats-icon"
+                onClick={() => handleShowStats(deck.id)}
+                title="Xem thống kê chi tiết"
+              >
+                <FaChartBar />
+              </button>
+            )}
+            {isSystemDeck && <span className="system-badge">Hệ thống</span>}
+          </div>
         </div>
         <p className="deck-description">{deck.description}</p>
         
-        <div className="deck-stats">
+        <div className={`deck-stats ${isSystemDeck ? 'deck-stats-single' : ''}`}>
           <div className="stat-item">
             <FaBook className="stat-icon" />
             <div className="stat-info">
@@ -108,20 +157,24 @@ const FlashcardDeckList: React.FC = () => {
               <span className="stat-label">Tổng thẻ</span>
             </div>
           </div>
-          <div className="stat-item">
-            <FaClock className="stat-icon" />
-            <div className="stat-info">
-              <span className="stat-value">{deck.dueCards}</span>
-              <span className="stat-label">Cần học</span>
-            </div>
-          </div>
-          <div className="stat-item">
-            <FaChartLine className="stat-icon" />
-            <div className="stat-info">
-              <span className="stat-value">{deck.learnedCards}</span>
-              <span className="stat-label">Đã học</span>
-            </div>
-          </div>
+          {!isSystemDeck && (
+            <>
+              <div className={`stat-item ${deck.dueCards > 0 ? 'stat-item-highlight' : ''}`}>
+                <FaClock className="stat-icon" />
+                <div className="stat-info">
+                  <span className="stat-value">{deck.dueCards}</span>
+                  <span className="stat-label">Quá hạn</span>
+                </div>
+              </div>
+              <div className="stat-item">
+                <FaChartLine className="stat-icon" />
+                <div className="stat-info">
+                  <span className="stat-value">{deck.learnedCards}</span>
+                  <span className="stat-label">Đã học</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {deck.progressPercent > 0 && (
@@ -151,15 +204,22 @@ const FlashcardDeckList: React.FC = () => {
               <button 
                 className="btn-study"
                 onClick={() => handleStudyDeck(deck.id)}
-                disabled={deck.dueCards === 0}
+                disabled={deck.learnedCards === deck.totalCards}
               >
-                <MdSchool /> {deck.dueCards > 0 ? 'Học ngay' : 'Đã hoàn thành'}
+                <MdSchool /> {deck.learnedCards < deck.totalCards ? 'Học ngay' : 'Đã hoàn thành'}
+              </button>
+              <button 
+                className="btn-reset"
+                onClick={() => handleResetDeck(deck.id)}
+                title="Reset tiến độ"
+              >
+                <FaUndo />
               </button>
               <button 
                 className="btn-delete"
                 onClick={() => handleDeleteDeck(deck.id)}
               >
-                <FaTrash /> Xóa
+                <FaTrash />
               </button>
             </>
           )}
@@ -185,6 +245,86 @@ const FlashcardDeckList: React.FC = () => {
       {showPopup && (
         <div className={`popup-notification ${popupType}`}>
           <span>{popupMessage}</span>
+        </div>
+      )}
+
+      {/* Stats Popup */}
+      {showStatsPopup && (
+        <div className="stats-popup-overlay" onClick={handleCloseStats}>
+          <div className="stats-popup" onClick={(e) => e.stopPropagation()}>
+            <div className="stats-popup-header">
+              <h2>Thống kê chi tiết</h2>
+            </div>
+            
+            {loadingStats ? (
+              <div className="stats-loading">
+                <div className="spinner"></div>
+                <p>Đang tải thống kê...</p>
+              </div>
+            ) : deckStats ? (
+              <div className="stats-content">
+                <div className="stats-deck-name">{deckStats.deckName}</div>
+                
+                <div className="stats-grid">
+                  <div className="stats-card">
+                    <div className="stats-card-info">
+                      <div className="stats-card-value">{deckStats.totalCards}</div>
+                      <div className="stats-card-label">Tổng số thẻ</div>
+                    </div>
+                  </div>
+
+                  <div className="stats-card highlight-orange"> 
+                    <div className="stats-card-info">
+                      <div className="stats-card-value">{deckStats.learningCards}</div>
+                      <div className="stats-card-label">Đang học</div>
+                    </div>
+                  </div>
+
+                  <div className="stats-card highlight-blue">
+                    <div className="stats-card-info">
+                      <div className="stats-card-value">{deckStats.reviewCards}</div>
+                      <div className="stats-card-label">Đang ôn tập</div>
+                    </div>
+                  </div>
+
+                  <div className="stats-card highlight-red">
+                    <div className="stats-card-info">
+                      <div className="stats-card-value">{deckStats.dueTodayCards}</div>
+                      <div className="stats-card-label">Đến hạn ôn hôm nay</div>
+                    </div>
+                  </div>
+
+                  <div className="stats-card highlight-green">
+                    <div className="stats-card-info">
+                      <div className="stats-card-value">{deckStats.studiedToday}</div>
+                      <div className="stats-card-label">Đã học hôm nay</div>
+                    </div>
+                  </div>
+
+                  <div className="stats-card">
+                    <div className="stats-card-info">
+                      <div className="stats-card-value">{deckStats.progressPercent}%</div>
+                      <div className="stats-card-label">Hoàn thành</div>
+                    </div>
+                  </div>
+
+                  <div className="stats-card">
+                    <div className="stats-card-info">
+                      <div className="stats-card-value">{deckStats.totalReviews}</div>
+                      <div className="stats-card-label">Tổng lượt ôn</div>
+                    </div>
+                  </div>
+                </div>
+
+                {deckStats.lastStudyAt && (
+                  <div className="stats-last-study">
+                    <strong>Lần học gần nhất:</strong>{' '}
+                    {new Date(deckStats.lastStudyAt).toLocaleString('vi-VN')}
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </div>
         </div>
       )}
 

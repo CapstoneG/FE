@@ -37,6 +37,19 @@ export interface SubmitStudyData {
   quality: number;
 }
 
+export interface DeckStudyStatsResponse {
+  deckId: number;
+  deckName: string;
+  totalCards: number;
+  learningCards: number;
+  reviewCards: number;
+  dueTodayCards: number;
+  studiedToday: number;
+  progressPercent: number;
+  totalReviews: number;
+  lastStudyAt: string | null;
+}
+
 export interface ApiError {
   message: string;
   status: number;
@@ -244,6 +257,73 @@ class FlashcardService {
           status: response.status,
         } as ApiError;
       }
+    } catch (error) {
+      if (error && typeof error === 'object' && 'status' in error) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw {
+          message: 'Network error. Please check your connection.',
+          status: 0,
+        } as ApiError;
+      }
+      throw {
+        message: 'An unexpected error occurred',
+        status: 500,
+      } as ApiError;
+    }
+  }
+
+
+  async resetDeckProgress(deckId: number): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/decks/${deckId}/reset`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw {
+          message: errorData.message || 'Failed to reset deck progress',
+          status: response.status,
+        } as ApiError;
+      }
+    } catch (error) {
+      if (error && typeof error === 'object' && 'status' in error) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw {
+          message: 'Network error. Please check your connection.',
+          status: 0,
+        } as ApiError;
+      }
+      throw {
+        message: 'An unexpected error occurred',
+        status: 500,
+      } as ApiError;
+    }
+  }
+
+
+  async getDeckStats(deckId: number): Promise<DeckStudyStatsResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/decks/${deckId}/stats`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw {
+          message: errorData.message || 'Failed to fetch deck stats',
+          status: response.status,
+        } as ApiError;
+      }
+
+      const data = await response.json();
+      return data;
     } catch (error) {
       if (error && typeof error === 'object' && 'status' in error) {
         throw error;

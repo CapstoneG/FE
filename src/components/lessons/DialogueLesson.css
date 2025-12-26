@@ -4,6 +4,8 @@
   padding: 2rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .dialogue-header {
@@ -15,7 +17,7 @@
   gap: 1rem;
 }
 
-.header-content {
+.header-content-dialogue-lesson {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -26,7 +28,7 @@
   flex-shrink: 0;
 }
 
-.lesson-title {
+.lesson-title-dialogue-lesson {
   font-size: 2rem;
   font-weight: 700;
   color: #1f2937;
@@ -514,7 +516,7 @@
     align-items: flex-start;
   }
 
-  .lesson-title {
+  .lesson-title-dialogue-lesson {
     font-size: 1.5rem;
   }
 

@@ -15,11 +15,24 @@ interface LessonContent {
     word: string;
     meaning: string;
     example: string;
+    imageUrl?: string;
   }>;
   grammar?: {
     topic?: string;
     explanation?: string;
+    signalWord?: string;
     examples?: string[];
+    formulas?: Array<{
+      type: string;
+      formula: string;
+      description: string;
+      verbType: string;
+      examples: Array<{
+        sentence: string;
+        translation: string;
+        highlight: string;
+      }>;
+    }>;
   };
   dialogue?: Array<{
     speaker: string;
@@ -49,12 +62,17 @@ interface LessonContent {
 interface LessonData {
   id: number;
   title: string;
-  type: 'video' | 'exercise' | 'quiz';
+  type?: 'video' | 'exercise' | 'quiz';
   orderIndex: number;
   duration: number;
   completed: boolean;
-  exercises: any[];
-  content: string; // JSON string from API
+  exercises?: any[];
+  dialogues?: any[];
+  vocabularies?: any[];
+  grammar?: any;
+  video?: any;
+  studySkill?: string;
+  content?: string; // JSON string from API (optional)
   parsedContent?: LessonContent; // Parsed content object
 }
 
@@ -110,16 +128,19 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [replyText, setReplyText] = useState('');
   const [completed, setCompleted] = useState<boolean>(false);
+  const [showExercises, setShowExercises] = useState<boolean>(false);
+  const [learningCompleted, setLearningCompleted] = useState<boolean>(false);
 
   const STORAGE_KEY = `enghub.beginner.lesson${lessonId}.completed`;
+  const LEARNING_COMPLETED_KEY = `enghub.beginner.lesson${lessonId}.learning.completed`;
 
   useStudyEvents({
     lessonId,
     activityType: 'LESSON',
-    skill: 'VOCAB', 
+    skill: (lesson?.studySkill as any) || 'VOCAB', 
     autoStart: true,  
     autoEnd: true,    
-    onStatsUpdate: (event) => {
+    onStatsUpdate: () => {
     },
   });
 
@@ -173,16 +194,33 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
         const data = responseData.result;
 
         console.log('Fetched lesson data:', data);
-        // Parse content JSON
-        if (data.content) {
-          data.parsedContent = JSON.parse(data.content);
-        }
+
+        data.parsedContent = {
+          vocabulary: data.vocabularies || [],
+          grammar: data.grammar || null,
+          dialogue: data.dialogues || [],
+          video: data.video || null,
+          quiz: [], 
+          exercise: data.exercises && data.exercises.length > 0 ? {
+            type: 'fill-blank',
+            instruction: 'Điền vào chỗ trống',
+            questions: data.exercises.map((ex: any) => {
+              const metadata = ex.metadata ? JSON.parse(ex.metadata) : {};
+              return {
+                sentence: ex.question,
+                answer: metadata.answer || ''
+              };
+            })
+          } : null
+        };
         
         setLesson(data);
         
-        // Load completion status
         const saved = localStorage.getItem(STORAGE_KEY);
         setCompleted(saved === 'true');
+        
+        const learningSaved = localStorage.getItem(LEARNING_COMPLETED_KEY);
+        setLearningCompleted(learningSaved === 'true');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
@@ -218,17 +256,32 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
 
   if (error || !lesson) {
     return (
-      <div className="beginner-lesson-error">
-        <button onClick={onBack} className="back-btn">
+      <div className="beginner-lesson-error-lesson-detail">
+        <button onClick={onBack} className="back-btn-lesson-detail">
           <FaArrowLeft /> <span>Quay lại khóa Beginner</span>
         </button>
-        <h1 className="title">Không thể tải bài học</h1>
+        <h1 className="title-lesson-detail">Không thể tải bài học</h1>
         <p>{error || 'Bài học không tồn tại'}</p>
       </div>
     );
   }
 
-  const renderLessonContent = () => {
+  const handleStartExercises = () => {
+    setShowExercises(true);
+    window.scrollTo(0, 0);
+  };
+
+  const handleBackToLesson = () => {
+    setShowExercises(false);
+    window.scrollTo(0, 0);
+  };
+
+  const handleCompleteLearning = () => {
+    setLearningCompleted(true);
+    localStorage.setItem(LEARNING_COMPLETED_KEY, 'true');
+  };
+
+  const renderExercisesPage = () => {
     const content = lesson?.parsedContent || {};
     
     // Prepare quiz questions if available
@@ -243,14 +296,118 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
         }))
       : [];
 
+    const hasExercises = hasData(questions) || (hasData(content.exercise) && hasData(content.exercise!.questions));
+
+    if (!hasExercises) {
+      return (
+        <div className="beginner-lesson-detail">
+          <div className="lesson-header-lesson-detail">
+            <button onClick={handleBackToLesson} className="back-btn-lesson-detail">
+              <FaArrowLeft /> <span>Quay lại bài học</span>
+            </button>
+            <h1 className="lesson-title-lesson-detail">Bài tập - {lesson.title}</h1>
+          </div>
+          <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+            <p style={{ fontSize: '1.2rem', color: '#6b7280' }}>Bài học này chưa có bài tập</p>
+            <button onClick={handleBackToLesson} className="primary-btn-lesson-detail" style={{ marginTop: '1rem' }}>
+              Quay lại bài học
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="beginner-lesson-detail">
         {/* Back Button */}
-        <div className="lesson-header">
-          <button onClick={onBack} className="back-btn">
+        <div className="lesson-header-lesson-detail">
+          <button onClick={handleBackToLesson} className="back-btn-lesson-detail">
+            <FaArrowLeft /> <span>Quay lại bài học</span>
+          </button>
+          <h1 className="lesson-title-lesson-detail">Bài tập - {lesson.title}</h1>
+        </div>
+
+        {/* Quiz Section */}
+        {hasData(questions) && (
+          <ExerciseLesson
+            title="Bài kiểm tra"
+            description="Hoàn thành các câu hỏi dưới đây để kiểm tra hiểu biết"
+            instructions="Chọn đáp án đúng cho mỗi câu hỏi"
+            questions={questions}
+            passingScore={80}
+            onComplete={async (score, passed) => {
+              if (passed) {
+                setCompleted(true);
+                localStorage.setItem(STORAGE_KEY, 'true');
+                
+                // Call API to save score
+                try {
+                  const token = localStorage.getItem('authToken');
+                  await fetch(`http://localhost:8080/api/v1/lessons/${lessonId}/complete`, {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${token}`,
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      score: score,
+                    }),
+                  });
+                } catch (error) {
+                  console.error('Error saving lesson completion:', error);
+                }
+              }
+            }}
+          />
+        )}
+
+        {/* Fill-in-blank Exercise Section */}
+        {hasData(content.exercise) && hasData(content.exercise!.questions) && (
+          <section className="lesson-section-lesson-detail exercise-section-lesson-detail">
+            <div className="section-header-lesson-detail">
+              <FaPencilAlt className="section-icon-lesson-detail" />
+              <h2>Bài tập điền từ</h2>
+            </div>
+            <div className="exercise-content-lesson-detail">
+              {content.exercise!.instruction && (
+                <p className="exercise-instruction-lesson-detail">{content.exercise!.instruction}</p>
+              )}
+              <div className="exercise-questions-lesson-detail">
+                {content.exercise!.questions!.map((item, index) => (
+                  <div key={index} className="exercise-question-lesson-detail">
+                    <p><strong>{index + 1}.</strong> {item.sentence}</p>
+                    <p className="exercise-answer-lesson-detail"><em>Đáp án: {item.answer}</em></p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Back button at bottom */}
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <button onClick={handleBackToLesson} className="back-btn-lesson-detail">
+            <FaArrowLeft /> Quay lại bài học
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderLessonContent = () => {
+    const content = lesson?.parsedContent || {};
+    
+    const hasLearningContent = hasData(content.video) || hasData(content.vocabulary) || 
+                               hasData(content.grammar) || hasData(content.dialogue);
+
+    return (
+      <div className="beginner-lesson-detail">
+        {/* Back Button */}
+        <div className="lesson-header-lesson-detail">
+          <button onClick={onBack} className="back-btn-lesson-detail">
             <FaArrowLeft /> <span>Quay lại khóa Beginner</span>
           </button>
-          <h1 className="lesson-title">{lesson.title}</h1>
+          <h1 className="lesson-title-lesson-detail">{lesson.title}</h1>
         </div>
 
         {/* Video Section */}
@@ -306,65 +463,26 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
             dialogue={content.dialogue!}
             onComplete={() => {
               console.log('Completed dialogue section');
+              handleCompleteLearning();
             }}
           />
         )}
 
-        {/* Quiz Section */}
-        {hasData(questions) && (
-          <ExerciseLesson
-            title="Bài kiểm tra"
-            description="Hoàn thành các câu hỏi dưới đây để kiểm tra hiểu biết"
-            instructions="Chọn đáp án đúng cho mỗi câu hỏi"
-            questions={questions}
-            passingScore={80}
-            onComplete={async (score, passed) => {
-              if (passed) {
-                setCompleted(true);
-                localStorage.setItem(STORAGE_KEY, 'true');
-                
-                // Call API to save score
-                try {
-                  const token = localStorage.getItem('authToken');
-                  await fetch(`http://localhost:8080/api/v1/lessons/${lessonId}/complete`, {
-                    method: 'POST',
-                    headers: {
-                      'Authorization': `Bearer ${token}`,
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      score: score,
-                    }),
-                  });
-                } catch (error) {
-                  console.error('Error saving lesson completion:', error);
-                }
-              }
-            }}
-          />
-        )}
-
-        {/* Fill-in-blank Exercise Section */}
-        {hasData(content.exercise) && hasData(content.exercise!.questions) && (
-          <section className="lesson-section exercise-section">
-            <div className="section-header">
-              <FaPencilAlt className="section-icon" />
-              <h2>Bài tập điền từ</h2>
+        {/* Button to start exercises */}
+        {hasLearningContent && (
+          <div className="lesson-completion-section-lesson-detail">
+            <div className="completion-card-lesson-detail">
+              <h3>🎉 Hoàn thành phần học!</h3>
+              <p>Bạn đã hoàn thành tất cả nội dung bài học. Hãy làm bài tập để kiểm tra kiến thức của mình!</p>
+              <button 
+                onClick={handleStartExercises}
+                className="start-exercises-btn-lesson-detail"
+              >
+                <FaPencilAlt style={{ marginRight: '8px' }} />
+                Làm bài tập ngay
+              </button>
             </div>
-            <div className="exercise-content">
-              {content.exercise!.instruction && (
-                <p className="exercise-instruction">{content.exercise!.instruction}</p>
-              )}
-              <div className="exercise-questions">
-                {content.exercise!.questions!.map((item, index) => (
-                  <div key={index} className="exercise-question">
-                    <p><strong>{index + 1}.</strong> {item.sentence}</p>
-                    <p className="exercise-answer"><em>Đáp án: {item.answer}</em></p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
+          </div>
         )}
       </div>
     );
@@ -516,7 +634,7 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
 
   const renderStars = (rating: number, interactive: boolean = false, onChange?: (rating: number) => void) => {
     return (
-      <div className="stars-rating">
+      <div className="stars-rating-lesson-detail">
         {[1, 2, 3, 4, 5].map((star) => (
           <FaStar
             key={star}
@@ -531,20 +649,20 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
   };
 
   const renderComment = (comment: Comment, isReply: boolean = false, parentId?: number) => (
-    <div key={comment.id} className={`comment-item ${isReply ? 'reply' : ''}`}>
-      <div className="comment-avatar">
-        <div className="avatar-placeholder">{comment.authorName.charAt(0).toUpperCase()}</div>
+    <div key={comment.id} className={`comment-item-lesson-detail ${isReply ? 'reply-lesson-detail' : ''}`}>
+      <div className="comment-avatar-lesson-detail">
+        <div className="avatar-placeholder-lesson-detail">{comment.authorName.charAt(0).toUpperCase()}</div>
       </div>
-      <div className="comment-content">
-        <div className="comment-header">
-          <h4 className="comment-author">{comment.authorName}</h4>
+      <div className="comment-content-lesson-detail">
+        <div className="comment-header-lesson-detail">
+          <h4 className="comment-author-lesson-detail">{comment.authorName}</h4>
           {comment.rating > 0 && renderStars(comment.rating)}
-          <span className="comment-date">{getRelativeTime(comment.date)}</span>
+          <span className="comment-date-lesson-detail">{getRelativeTime(comment.date)}</span>
         </div>
-        <p className="comment-text">{comment.content}</p>
-        <div className="comment-actions">
+        <p className="comment-text-lesson-detail">{comment.content}</p>
+        <div className="comment-actions-lesson-detail">
           <button 
-            className={`like-btn ${comment.liked ? 'liked' : ''}`}
+            className={`like-btn-lesson-detail ${comment.liked ? 'liked-lesson-detail' : ''}`}
             onClick={() => handleLikeComment(comment.id, isReply, parentId)}
           >
             <FaThumbsUp size={14} />
@@ -552,7 +670,7 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
           </button>
           {!isReply && (
             <button 
-              className="reply-btn"
+              className="reply-btn-lesson-detail"
               onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
             >
               <FaReply size={14} />
@@ -563,18 +681,18 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
 
         {/* Reply Form */}
         {replyingTo === comment.id && (
-          <div className="reply-form">
+          <div className="reply-form-lesson-detail">
             <textarea
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               placeholder="Viết câu trả lời..."
               rows={3}
             />
-            <div className="reply-form-actions">
-              <button onClick={() => setReplyingTo(null)} className="cancel-btn">
+            <div className="reply-form-actions-lesson-detail">
+              <button onClick={() => setReplyingTo(null)} className="cancel-btn-lesson-detail">
                 Hủy
               </button>
-              <button onClick={() => handleAddReply(comment.id)} className="submit-btn">
+              <button onClick={() => handleAddReply(comment.id)} className="submit-btn-lesson-detail">
                 Gửi
               </button>
             </div>
@@ -583,7 +701,7 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
 
         {/* Replies */}
         {comment.replies && comment.replies.length > 0 && (
-          <div className="comment-replies">
+          <div className="comment-replies-lesson-detail">
             {comment.replies.map(reply => renderComment(reply, true, comment.id))}
           </div>
         )}
@@ -591,19 +709,24 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
     </div>
   );
 
+  // Show exercises page if user clicked "Làm bài tập"
+  if (showExercises) {
+    return renderExercisesPage();
+  }
+
   return (
     <div className="beginner-lesson-detail">
       {renderLessonContent()}
       
       {/* Comments Section */}
-      <section className="lesson-comments-section">
-        <div className="comments-container">
-          <h2 className="comments-title">Nhận xét của học viên ({comments.length})</h2>
+      <section className="lesson-comments-section-lesson-detail">
+        <div className="comments-container-lesson-detail">
+          <h2 className="comments-title-lesson-detail">Nhận xét của học viên ({comments.length})</h2>
           
           {/* Add Comment Form */}
-          <div className="add-comment-form">
+          <div className="add-comment-form-lesson-detail">
             <h3>Để lại nhận xét của bạn</h3>
-            <div className="rating-input">
+            <div className="rating-input-lesson-detail">
               <label>Đánh giá:</label>
               {renderStars(newRating, true, setNewRating)}
             </div>
@@ -613,13 +736,13 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
               placeholder="Chia sẻ trải nghiệm của bạn về bài học này..."
               rows={4}
             />
-            <button onClick={handleAddComment} className="submit-comment-btn">
+            <button onClick={handleAddComment} className="submit-comment-btn-lesson-detail">
               Gửi nhận xét
             </button>
           </div>
 
           {/* Comments List */}
-          <div className="comments-list">
+          <div className="comments-list-lesson-detail">
             {commentsLoading ? (
               <p style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>Đang tải nhận xét...</p>
             ) : comments.length === 0 ? (

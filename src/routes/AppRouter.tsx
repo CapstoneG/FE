@@ -20,7 +20,7 @@ import SpeakingTrainingPage from '@/pages/SpeakingTrainingPage';
 import SpeakingPracticePage from '@/pages/SpeakingPracticePage';
 import DashboardPage from '@/pages/DashboardPage';
 import FlashcardDeckList from '@/pages/flashcards/FlashcardDeckList';
-import FlashcardStudy from '@/pages/flashcards/FlashcardStudy';
+import FlashcardLesson from '@/pages/flashcards/FlashcardLesson';
 
 const AppRouter: React.FC = () => {
   return (
@@ -75,8 +75,11 @@ const AppRouter: React.FC = () => {
       <Route path="/flashcard" element={
         <FlashcardDeckList />
       } />
-      <Route path="/flashcard/study/:deckId" element={
+      {/* <Route path="/flashcard/study/:deckId" element={
         <FlashcardStudy />
+      } /> */}
+      <Route path="/flashcard/lesson/:deckId" element={
+        <FlashcardLesson />
       } />
       <Route path="/skills/listening" element={
         <Layout>
