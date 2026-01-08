@@ -15,6 +15,7 @@ interface AuthContextType {
   logout: () => void;
   register: (userData: RegisterData) => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
+  updateLevelPlacement: (data: Partial<User>) => Promise<void>;
 }
 
 interface RegisterData {
@@ -150,6 +151,21 @@ export const useAuthLogic = () => {
     }
   };
 
+  const updateLevelPlacement = async (data: Partial<User>) => {
+    if (!user) return;
+    
+    try {
+      const updateData: any = {};
+      if (data.level !== undefined) updateData.level = data.level;
+      
+      await userService.updateLevelPlacement(updateData);
+      setUser({ ...user, ...updateData });
+    } catch (error) {
+      console.error('Profile update failed:', error);
+      throw error;
+    }
+  };
+
   return {
     user,
     isLoading,
@@ -159,6 +175,7 @@ export const useAuthLogic = () => {
     logout,
     register,
     updateProfile,
+    updateLevelPlacement
   };
 };
 

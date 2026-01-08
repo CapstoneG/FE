@@ -1,5 +1,6 @@
 import React from 'react';
 import { Footer } from './Footer';
+import { ChatBot } from '../common/ChatBot';
 import './Layout.css';
 
 interface LayoutProps {
@@ -28,6 +29,9 @@ export const Layout: React.FC<LayoutProps> = ({
       </main>
       
       {showFooter && <Footer />}
+      
+      {/* Chat Widget */}
+      <ChatBot />
     </div>
   );
 };

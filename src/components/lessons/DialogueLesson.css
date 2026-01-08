@@ -1,554 +1,912 @@
-.dialogue-lesson {
-  background: white;
-  border-radius: 12px;
+/* Dialogue Lesson Container */
+.dialogue-lesson-container-dialogue-lesson {
+  width: 100%;
+  min-height: 600px;
   padding: 2rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  background: #f8fafc;
+  border-radius: 24px;
   box-sizing: border-box;
-  max-width: 100%;
 }
 
-.dialogue-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* Header Section */
+.dialogue-header-dialogue-lesson {
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
   margin-bottom: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
 }
 
 .header-content-dialogue-lesson {
   display: flex;
-  align-items: center;
-  gap: 1rem;
+  align-items: flex-start;
+  gap: 1.5rem;
+  flex: 1;
 }
 
-.header-icon {
-  color: #10b981;
+.header-icon-dialogue-lesson {
+  font-size: 2.5rem;
+  color: #334155;
   flex-shrink: 0;
 }
 
-.lesson-title-dialogue-lesson {
-  font-size: 2rem;
+.header-text-dialogue-lesson {
+  flex: 1;
+}
+
+.dialogue-title-dialogue-lesson {
+  font-size: 1.8rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.dialogue-description-dialogue-lesson {
+  font-size: 1rem;
+  color: #64748b;
   margin: 0;
+  line-height: 1.6;
 }
 
-.lesson-description {
-  color: #6b7280;
-  margin: 0.5rem 0 0 0;
-}
-
-.view-mode-toggle {
-  display: flex;
-  gap: 0.5rem;
-  background: #f3f4f6;
-  padding: 0.25rem;
-  border-radius: 0.5rem;
-}
-
-.toggle-btn {
-  padding: 0.5rem 1.5rem;
-  border: none;
-  background: transparent;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  font-weight: 500;
-  color: #6b7280;
-  transition: all 0.2s;
-}
-
-.toggle-btn.active {
-  background: white;
-  color: #10b981;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.progress-section {
-  background: #f8fafc;
-  padding: 1.5rem;
-  border-radius: 0.75rem;
-  border: 1px solid #e2e8f0;
-  margin-bottom: 2rem;
-}
-
-.progress-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.progress-text {
-  font-weight: 500;
-  color: #4b5563;
-}
-
-.progress-percent {
-  font-weight: 700;
-  color: #10b981;
-  font-size: 1.25rem;
-}
-
-.progress-bar {
-  height: 0.75rem;
-  background: #e5e7eb;
-  border-radius: 9999px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
-  transition: width 0.5s ease;
-  border-radius: 9999px;
-}
-
-/* Conversation Mode */
-.conversation-mode {
-  background: white;
-  border-radius: 1rem;
-  padding: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.dialogue-controls {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.play-all-btn {
+/* Auto Play Button */
+.auto-play-button-dialogue-lesson {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: #10b981;
-  border: none;
-  border-radius: 0.5rem;
+  gap: 0.75rem;
+  padding: 1rem 1.75rem;
+  background: #334155;
   color: white;
+  border: none;
+  border-radius: 12px;
   font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(51, 65, 85, 0.3);
+  flex-shrink: 0;
 }
 
-.play-all-btn:hover {
-  background: #059669;
+.auto-play-button-dialogue-lesson:hover {
+  background: #1e293b;
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 16px rgba(51, 65, 85, 0.4);
 }
 
-.play-all-btn.playing {
-  background: #ef4444;
-}
-
-.play-all-btn.playing:hover {
+.auto-play-button-dialogue-lesson.playing-dialogue-lesson {
   background: #dc2626;
 }
 
-.reset-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+.auto-play-button-dialogue-lesson.playing-dialogue-lesson:hover {
+  background: #b91c1c;
+}
+
+/* Dialogue Content */
+.dialogue-content-dialogue-lesson {
   background: white;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.5rem;
-  color: #6b7280;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
 }
 
-.reset-btn:hover {
-  border-color: #10b981;
-  color: #10b981;
+.dialogue-list-dialogue-lesson {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
-.translation-toggle {
+/* Dialogue Item */
+.dialogue-item-dialogue-lesson {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dialogue-item-dialogue-lesson.playing-dialogue-lesson {
+  transform: scale(1.02);
+}
+
+.dialogue-item-dialogue-lesson.auto-playing-dialogue-lesson .dialogue-bubble-dialogue-lesson {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+/* Speaker Badge */
+.dialogue-speaker-badge-dialogue-lesson {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  font-weight: 500;
-  color: #6b7280;
-  user-select: none;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 3px solid;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.translation-toggle input {
+.dialogue-item-dialogue-lesson:hover .dialogue-speaker-badge-dialogue-lesson {
+  transform: scale(1.1);
+}
+
+.speaker-label-dialogue-lesson {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+}
+
+/* Dialogue Bubble */
+.dialogue-bubble-dialogue-lesson {
+  flex: 1;
+  position: relative;
+  padding: 1.25rem 1.5rem;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dialogue-item-dialogue-lesson:hover .dialogue-bubble-dialogue-lesson {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.dialogue-item-dialogue-lesson.completed-dialogue-lesson .dialogue-bubble-dialogue-lesson {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.dialogue-text-dialogue-lesson {
+  font-size: 1.1rem;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1.6;
+  padding-right: 3rem;
+}
+
+/* Speak Button */
+.speak-button-dialogue-lesson {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  background: #334155;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  padding: 0;
+}
+
+.speak-button-dialogue-lesson svg {
   width: 18px;
   height: 18px;
 }
 
-.dialogue-conversation {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+.speak-button-dialogue-lesson:hover:not(:disabled) {
+  background: #1e293b;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.dialogue-bubble {
-  background: #f9fafb;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  border: 2px solid #e5e7eb;
-  transition: all 0.3s;
+.speak-button-dialogue-lesson:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.dialogue-bubble.active {
-  border-color: #10b981;
-  background: #ecfdf5;
-  transform: scale(1.02);
-  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
-}
-
-.dialogue-bubble.played {
+/* Role Selection Section */
+.role-selection-dialogue-lesson {
   background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
 }
 
-.bubble-header {
+.role-selection-title-dialogue-lesson {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.speaker-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 700;
-  font-size: 1.25rem;
-  flex-shrink: 0;
-}
-
-.speaker-info {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.speaker-name {
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.played-icon {
-  color: #10b981;
-}
-
-.speak-btn-inline {
-  background: #eff6ff;
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #2563eb;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.speak-btn-inline:hover {
-  background: #dbeafe;
-  transform: scale(1.1);
-}
-
-.bubble-content {
-  padding-left: 3.75rem;
-}
-
-.dialogue-text {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.125rem;
-  line-height: 1.8;
-  color: #1f2937;
-}
-
-.dialogue-translation {
-  margin: 0.75rem 0 0 0;
-  padding: 0.75rem;
-  background: white;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  color: #6b7280;
-  border-left: 3px solid #10b981;
-}
-
-/* Roleplay Mode */
-.roleplay-mode {
-  background: white;
-  border-radius: 1rem;
-  padding: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.role-selection h3 {
-  margin: 0 0 1.5rem 0;
-  font-size: 1.25rem;
-  color: #1f2937;
-}
-
-.role-buttons {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.role-btn {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.5rem;
-  background: white;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.role-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.role-btn.selected {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.role-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.roleplay-instructions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  background: #fef3c7;
-  padding: 1rem 1.5rem;
-  border-radius: 0.5rem;
-  margin-bottom: 2rem;
-  border-left: 4px solid #f59e0b;
-}
-
-.roleplay-instructions svg {
-  color: #f59e0b;
   font-size: 1.5rem;
-  flex-shrink: 0;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 1.5rem 0;
 }
 
-.roleplay-instructions p {
-  margin: 0;
-  color: #78350f;
-  line-height: 1.6;
-}
-
-.roleplay-dialogue {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.roleplay-line {
+.role-buttons-dialogue-lesson {
   display: flex;
   gap: 1rem;
-  align-items: flex-start;
+  flex-wrap: wrap;
 }
 
-.roleplay-line.user-role {
-  flex-direction: row-reverse;
+.role-button-dialogue-lesson {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: white;
+  border: 3px solid;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 1rem;
+  font-weight: 600;
 }
 
-.roleplay-avatar {
-  width: 48px;
-  height: 48px;
+.role-button-dialogue-lesson:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.role-badge-dialogue-lesson {
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: 700;
-  font-size: 1.25rem;
-  flex-shrink: 0;
+  font-size: 1.1rem;
 }
 
-.roleplay-bubble {
-  flex: 1;
-  max-width: 80%;
-  background: #f9fafb;
-  padding: 1rem 1.5rem;
-  border-radius: 1rem;
-  border: 2px solid #e5e7eb;
+/* Role-Play Mode */
+.roleplay-mode-dialogue-lesson {
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
 }
 
-.user-role .roleplay-bubble {
-  background: #ecfdf5;
-  border-color: #10b981;
-}
-
-.roleplay-header {
+.roleplay-header-dialogue-lesson {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
 }
 
-.roleplay-speaker {
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.your-turn-badge {
-  background: #10b981;
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.roleplay-text {
-  margin: 0 0 0.75rem 0;
-  font-size: 1.125rem;
-  line-height: 1.8;
-  color: #1f2937;
-}
-
-.play-other-btn {
-  display: inline-flex;
+.roleplay-info-dialogue-lesson {
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 0.375rem;
-  color: #2563eb;
-  font-size: 0.875rem;
-  font-weight: 500;
+  gap: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.current-role-badge-dialogue-lesson {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.3rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.exit-roleplay-button-dialogue-lesson {
+  padding: 0.75rem 1.5rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.play-other-btn:hover {
-  background: #dbeafe;
-  transform: translateY(-1px);
+.exit-roleplay-button-dialogue-lesson:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
 }
 
-/* Tips Section */
-.dialogue-tips {
+/* Current Dialogue Section */
+.current-dialogue-dialogue-lesson {
+  background: #f8fafc;
+  padding: 2rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  border: 2px solid #e2e8f0;
+}
+
+.original-text-dialogue-lesson {
+  margin-bottom: 1.5rem;
+}
+
+.original-text-dialogue-lesson h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #334155;
+  margin: 0 0 0.75rem 0;
+}
+
+.original-text-dialogue-lesson p {
+  font-size: 1.2rem;
+  color: #1e293b;
+  line-height: 1.8;
+  margin: 0;
+  padding: 1rem;
+  background: white;
+  border-radius: 10px;
+  border-left: 4px solid #3b82f6;
+}
+
+/* Recording Controls */
+.recording-controls-dialogue-lesson {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+}
+
+.bot-speaking-dialogue-lesson {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 2rem;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.bot-speaking-icon-dialogue-lesson {
+  font-size: 1.3rem;
+  animation: pulse-icon 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-icon {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+}
+
+.record-button-dialogue-lesson,
+.stop-button-dialogue-lesson {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 2rem;
+  border: none;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.record-button-dialogue-lesson {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+.record-button-dialogue-lesson:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.record-button-dialogue-lesson:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.stop-button-dialogue-lesson {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  animation: pulse-recording 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-recording {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Comparison Result */
+.comparison-result-dialogue-lesson {
   margin-top: 2rem;
 }
 
-.tip-card {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  border-radius: 1rem;
-  padding: 2rem;
+.user-transcript-dialogue-lesson {
+  margin-bottom: 1.5rem;
 }
 
-.tip-card h4 {
-  margin: 0 0 1rem 0;
-  font-size: 1.25rem;
-  color: #1e40af;
+.user-transcript-dialogue-lesson h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #334155;
+  margin: 0 0 0.75rem 0;
 }
 
-.tip-card ul {
+.user-transcript-dialogue-lesson p {
+  font-size: 1.1rem;
+  color: #475569;
+  line-height: 1.8;
   margin: 0;
-  padding-left: 1.5rem;
-  list-style: none;
+  padding: 1rem;
+  background: white;
+  border-radius: 10px;
+  border-left: 4px solid #10b981;
 }
 
-.tip-card ul li {
-  position: relative;
-  padding-left: 1.5rem;
+/* Accuracy Score */
+.accuracy-score-dialogue-lesson {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 2rem 0;
+}
+
+.score-circle-dialogue-lesson {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981, #059669);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+  animation: score-appear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes score-appear {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.score-value-dialogue-lesson {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: white;
+}
+
+.score-label-dialogue-lesson {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* Highlighted Text */
+.highlighted-text-dialogue-lesson {
+  margin: 2rem 0;
+}
+
+.highlighted-text-dialogue-lesson h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #334155;
+  margin: 0 0 0.75rem 0;
+}
+
+.comparison-text-dialogue-lesson {
+  font-size: 1.2rem;
+  line-height: 2;
+  margin: 0;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 10px;
+  border: 2px solid #e2e8f0;
+}
+
+.legend-dialogue-lesson {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 8px;
+}
+
+.legend-item-dialogue-lesson {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.legend-correct-dialogue-lesson,
+.legend-incorrect-dialogue-lesson {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+}
+
+.legend-correct-dialogue-lesson {
+  background: #10b981;
+}
+
+.legend-incorrect-dialogue-lesson {
+  background: #ef4444;
+}
+
+/* Next Turn Button */
+.next-turn-button-dialogue-lesson {
+  width: 100%;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 2rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.next-turn-button-dialogue-lesson:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+/* Context Dialogues */
+.context-dialogues-dialogue-lesson {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #e2e8f0;
+}
+
+.context-dialogues-dialogue-lesson h4 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 1.5rem 0;
+}
+
+.context-item-dialogue-lesson {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
   margin-bottom: 0.75rem;
-  color: #1e3a8a;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.context-item-dialogue-lesson.current-dialogue-lesson {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+.context-item-dialogue-lesson.user-role-dialogue-lesson {
+  background: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.context-speaker-badge-dialogue-lesson {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.context-item-dialogue-lesson p {
+  flex: 1;
+  margin: 0;
+  color: #334155;
   line-height: 1.6;
 }
 
-.tip-card ul li:before {
-  content: '✓';
-  position: absolute;
-  left: 0;
-  color: #2563eb;
+.context-score-dialogue-lesson {
+  padding: 0.5rem 1rem;
+  background: #10b981;
+  color: white;
+  border-radius: 8px;
   font-weight: 700;
+  font-size: 0.95rem;
 }
 
-.tip-card ul li:last-child {
-  margin-bottom: 0;
-}
-
-.tip-card strong {
-  color: #1e40af;
-}
-
-/* Responsive */
+/* Responsive Design */
 @media (max-width: 768px) {
-  .dialogue-header {
+  .dialogue-lesson-container-dialogue-lesson {
+    padding: 1rem;
+  }
+
+  .dialogue-header-dialogue-lesson {
     flex-direction: column;
-    align-items: flex-start;
+    gap: 1rem;
   }
 
-  .lesson-title-dialogue-lesson {
-    font-size: 1.5rem;
+  .role-buttons-dialogue-lesson {
+    flex-direction: column;
   }
 
-  .dialogue-controls {
+  .role-button-dialogue-lesson {
     width: 100%;
   }
 
-  .play-all-btn,
-  .reset-btn {
-    flex: 1;
+  .roleplay-header-dialogue-lesson {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .score-circle-dialogue-lesson {
+    width: 100px;
+    height: 100px;
+  }
+
+  .score-value-dialogue-lesson {
+    font-size: 2rem;
+  }
+}
+
+.speak-button-dialogue-lesson:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dialogue-item-dialogue-lesson.playing-dialogue-lesson .speak-button-dialogue-lesson {
+  background: #10b981;
+  animation: pulse-dialogue-lesson 1s infinite;
+}
+
+@keyframes pulse-dialogue-lesson {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Completed Icon */
+.completed-icon-dialogue-lesson {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 0.75rem;
+  color: #10b981;
+  font-size: 1.25rem;
+}
+
+.volume-icon-dialogue-lesson {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  color: #ddc7c3;
+  font-size: 1.25rem;
+}
+
+/* Progress Section */
+.progress-section-dialogue-lesson {
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+}
+
+.progress-bar-dialogue-lesson {
+  width: 100%;
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.progress-fill-dialogue-lesson {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #059669);
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 6px;
+}
+
+.progress-text-dialogue-lesson {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Completion Message */
+.completion-message-dialogue-lesson {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.25rem 2rem;
+  background: #f0fdf4;
+  color: #059669;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1.05rem;
+  border: 2px solid #10b981;
+  animation: slideIn-dialogue-lesson 0.5s ease-out;
+}
+
+@keyframes slideIn-dialogue-lesson {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.completion-icon-dialogue-lesson {
+  font-size: 1.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dialogue-lesson-container-dialogue-lesson {
+    padding: 1.5rem;
+  }
+
+  .dialogue-header-dialogue-lesson {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1.5rem;
+  }
+
+  .header-content-dialogue-lesson {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .dialogue-title-dialogue-lesson {
+    font-size: 1.5rem;
+  }
+
+  .auto-play-button-dialogue-lesson {
+    width: 100%;
     justify-content: center;
+    padding: 1rem;
   }
 
-  .bubble-content {
-    padding-left: 0;
+  .dialogue-content-dialogue-lesson {
+    padding: 1.5rem;
   }
 
-  .role-buttons {
-    grid-template-columns: 1fr;
+  .dialogue-list-dialogue-lesson {
+    gap: 1.25rem;
   }
 
-  .roleplay-bubble {
-    max-width: 85%;
-  }
-
-  .roleplay-line {
-    gap: 0.5rem;
-  }
-
-  .roleplay-avatar {
+  .dialogue-speaker-badge-dialogue-lesson {
     width: 40px;
     height: 40px;
+  }
+
+  .speaker-label-dialogue-lesson {
+    font-size: 1.1rem;
+  }
+
+  .dialogue-text-dialogue-lesson {
+    font-size: 1rem;
+    padding-right: 2.5rem;
+  }
+
+  .speak-button-dialogue-lesson {
+    width: 36px;
+    height: 36px;
     font-size: 1rem;
   }
+}
+
+@media (max-width: 480px) {
+  .dialogue-lesson-container-dialogue-lesson {
+    padding: 1rem;
+    border-radius: 16px;
+  }
+
+  .dialogue-header-dialogue-lesson,
+  .dialogue-content-dialogue-lesson {
+    padding: 1rem;
+    border-radius: 16px;
+  }
+
+  .dialogue-title-dialogue-lesson {
+    font-size: 1.3rem;
+  }
+
+  .dialogue-item-dialogue-lesson {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .dialogue-speaker-badge-dialogue-lesson {
+    align-self: flex-start;
+  }
+
+  .dialogue-bubble-dialogue-lesson {
+    padding: 1rem;
+  }
+
+  .dialogue-text-dialogue-lesson {
+    font-size: 0.95rem;
+    padding-right: 2rem;
+  }
+
+  .speak-button-dialogue-lesson {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+
+  .completed-icon-dialogue-lesson {
+    bottom: 0.75rem !important;
+    right: 0.75rem !important;
+    font-size: 1.1rem;
+  }
+
+  .completion-message-dialogue-lesson {
+    padding: 1rem 1.5rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* Custom Scrollbar */
+.dialogue-lesson-container-dialogue-lesson ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dialogue-lesson-container-dialogue-lesson ::-webkit-scrollbar-track {
+  background: #e2e8f0;
+  border-radius: 4px;
+}
+
+.dialogue-lesson-container-dialogue-lesson ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.dialogue-lesson-container-dialogue-lesson ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

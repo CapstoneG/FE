@@ -386,24 +386,6 @@ const DashboardPage: React.FC = () => {
             </div>
           )}
         </section>
-
-        {/* 7. Recommendations Section */}
-        <section className="dash-recommendations">
-          <h2 className="dash-section-title">💡 Gợi ý cho bạn</h2>
-          <div className="dash-rec-grid">
-            {mockData.recommendations.map((rec) => (
-              <div key={rec.id} className="dash-rec-card">
-                <span className="dash-rec-badge">{rec.type}</span>
-                <h3>{rec.title}</h3>
-                <div className="dash-rec-level">
-                  <span className="dash-level-icon">📊</span>
-                  <span>Cấp độ: {rec.level}</span>
-                </div>
-                <button className="dash-btn-try">Thử ngay →</button>
-              </div>
-            ))}
-          </div>
-        </section>
       </div>
     </div>
   );

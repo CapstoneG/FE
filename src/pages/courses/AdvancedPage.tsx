@@ -143,25 +143,18 @@ const AdvancedPage: React.FC = () => {
             Làm chủ tiếng Anh ở trình độ chuyên gia và thành thạo như người bản xứ
           </p>
           <div className="hero-stats">
-            <div className="stat-item">
-              <FaBook size={24} color="#7c3aed" />
+            <div className="stat-item-advanced">
+              <FaBook size={24} color="#d7c9f3ff" />
               <div>
                 <h3>6 Modules</h3>
                 <p>Chuyên sâu cao cấp</p>
               </div>
             </div>
-            <div className="stat-item">
-              <FaClock size={24} color="#7c3aed" />
+            <div className="stat-item-advanced">
+              <FaClock size={24} color="#d7c9f3ff" />
               <div>
                 <h3>50+ Giờ</h3>
                 <p>Học thuật & Thực hành</p>
-              </div>
-            </div>
-            <div className="stat-item">
-              <BiTrophy size={24} color="#7c3aed" />
-              <div>
-                <h3>Chứng chỉ</h3>
-                <p>Trình độ chuyên gia</p>
               </div>
             </div>
           </div>
@@ -183,38 +176,15 @@ const AdvancedPage: React.FC = () => {
             <OverviewCard
               icon={<FaGraduationCap size={30} />}
               iconColor="#7c3aed"
-              title="Ngữ pháp chuyên sâu"
-              description="Làm chủ các cấu trúc phức tạp, inversion, cleft sentences và subjunctive mood"
+              title="Ngữ pháp nâng cao"
+              description="Làm chủ các cấu trúc ngữ pháp phức tạp như mệnh đề quan hệ nâng cao, câu bị động, đảo ngữ và câu gián tiếp."
             />
+
             <OverviewCard
               icon={<RiEnglishInput size={30} />}
               iconColor="#7c3aed"
               title="Từ vựng học thuật"
-              description="Hơn 2000 từ vựng chuyên ngành, academic word list và collocations"
-            />
-            <OverviewCard
-              icon={<FaComments size={30} />}
-              iconColor="#7c3aed"
-              title="Giao tiếp chuyên nghiệp"
-              description="Thuyết trình, đàm phán và thảo luận các chủ đề phức tạp tự tin"
-            />
-            <OverviewCard
-              icon={<FaPencilAlt size={30} />}
-              iconColor="#7c3aed"
-              title="Viết học thuật"
-              description="Viết luận, nghiên cứu và phân tích phê bình ở trình độ cao"
-            />
-            <OverviewCard
-              icon={<FaBriefcase size={30} />}
-              iconColor="#7c3aed"
-              title="Business English"
-              description="Giao tiếp trong môi trường doanh nghiệp quốc tế chuyên nghiệp"
-            />
-            <OverviewCard
-              icon={<FaAward size={30} />}
-              iconColor="#7c3aed"
-              title="Chuẩn bị thi"
-              description="IELTS 7.5+, TOEFL 100+, CAE với chiến lược hiệu quả"
+              description="Mở rộng vốn từ vựng học thuật, từ đồng nghĩa, sắc thái nghĩa và cách sử dụng trong ngữ cảnh chuyên sâu."
             />
           </div>
         </div>
@@ -271,7 +241,7 @@ const AdvancedPage: React.FC = () => {
         <div className="content-container">
           <h2 className="section-title">Nội dung khóa học</h2>
           <p className="section-subtitle">
-            6 modules toàn diện với hơn 50 giờ học chuyên sâu
+            2 modules toàn diện với hơn 20 giờ học chuyên sâu
           </p>
           
           <div className="modules-list">

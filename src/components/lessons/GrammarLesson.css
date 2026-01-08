@@ -1,489 +1,510 @@
-.grammar-lesson {
-  background: white;
-  border-radius: 12px;
+/* Grammar Lesson Container */
+.grammar-lesson-container-grammar-lesson {
+  width: 100%;
+  min-height: 600px;
   padding: 2rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  background: #f8fafc;
+  border-radius: 24px;
   box-sizing: border-box;
-  max-width: 100%;
 }
 
-.grammar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* Header Section */
+.grammar-header-grammar-lesson {
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
   margin-bottom: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
 }
 
-.header-content {
+.header-content-grammar-lesson {
   display: flex;
-  align-items: center;
-  gap: 1rem;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
-.header-icon {
-  color: #7c3aed;
+.header-icon-grammar-lesson {
+  font-size: 2.5rem;
+  color: #334155;
   flex-shrink: 0;
 }
 
-.lesson-title {
-  font-size: 2rem;
+.header-text-grammar-lesson {
+  flex: 1;
+}
+
+.grammar-title-grammar-lesson {
+  font-size: 1.8rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.grammar-description-grammar-lesson {
+  font-size: 1rem;
+  color: #64748b;
   margin: 0;
+  line-height: 1.6;
 }
 
-.lesson-description {
-  color: #6b7280;
-  margin: 0.5rem 0 0 0;
+/* Signal Words */
+.signal-words-grammar-lesson {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: #f1f5f9;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
 }
 
-.understood-badge {
+.signal-icon-grammar-lesson {
+  color: #f59e0b;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.signal-label-grammar-lesson {
+  font-weight: 600;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.signal-text-grammar-lesson {
+  color: #1e293b;
+  font-style: italic;
+  font-size: 0.95rem;
+}
+
+/* Verb Type Tabs */
+.verb-type-tabs-grammar-lesson {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.verb-type-tab-grammar-lesson {
+  flex: 1;
+  padding: 1rem 2rem;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.verb-type-tab-grammar-lesson:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.verb-type-tab-grammar-lesson.active-verb-type-grammar-lesson {
+  background: #1e293b;
+  color: white;
+  border-color: #1e293b;
+  box-shadow: 0 4px 12px rgba(30, 41, 59, 0.3);
+}
+
+/* Formula Tabs */
+.formula-tabs-grammar-lesson {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.formula-tab-grammar-lesson {
+  padding: 0.875rem 1.75rem;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #d1fae5;
-  color: #065f46;
-  padding: 0.5rem 1rem;
-  border-radius: 9999px;
-  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.grammar-content-wrapper {
-  background: white;
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+.formula-tab-grammar-lesson:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
 }
 
-/* Topic Section */
-.grammar-topic-section {
-  padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.formula-tab-grammar-lesson.active-grammar-lesson {
+  background: #334155;
+  color: white;
+  border-color: #334155;
+}
+
+.formula-tab-grammar-lesson.completed-grammar-lesson {
+  border-color: #10b981;
+}
+
+.formula-tab-grammar-lesson.completed-grammar-lesson:not(.active-grammar-lesson) {
+  background: #f0fdf4;
+  color: #059669;
+}
+
+.tab-check-icon-grammar-lesson {
+  color: #10b981;
+  font-size: 1rem;
+}
+
+.formula-tab-grammar-lesson.active-grammar-lesson .tab-check-icon-grammar-lesson {
   color: white;
 }
 
-.topic-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  opacity: 0.9;
-}
-
-.topic-icon {
-  font-size: 1.25rem;
-}
-
-.topic-header h2 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.topic-title {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0;
-  line-height: 1.3;
-}
-
-/* Explanation Section */
-.grammar-explanation-section {
+/* Formula Content */
+.formula-content-grammar-lesson {
+  background: white;
   padding: 2rem;
-  border-bottom: 2px solid #f3f4f6;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
 }
 
-.explanation-header {
+.formula-card-grammar-lesson {
+  margin-bottom: 2rem;
+}
+
+.formula-header-grammar-lesson {
   display: flex;
-  align-items: center;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
 }
 
-.explanation-icon {
-  color: #f59e0b;
-  font-size: 1.5rem;
+.formula-type-badge-grammar-lesson {
+  padding: 0.5rem 1rem;
+  background: #334155;
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
-.explanation-header h2 {
-  margin: 0;
+.verb-type-badge-grammar-lesson {
+  padding: 0.5rem 1rem;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid #cbd5e1;
+}
+
+/* Formula Box */
+.formula-box-grammar-lesson {
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 2px solid #cbd5e1;
+  margin-bottom: 1.5rem;
+}
+
+.formula-title-grammar-lesson {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 0.75rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.formula-text-grammar-lesson {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1f2937;
-}
-
-.explanation-content {
-  background: #fef3c7;
-  border-left: 4px solid #f59e0b;
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-}
-
-.explanation-content p {
+  color: #1e293b;
   margin: 0;
-  font-size: 1.125rem;
-  line-height: 1.8;
-  color: #374151;
+  font-family: 'Courier New', monospace;
 }
 
 /* Examples Section */
-.grammar-examples-section {
-  padding: 2rem;
+.examples-section-grammar-lesson {
+  margin-bottom: 2rem;
 }
 
-.examples-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.examples-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
+.examples-title-grammar-lesson {
+  font-size: 1.1rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #1e293b;
+  margin: 0 0 1rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.examples-controls {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.control-btn {
-  padding: 0.5rem 1rem;
-  background: white;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #6b7280;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.control-btn:hover {
-  border-color: #7c3aed;
-  color: #7c3aed;
-  background: #f5f3ff;
-}
-
-.examples-list {
+.examples-list-grammar-lesson {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.example-card {
-  background: #f9fafb;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.75rem;
-  overflow: hidden;
-  transition: all 0.3s;
-}
-
-.example-card.expanded {
-  border-color: #7c3aed;
-  box-shadow: 0 4px 6px rgba(124, 58, 237, 0.1);
-}
-
-.example-header {
+.example-card-grammar-lesson {
   display: flex;
-  align-items: center;
   gap: 1rem;
-  padding: 1rem 1.5rem;
-  cursor: pointer;
-  transition: background 0.2s;
+  padding: 1.25rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.example-header:hover {
-  background: #f3f4f6;
+.example-card-grammar-lesson:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  transform: translateX(4px);
 }
 
-.example-number {
-  flex-shrink: 0;
+.example-number-grammar-lesson {
   width: 32px;
   height: 32px;
-  background: #7c3aed;
+  background: #334155;
   color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
+  flex-shrink: 0;
 }
 
-.example-preview {
+.example-content-grammar-lesson {
   flex: 1;
 }
 
-.example-text {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #1f2937;
+.example-sentence-grammar-lesson {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
   line-height: 1.6;
 }
 
-.expand-btn {
-  flex-shrink: 0;
-  background: transparent;
-  border: none;
-  color: #7c3aed;
-  cursor: pointer;
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.2s;
+.highlight-grammar-lesson {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  font-weight: 700;
 }
 
-.example-card.expanded .expand-btn {
-  transform: rotate(180deg);
-}
-
-.example-translation {
-  padding: 1rem 1.5rem 1rem 4.5rem;
-  background: white;
-  border-top: 1px solid #e5e7eb;
-}
-
-.translation-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #6b7280;
-  margin-bottom: 0.5rem;
-}
-
-.example-translation p {
+.example-translation-grammar-lesson {
+  font-size: 0.95rem;
+  color: #64748b;
   margin: 0;
-  font-size: 1rem;
-  color: #4b5563;
   font-style: italic;
-}
-
-.example-actions {
-  padding: 0.75rem 1.5rem 1rem 4.5rem;
-  background: white;
-  display: flex;
-  gap: 0.5rem;
-}
-
-.speak-example-btn {
-  padding: 0.5rem 1rem;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 0.375rem;
-  color: #2563eb;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.speak-example-btn:hover {
-  background: #dbeafe;
-  transform: translateY(-1px);
-}
-
-/* Notes Section */
-.grammar-notes-section {
-  padding: 2rem;
-  border-top: 2px solid #f3f4f6;
-}
-
-.notes-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: white;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.5rem;
-  color: #6b7280;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  width: 100%;
-  justify-content: center;
-}
-
-.notes-toggle:hover {
-  border-color: #7c3aed;
-  color: #7c3aed;
-  background: #f5f3ff;
-}
-
-.notes-content {
-  margin-top: 1rem;
-}
-
-.notes-content textarea {
-  width: 100%;
-  padding: 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  font-family: inherit;
-  resize: vertical;
-  transition: border-color 0.2s;
-}
-
-.notes-content textarea:focus {
-  outline: none;
-  border-color: #7c3aed;
-}
-
-.notes-hint {
-  margin-top: 0.5rem;
-  font-size: 0.875rem;
-  color: #6b7280;
+  line-height: 1.5;
 }
 
 /* Action Section */
-.grammar-action-section {
-  padding: 2rem;
-  text-align: center;
-  border-top: 2px solid #f3f4f6;
+.action-section-grammar-lesson {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
 }
 
-.understand-btn {
-  display: inline-flex;
+.understand-button-grammar-lesson {
+  display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  border-radius: 0.75rem;
+  background: #334155;
   color: white;
-  font-size: 1.125rem;
-  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 4px 6px rgba(124, 58, 237, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(51, 65, 85, 0.3);
 }
 
-.understand-btn:hover {
+.understand-button-grammar-lesson:hover {
+  background: #1e293b;
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(124, 58, 237, 0.4);
+  box-shadow: 0 6px 16px rgba(51, 65, 85, 0.4);
 }
 
-.understand-btn:active {
+.understand-button-grammar-lesson:active {
   transform: translateY(0);
 }
 
-.completion-message {
-  padding: 2rem;
-  text-align: center;
-  color: #065f46;
-}
-
-.completion-message svg {
-  color: #10b981;
-  margin-bottom: 1rem;
-}
-
-.completion-message h3 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.5rem;
-  color: #065f46;
-}
-
-.completion-message p {
-  margin: 0;
-  color: #047857;
-}
-
-/* Tips Section */
-.grammar-tips {
-  margin-top: 2rem;
-}
-
-.tip-card {
-  background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
-  border-radius: 1rem;
-  padding: 2rem;
+.understood-message-grammar-lesson {
   display: flex;
-  gap: 1.5rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  background: #f0fdf4;
+  color: #059669;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  border: 2px solid #10b981;
 }
 
-.tip-icon {
-  flex-shrink: 0;
-  font-size: 2rem;
-  color: #d97706;
-}
-
-.tip-content h4 {
-  margin: 0 0 1rem 0;
+.understood-icon-grammar-lesson {
   font-size: 1.25rem;
-  color: #92400e;
 }
 
-.tip-content ul {
-  margin: 0;
-  padding-left: 1.5rem;
-  list-style: none;
+/* Progress Section */
+.progress-section-grammar-lesson {
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
 }
 
-.tip-content ul li {
-  position: relative;
-  padding-left: 1.5rem;
+.progress-bar-grammar-lesson {
+  width: 100%;
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
   margin-bottom: 0.75rem;
-  color: #78350f;
-  line-height: 1.6;
 }
 
-.tip-content ul li:before {
-  content: '✓';
-  position: absolute;
-  left: 0;
-  color: #d97706;
-  font-weight: 700;
+.progress-fill-grammar-lesson {
+  height: 100%;
+  background: #10b981;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 6px;
 }
 
-.tip-content ul li:last-child {
-  margin-bottom: 0;
+.progress-text-grammar-lesson {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
 }
 
-/* Responsive */
+/* Responsive Design */
 @media (max-width: 768px) {
-  .grammar-header {
-    flex-direction: column;
-    align-items: flex-start;
+  .grammar-lesson-container-grammar-lesson {
+    padding: 1.5rem;
   }
 
-  .lesson-title {
+  .grammar-header-grammar-lesson,
+  .formula-content-grammar-lesson {
+    padding: 1.5rem;
+  }
+
+  .header-content-grammar-lesson {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .grammar-title-grammar-lesson {
     font-size: 1.5rem;
   }
 
-  .topic-title {
-    font-size: 1.5rem;
+  .verb-type-tabs-grammar-lesson {
+    gap: 0.75rem;
   }
 
-  .examples-header {
+  .verb-type-tab-grammar-lesson {
+    padding: 0.875rem 1.5rem;
+    font-size: 0.95rem;
+  }
+
+  .formula-tabs-grammar-lesson {
+    gap: 0.75rem;
+  }
+
+  .formula-tab-grammar-lesson {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+  }
+
+  .formula-text-grammar-lesson {
+    font-size: 1.25rem;
+  }
+
+  .example-card-grammar-lesson {
     flex-direction: column;
-    align-items: flex-start;
+    gap: 0.75rem;
   }
 
-  .example-translation,
-  .example-actions {
-    padding-left: 1.5rem;
-  }
-
-  .tip-card {
-    flex-direction: column;
-  }
-
-  .understand-btn {
+  .understand-button-grammar-lesson {
     width: 100%;
     justify-content: center;
   }
+}
+
+@media (max-width: 480px) {
+  .grammar-lesson-container-grammar-lesson {
+    padding: 1rem;
+    border-radius: 16px;
+  }
+
+  .grammar-header-grammar-lesson,
+  .formula-content-grammar-lesson {
+    padding: 1rem;
+    border-radius: 16px;
+  }
+
+  .grammar-title-grammar-lesson {
+    font-size: 1.3rem;
+  }
+
+  .signal-words-grammar-lesson {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .verb-type-tabs-grammar-lesson {
+    flex-direction: column;
+  }
+
+  .verb-type-tab-grammar-lesson {
+    width: 100%;
+  }
+
+  .formula-tabs-grammar-lesson {
+    flex-direction: column;
+  }
+
+  .formula-tab-grammar-lesson {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .formula-text-grammar-lesson {
+    font-size: 1.1rem;
+  }
+
+  .example-sentence-grammar-lesson {
+    font-size: 1rem;
+  }
+}
+
+/* Custom Scrollbar */
+.grammar-lesson-container-grammar-lesson ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.grammar-lesson-container-grammar-lesson ::-webkit-scrollbar-track {
+  background: #e2e8f0;
+  border-radius: 4px;
+}
+
+.grammar-lesson-container-grammar-lesson ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.grammar-lesson-container-grammar-lesson ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

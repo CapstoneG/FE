@@ -81,6 +81,32 @@ class UserService {
     }
   }
 
+  async updateLevelPlacement(data: UpdateUserData): Promise<void> {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/users/update-level-placement`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData: ApiResponse<null> = await response.json();
+        throw new Error(errorData.message || 'Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      throw error;
+    }
+  }
+
   async changePassword(data: ChangePasswordData): Promise<{ code: number; message: string }> {
     try {
       const token = localStorage.getItem('authToken');

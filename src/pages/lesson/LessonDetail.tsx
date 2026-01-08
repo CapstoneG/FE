@@ -18,15 +18,13 @@ interface LessonContent {
     imageUrl?: string;
   }>;
   grammar?: {
-    topic?: string;
-    explanation?: string;
-    signalWord?: string;
-    examples?: string[];
-    formulas?: Array<{
+    topic: string;
+    explanation: string;
+    signalWord: string;
+    formulas: Array<{
       type: string;
       formula: string;
-      description: string;
-      verbType: string;
+      verbType: 'REGULAR_VERB' | 'TO_BE';
       examples: Array<{
         sentence: string;
         translation: string;
@@ -129,10 +127,8 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
   const [replyText, setReplyText] = useState('');
   const [completed, setCompleted] = useState<boolean>(false);
   const [showExercises, setShowExercises] = useState<boolean>(false);
-  const [learningCompleted, setLearningCompleted] = useState<boolean>(false);
 
   const STORAGE_KEY = `enghub.beginner.lesson${lessonId}.completed`;
-  const LEARNING_COMPLETED_KEY = `enghub.beginner.lesson${lessonId}.learning.completed`;
 
   useStudyEvents({
     lessonId,
@@ -195,22 +191,62 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
 
         console.log('Fetched lesson data:', data);
 
+        // Parse exercises into quiz questions and fill-blank exercises
+        const quizQuestions: any[] = [];
+        const fillBlankQuestions: any[] = [];
+
+        if (data.exercises && data.exercises.length > 0) {
+          data.exercises.forEach((ex: any) => {
+            const metadata = typeof ex.metadata === 'string' ? JSON.parse(ex.metadata) : ex.metadata;
+
+            switch (ex.type) {
+              case 'MULTIPLE_CHOICE':
+                quizQuestions.push({
+                  question: ex.question,
+                  options: metadata.options || [],
+                  answer: metadata.correct || '',
+                  explanation: metadata.explanation || '',
+                });
+                break;
+
+              case 'FILL_BLANK':
+                fillBlankQuestions.push({
+                  sentence: ex.question,
+                  answer: metadata.answer || ''
+                });
+                break;
+
+              case 'TRANSLATE':
+                quizQuestions.push({
+                  question: ex.question,
+                  options: [], // Will be handled as text input
+                  answer: metadata.answer || '',
+                  explanation: metadata.explanation || '',
+                });
+                break;
+
+              case 'MATCH_PAIRS':
+              case 'SELECT_IMAGE':
+                // These types can be added later if needed
+                console.log(`Exercise type ${ex.type} not yet supported`);
+                break;
+
+              default:
+                console.log(`Unknown exercise type: ${ex.type}`);
+            }
+          });
+        }
+
         data.parsedContent = {
           vocabulary: data.vocabularies || [],
           grammar: data.grammar || null,
           dialogue: data.dialogues || [],
           video: data.video || null,
-          quiz: [], 
-          exercise: data.exercises && data.exercises.length > 0 ? {
+          quiz: quizQuestions,
+          exercise: fillBlankQuestions.length > 0 ? {
             type: 'fill-blank',
             instruction: 'Điền vào chỗ trống',
-            questions: data.exercises.map((ex: any) => {
-              const metadata = ex.metadata ? JSON.parse(ex.metadata) : {};
-              return {
-                sentence: ex.question,
-                answer: metadata.answer || ''
-              };
-            })
+            questions: fillBlankQuestions
           } : null
         };
         
@@ -218,9 +254,6 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
         
         const saved = localStorage.getItem(STORAGE_KEY);
         setCompleted(saved === 'true');
-        
-        const learningSaved = localStorage.getItem(LEARNING_COMPLETED_KEY);
-        setLearningCompleted(learningSaved === 'true');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
@@ -276,27 +309,22 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
     window.scrollTo(0, 0);
   };
 
-  const handleCompleteLearning = () => {
-    setLearningCompleted(true);
-    localStorage.setItem(LEARNING_COMPLETED_KEY, 'true');
-  };
-
   const renderExercisesPage = () => {
-    const content = lesson?.parsedContent || {};
+    // Prepare exercises from lesson data
+    const exercisesFromAPI: any[] = [];
     
-    // Prepare quiz questions if available
-    const questions = hasData(content.quiz) 
-      ? content.quiz!.map((q, idx) => ({
-          id: idx,
-          question: q.question,
-          type: 'multiple-choice' as const,
-          options: q.options,
-          correctAnswer: q.answer,
-          explanation: q.explanation || '',
-        }))
-      : [];
+    if (lesson?.exercises && lesson.exercises.length > 0) {
+      lesson.exercises.forEach((ex: any) => {
+        const metadata = typeof ex.metadata === 'string' ? JSON.parse(ex.metadata) : ex.metadata;
+        exercisesFromAPI.push({
+          question: ex.question,
+          type: ex.type,
+          metadata: metadata
+        });
+      });
+    }
 
-    const hasExercises = hasData(questions) || (hasData(content.exercise) && hasData(content.exercise!.questions));
+    const hasExercises = exercisesFromAPI.length > 0;
 
     if (!hasExercises) {
       return (
@@ -327,14 +355,14 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
           <h1 className="lesson-title-lesson-detail">Bài tập - {lesson.title}</h1>
         </div>
 
-        {/* Quiz Section */}
-        {hasData(questions) && (
+        {/* Exercise Section */}
+        {hasExercises && (
           <ExerciseLesson
-            title="Bài kiểm tra"
-            description="Hoàn thành các câu hỏi dưới đây để kiểm tra hiểu biết"
-            instructions="Chọn đáp án đúng cho mỗi câu hỏi"
-            questions={questions}
-            passingScore={80}
+            title="Bài tập thực hành"
+            description="Hoàn thành các câu hỏi dưới đây để kiểm tra kiến thức của bạn"
+            instructions="Làm đầy đủ tất cả các câu hỏi"
+            exercises={exercisesFromAPI}
+            passingScore={70}
             onComplete={async (score, passed) => {
               if (passed) {
                 setCompleted(true);
@@ -356,32 +384,14 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
                 } catch (error) {
                   console.error('Error saving lesson completion:', error);
                 }
+                
+                setTimeout(() => {
+                  onBack();
+                  window.location.reload();
+                }, 1500);
               }
             }}
           />
-        )}
-
-        {/* Fill-in-blank Exercise Section */}
-        {hasData(content.exercise) && hasData(content.exercise!.questions) && (
-          <section className="lesson-section-lesson-detail exercise-section-lesson-detail">
-            <div className="section-header-lesson-detail">
-              <FaPencilAlt className="section-icon-lesson-detail" />
-              <h2>Bài tập điền từ</h2>
-            </div>
-            <div className="exercise-content-lesson-detail">
-              {content.exercise!.instruction && (
-                <p className="exercise-instruction-lesson-detail">{content.exercise!.instruction}</p>
-              )}
-              <div className="exercise-questions-lesson-detail">
-                {content.exercise!.questions!.map((item, index) => (
-                  <div key={index} className="exercise-question-lesson-detail">
-                    <p><strong>{index + 1}.</strong> {item.sentence}</p>
-                    <p className="exercise-answer-lesson-detail"><em>Đáp án: {item.answer}</em></p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
         )}
 
         {/* Back button at bottom */}
@@ -446,8 +456,6 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
         {/* Grammar Section */}
         {hasData(content.grammar) && (
           <GrammarLesson
-            title="Ngữ pháp"
-            description="Tìm hiểu và nắm vững điểm ngữ pháp quan trọng"
             grammar={content.grammar!}
             onComplete={() => {
               console.log('Completed grammar section');
@@ -463,7 +471,6 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
             dialogue={content.dialogue!}
             onComplete={() => {
               console.log('Completed dialogue section');
-              handleCompleteLearning();
             }}
           />
         )}
@@ -472,7 +479,7 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
         {hasLearningContent && (
           <div className="lesson-completion-section-lesson-detail">
             <div className="completion-card-lesson-detail">
-              <h3>🎉 Hoàn thành phần học!</h3>
+              <h3>Hoàn thành phần học!</h3>
               <p>Bạn đã hoàn thành tất cả nội dung bài học. Hãy làm bài tập để kiểm tra kiến thức của mình!</p>
               <button 
                 onClick={handleStartExercises}

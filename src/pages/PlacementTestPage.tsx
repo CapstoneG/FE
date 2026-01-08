@@ -36,7 +36,7 @@ interface TestResult {
 
 const PlacementTestPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated, updateProfile } = useAuth();
+  const { user, isAuthenticated, updateLevelPlacement } = useAuth();
   const [currentSection, setCurrentSection] = useState<'intro' | 'test' | 'result'>('intro');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -337,7 +337,7 @@ const PlacementTestPage: React.FC = () => {
     if (isAuthenticated && user) {
       try {
         await authService.updateUserLevel(result.apiLevel);
-        await updateProfile({ level: result.apiLevel });
+        await updateLevelPlacement({ level: result.apiLevel });
       } catch (error) {
         console.error('Failed to update user level:', error);
       }

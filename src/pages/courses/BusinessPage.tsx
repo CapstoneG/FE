@@ -160,13 +160,6 @@ const BusinessPage: React.FC = () => {
                 <p>Học tập tập trung</p>
               </div>
             </div>
-            <div className="stat-item">
-              <BiTrophy size={24} color="#0ea5e9" />
-              <div>
-                <h3>Chứng chỉ</h3>
-                <p>Business English</p>
-              </div>
-            </div>
           </div>
         </div>
         <div className="business-hero-image">

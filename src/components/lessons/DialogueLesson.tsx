@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { FaComments, FaPlay, FaPause, FaVolumeUp, FaUser, FaCheckCircle, FaRedo } from 'react-icons/fa';
+import React, { useState, useRef, useEffect } from 'react';
+import { FaComments, FaVolumeUp, FaCheckCircle, FaPlay, FaPause, FaMicrophone, FaStop, FaUserCircle } from 'react-icons/fa';
 import './DialogueLesson.css';
 
-interface DialogueLine {
+interface DialogueItem {
   speaker: string;
   text: string;
 }
@@ -10,7 +10,7 @@ interface DialogueLine {
 interface DialogueLessonProps {
   title: string;
   description?: string;
-  dialogue: DialogueLine[];
+  dialogue: DialogueItem[];
   onComplete?: () => void;
 }
 
@@ -20,287 +20,597 @@ const DialogueLesson: React.FC<DialogueLessonProps> = ({
   dialogue,
   onComplete,
 }) => {
-  const [currentLine, setCurrentLine] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [playedLines, setPlayedLines] = useState<Set<number>>(new Set());
-  const [showTranslation, setShowTranslation] = useState(false);
-  const [viewMode, setViewMode] = useState<'conversation' | 'roleplay'>('conversation');
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const [completedDialogues, setCompletedDialogues] = useState<Set<number>>(new Set());
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+  const [currentAutoIndex, setCurrentAutoIndex] = useState(0);
+  
+  // Role-playing mode states
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [currentTurnIndex, setCurrentTurnIndex] = useState(0);
+  const [userTranscripts, setUserTranscripts] = useState<{[key: number]: string}>({});
+  const [accuracyScores, setAccuracyScores] = useState<{[key: number]: number}>({});
+  const [isRolePlayMode, setIsRolePlayMode] = useState(false);
+  
+  const recognitionRef = useRef<any>(null);
 
-  const speakers = Array.from(new Set(dialogue.map(line => line.speaker)));
+  // Setup Speech Recognition
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
+    }
 
-  const handleSpeak = (text: string, lineIndex?: number) => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
+  // Calculate text similarity (Levenshtein distance)
+  const calculateSimilarity = (str1: string, str2: string): number => {
+    const s1 = str1.toLowerCase().trim();
+    const s2 = str2.toLowerCase().trim();
+    
+    const matrix: number[][] = [];
+    
+    for (let i = 0; i <= s2.length; i++) {
+      matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= s1.length; j++) {
+      matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= s2.length; i++) {
+      for (let j = 1; j <= s1.length; j++) {
+        if (s2.charAt(i - 1) === s1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+    
+    const maxLen = Math.max(s1.length, s2.length);
+    const distance = matrix[s2.length][s1.length];
+    return maxLen === 0 ? 100 : ((maxLen - distance) / maxLen) * 100;
+  };
+
+  // Highlight differences between original and user text
+  const highlightDifferences = (original: string, userText: string) => {
+    const originalWords = original.toLowerCase().split(/\s+/);
+    const userWords = userText.toLowerCase().split(/\s+/);
+    const displayWords = original.split(/\s+/);
+    
+    return displayWords.map((word, index) => {
+      const isCorrect = userWords[index] && userWords[index] === originalWords[index];
+      return (
+        <span
+          key={index}
+          style={{
+            color: isCorrect ? '#10b981' : '#ef4444',
+            fontWeight: isCorrect ? 'normal' : 'bold',
+            backgroundColor: isCorrect ? 'transparent' : '#fee2e2',
+            padding: '2px 4px',
+            borderRadius: '4px',
+          }}
+        >
+          {word}{' '}
+        </span>
+      );
+    });
+  };
+
+  // Start role-play mode
+  const startRolePlay = (role: string) => {
+    setSelectedRole(role);
+    setIsRolePlayMode(true);
+    setCurrentTurnIndex(0);
+    setUserTranscripts({});
+    setAccuracyScores({});
+    
+    // Find first turn for this role
+    const firstTurnIndex = dialogue.findIndex(item => item.speaker === role);
+    if (firstTurnIndex !== -1) {
+      setCurrentTurnIndex(firstTurnIndex);
+    }
+  };
+
+  // Play bot's turn automatically
+  const playBotTurns = (startIndex: number) => {
+    let currentIndex = startIndex;
+    
+    // Find all consecutive bot turns
+    const botTurns: number[] = [];
+    while (currentIndex < dialogue.length && dialogue[currentIndex].speaker !== selectedRole) {
+      botTurns.push(currentIndex);
+      currentIndex++;
+    }
+    
+    // Check if there are any more user turns
+    let hasMoreUserTurns = false;
+    for (let i = currentIndex; i < dialogue.length; i++) {
+      if (dialogue[i].speaker === selectedRole) {
+        hasMoreUserTurns = true;
+        break;
+      }
+    }
+    
+    if (botTurns.length === 0 && !hasMoreUserTurns) {
+      // No more turns at all - completed!
+      setTimeout(() => {
+        exitRolePlay();
+        if (onComplete) onComplete();
+      }, 500);
+      return;
+    }
+    
+    if (botTurns.length === 0) {
+      // No bot turns, but there are user turns
+      if (currentIndex < dialogue.length && hasMoreUserTurns) {
+        setCurrentTurnIndex(currentIndex);
+      }
+      return;
+    }
+    
+    // Play bot turns sequentially
+    const playNextBotTurn = (index: number) => {
+      if (index >= botTurns.length) {
+        // All bot turns played
+        if (hasMoreUserTurns && currentIndex < dialogue.length) {
+          setCurrentTurnIndex(currentIndex);
+        } else {
+          // Completed all dialogues
+          setTimeout(() => {
+            alert('🎉 Chúc mừng! Bạn đã hoàn thành bài hội thoại!');
+            exitRolePlay();
+            if (onComplete) onComplete();
+          }, 500);
+        }
+        return;
+      }
+      
+      const turnIndex = botTurns[index];
+      const text = dialogue[turnIndex].text;
+      
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9;
+        
+        utterance.onstart = () => {
+          setPlayingIndex(turnIndex);
+        };
+        
+        utterance.onend = () => {
+          setPlayingIndex(null);
+          
+          // Mark as completed
+          setCompletedDialogues(prev => new Set([...prev, turnIndex]));
+          
+          // Play next bot turn after a delay
+          setTimeout(() => {
+            playNextBotTurn(index + 1);
+          }, 800);
+        };
+        
+        window.speechSynthesis.speak(utterance);
+      } else {
+        // If speech synthesis not available, just move to next user turn
+        if (hasMoreUserTurns && currentIndex < dialogue.length) {
+          setCurrentTurnIndex(currentIndex);
+        } else {
+          setTimeout(() => {
+            alert('🎉 Chúc mừng! Bạn đã hoàn thành bài hội thoại!');
+            exitRolePlay();
+            if (onComplete) onComplete();
+          }, 500);
+        }
+      }
+    };
+    
+    playNextBotTurn(0);
+  };
+
+  // Start recording
+  const startRecording = () => {
+    if (!recognitionRef.current) {
+      alert('Speech recognition is not supported in your browser');
+      return;
+    }
+
+    setIsRecording(true);
+    
+    recognitionRef.current.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      const originalText = dialogue[currentTurnIndex].text;
+      const accuracy = calculateSimilarity(originalText, transcript);
+      
+      setUserTranscripts(prev => ({
+        ...prev,
+        [currentTurnIndex]: transcript
+      }));
+      
+      setAccuracyScores(prev => ({
+        ...prev,
+        [currentTurnIndex]: accuracy
+      }));
+      
+      setIsRecording(false);
+      
+      // After user speaks, automatically play bot's turns and move to next user turn
+      setTimeout(() => {
+        playBotTurns(currentTurnIndex + 1);
+      }, 1000);
+    };
+    
+    recognitionRef.current.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      setIsRecording(false);
+    };
+    
+    recognitionRef.current.start();
+  };
+
+  // Stop recording
+  const stopRecording = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    setIsRecording(false);
+  };
+
+  // Exit role-play mode
+  const exitRolePlay = () => {
+    setIsRolePlayMode(false);
+    setSelectedRole(null);
+    setCurrentTurnIndex(0);
+    stopRecording();
+  };
+
+  const handleSpeak = (text: string, index: number) => {
     if ('speechSynthesis' in window) {
+      // Stop any ongoing speech
       window.speechSynthesis.cancel();
+      
+      if (playingIndex === index) {
+        setPlayingIndex(null);
+        return;
+      }
+
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'en-US';
       utterance.rate = 0.9;
       
-      if (lineIndex !== undefined) {
-        const newPlayed = new Set(playedLines);
-        newPlayed.add(lineIndex);
-        setPlayedLines(newPlayed);
+      utterance.onstart = () => {
+        setPlayingIndex(index);
+      };
+      
+      utterance.onend = () => {
+        setPlayingIndex(null);
         
-        if (newPlayed.size === dialogue.length && onComplete) {
-          setTimeout(() => {
-            onComplete();
-          }, 500);
-        }
-      }
+        // Mark as completed when played
+        const newCompleted = new Set(completedDialogues);
+        newCompleted.add(index);
+        setCompletedDialogues(newCompleted);
+      };
       
       window.speechSynthesis.speak(utterance);
     }
   };
 
-  const playFullDialogue = () => {
-    if (isPlaying) {
+  const handleAutoPlay = () => {
+    if (isAutoPlaying) {
       window.speechSynthesis.cancel();
-      setIsPlaying(false);
+      setIsAutoPlaying(false);
+      setPlayingIndex(null);
       return;
     }
 
-    setIsPlaying(true);
-    let index = 0;
+    setIsAutoPlaying(true);
+    playDialogueSequence(0);
+  };
 
-    const playNext = () => {
-      if (index < dialogue.length) {
-        setCurrentLine(index);
-        const utterance = new SpeechSynthesisUtterance(dialogue[index].text);
-        utterance.lang = 'en-US';
-        utterance.rate = 0.9;
-        
-        const newPlayed = new Set(playedLines);
-        newPlayed.add(index);
-        setPlayedLines(newPlayed);
-
-        utterance.onend = () => {
-          index++;
-          if (index < dialogue.length) {
-            setTimeout(playNext, 500);
-          } else {
-            setIsPlaying(false);
-            if (onComplete) {
-              onComplete();
-            }
-          }
-        };
-
-        window.speechSynthesis.speak(utterance);
+  const playDialogueSequence = (index: number) => {
+    if (index >= dialogue.length) {
+      setIsAutoPlaying(false);
+      setPlayingIndex(null);
+      setCurrentAutoIndex(0);
+      
+      // Mark all as completed
+      const allCompleted = new Set(dialogue.map((_, i) => i));
+      setCompletedDialogues(allCompleted);
+      
+      if (onComplete) {
+        onComplete();
       }
+      return;
+    }
+
+    setCurrentAutoIndex(index);
+    const text = dialogue[index].text;
+    
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.9;
+      
+      utterance.onstart = () => {
+        setPlayingIndex(index);
+      };
+      
+      utterance.onend = () => {
+        setPlayingIndex(null);
+        
+        // Mark as completed
+        setCompletedDialogues(prev => new Set([...prev, index]));
+        
+        // Play next after a short delay
+        setTimeout(() => {
+          playDialogueSequence(index + 1);
+        }, 800);
+      };
+      
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const getSpeakerColor = (speaker: string) => {
+    const colors: { [key: string]: string } = {
+      'A': '#3b82f6',
+      'B': '#10b981',
+      'C': '#f59e0b',
+      'D': '#8b5cf6',
     };
-
-    playNext();
+    return colors[speaker] || '#64748b';
   };
 
-  const resetProgress = () => {
-    setPlayedLines(new Set());
-    setCurrentLine(0);
-    window.speechSynthesis.cancel();
-    setIsPlaying(false);
-  };
+  // Get unique speakers
+  const uniqueSpeakers = Array.from(new Set(dialogue.map(item => item.speaker)));
 
-  const getSpeakerColor = (speaker: string): string => {
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
-    const index = speakers.indexOf(speaker);
-    return colors[index % colors.length];
-  };
-
-  const getSpeakerAvatar = (speaker: string): string => {
-    return speaker.charAt(0).toUpperCase();
-  };
+  // Check if current turn is valid
+  const isValidTurn = currentTurnIndex < dialogue.length && 
+                      dialogue[currentTurnIndex]?.speaker === selectedRole;
 
   return (
-    <div className="dialogue-lesson">
-      <div className="dialogue-header">
+    <div className="dialogue-lesson-container-dialogue-lesson">
+      {/* Header */}
+      <div className="dialogue-header-dialogue-lesson">
         <div className="header-content-dialogue-lesson">
-          <FaComments className="header-icon" size={32} />
-          <div>
-            <h1 className="lesson-title-dialogue-lesson">{title}</h1>
-            {description && <p className="lesson-description">{description}</p>}
+          <FaComments className="header-icon-dialogue-lesson" />
+          <div className="header-text-dialogue-lesson">
+            <h2 className="dialogue-title-dialogue-lesson">{title}</h2>
+            {description && (
+              <p className="dialogue-description-dialogue-lesson">{description}</p>
+            )}
           </div>
         </div>
-
-        <div className="view-mode-toggle">
+        
+        {/* Auto Play Button */}
+        {!isRolePlayMode && (
           <button
-            className={`toggle-btn ${viewMode === 'conversation' ? 'active' : ''}`}
-            onClick={() => setViewMode('conversation')}
+            className={`auto-play-button-dialogue-lesson ${isAutoPlaying ? 'playing-dialogue-lesson' : ''}`}
+            onClick={handleAutoPlay}
           >
-            Hội thoại
+            {isAutoPlaying ? (
+              <>
+                <FaPause />
+                <span>Dừng tự động phát</span>
+              </>
+            ) : (
+              <>
+                <FaPlay />
+                <span>Phát tự động</span>
+              </>
+            )}
           </button>
-          <button
-            className={`toggle-btn ${viewMode === 'roleplay' ? 'active' : ''}`}
-            onClick={() => setViewMode('roleplay')}
-          >
-            Luyện tập vai
-          </button>
-        </div>
+        )}
       </div>
-
-
-
-      {viewMode === 'conversation' ? (
-        <div className="conversation-mode">
-          <div className="dialogue-controls">
-            <button 
-              className={`play-all-btn ${isPlaying ? 'playing' : ''}`}
-              onClick={playFullDialogue}
-            >
-              {isPlaying ? (
-                <>
-                  <FaPause /> Dừng lại
-                </>
-              ) : (
-                <>
-                  <FaPlay /> Phát toàn bộ
-                </>
-              )}
+      {/* Role-Play Mode */}
+      {isRolePlayMode && (
+        <div className="roleplay-mode-dialogue-lesson">
+          <div className="roleplay-header-dialogue-lesson">
+            <div className="roleplay-info-dialogue-lesson">
+              <div 
+                className="current-role-badge-dialogue-lesson"
+                style={{ backgroundColor: getSpeakerColor(selectedRole || '') }}
+              >
+                {selectedRole}
+              </div>
+              <span>Lượt của bạn ({currentTurnIndex + 1}/{dialogue.length})</span>
+            </div>
+            <button className="exit-roleplay-button-dialogue-lesson" onClick={exitRolePlay}>
+              Thoát luyện tập
             </button>
-            <button 
-              className="reset-btn"
-              onClick={resetProgress}
-            >
-              <FaRedo /> Làm lại
-            </button>
-            <label className="translation-toggle">
-              <input
-                type="checkbox"
-                checked={showTranslation}
-                onChange={(e) => setShowTranslation(e.target.checked)}
-              />
-              Hiện dịch
-            </label>
           </div>
 
-          <div className="dialogue-conversation">
-            {dialogue.map((line, index) => {
-              const isActive = isPlaying && currentLine === index;
-              const isPlayed = playedLines.has(index);
-              
-              return (
-                <div 
-                  key={index}
-                  className={`dialogue-bubble ${isActive ? 'active' : ''} ${isPlayed ? 'played' : ''}`}
-                >
-                  <div className="bubble-header">
-                    <div 
-                      className="speaker-avatar"
-                      style={{ background: getSpeakerColor(line.speaker) }}
-                    >
-                      {getSpeakerAvatar(line.speaker)}
-                    </div>
-                    <div className="speaker-info">
-                      <h4 className="speaker-name">{line.speaker}</h4>
-                      {isPlayed && (
-                        <FaCheckCircle className="played-icon" size={14} />
-                      )}
-                    </div>
-                    <button
-                      className="speak-btn-inline"
-                      onClick={() => handleSpeak(line.text, index)}
-                    >
-                      <FaVolumeUp />
-                    </button>
+          {/* Current dialogue */}
+          {isValidTurn && (
+          <div className="current-dialogue-dialogue-lesson">
+            <div className="original-text-dialogue-lesson">
+              <h4>Câu gốc:</h4>
+              <p>{dialogue[currentTurnIndex]?.text}</p>
+            </div>
+
+            {/* Recording Controls */}
+            <div className="recording-controls-dialogue-lesson">
+              {playingIndex !== null ? (
+                <div className="bot-speaking-dialogue-lesson">
+                  <div className="bot-speaking-icon-dialogue-lesson">
+                    <FaVolumeUp />
                   </div>
-                  <div className="bubble-content">
-                    <p className="dialogue-text">{line.text}</p>
-                    {showTranslation && (
-                      <p className="dialogue-translation">
-                        {/* Translation would come from API if available */}
-                        <em>(Dịch sẽ được hiển thị ở đây)</em>
-                      </p>
+                  <span>{dialogue[currentTurnIndex]?.speaker} đang nói...</span>
+                </div>
+              ) : !isRecording ? (
+                <button 
+                  className="record-button-dialogue-lesson"
+                  onClick={startRecording}
+                  disabled={!!userTranscripts[currentTurnIndex]}
+                >
+                  <FaMicrophone />
+                  <span>Bắt đầu nói</span>
+                </button>
+              ) : (
+                <button 
+                  className="stop-button-dialogue-lesson"
+                  onClick={stopRecording}
+                >
+                  <FaStop />
+                  <span>Dừng ghi âm</span>
+                </button>
+              )}
+            </div>
+
+            {/* User transcript and comparison */}
+            {userTranscripts[currentTurnIndex] && !playingIndex && (
+              <div className="comparison-result-dialogue-lesson">
+                <div className="user-transcript-dialogue-lesson">
+                  <h4>Bạn đã nói:</h4>
+                  <p>{userTranscripts[currentTurnIndex]}</p>
+                </div>
+
+                <div className="accuracy-score-dialogue-lesson">
+                  <div className="score-circle-dialogue-lesson">
+                    <span className="score-value-dialogue-lesson">
+                      {accuracyScores[currentTurnIndex]?.toFixed(0)}%
+                    </span>
+                  </div>
+                  <span className="score-label-dialogue-lesson">Độ chính xác</span>
+                </div>
+
+                <div className="highlighted-text-dialogue-lesson">
+                  <h4>So sánh:</h4>
+                  <p className="comparison-text-dialogue-lesson">
+                    {highlightDifferences(
+                      dialogue[currentTurnIndex].text,
+                      userTranscripts[currentTurnIndex]
                     )}
+                  </p>
+                  <div className="legend-dialogue-lesson">
+                    <span className="legend-item-dialogue-lesson">
+                      <span className="legend-correct-dialogue-lesson"></span>
+                      Đúng
+                    </span>
+                    <span className="legend-item-dialogue-lesson">
+                      <span className="legend-incorrect-dialogue-lesson"></span>
+                      Sai
+                    </span>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      ) : (
-        <div className="roleplay-mode">
-          <div className="role-selection">
-            <h3>Chọn vai diễn của bạn:</h3>
-            <div className="role-buttons">
-              {speakers.map((speaker) => (
-                <button
-                  key={speaker}
-                  className={`role-btn ${selectedRole === speaker ? 'selected' : ''}`}
-                  onClick={() => setSelectedRole(speaker)}
-                  style={{
-                    borderColor: selectedRole === speaker ? getSpeakerColor(speaker) : '#e5e7eb',
-                    background: selectedRole === speaker ? `${getSpeakerColor(speaker)}15` : 'white'
-                  }}
-                >
-                  <div 
-                    className="role-avatar"
-                    style={{ background: getSpeakerColor(speaker) }}
-                  >
-                    {getSpeakerAvatar(speaker)}
-                  </div>
-                  <span>{speaker}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {selectedRole && (
-            <div className="roleplay-content">
-              <div className="roleplay-instructions">
-                <FaUser />
-                <p>Đọc to các câu của <strong>{selectedRole}</strong>. Máy sẽ đọc các vai khác.</p>
               </div>
-
-              <div className="roleplay-dialogue">
-                {dialogue.map((line, index) => {
-                  const isUserRole = line.speaker === selectedRole;
-                  
-                  return (
-                    <div 
-                      key={index}
-                      className={`roleplay-line ${isUserRole ? 'user-role' : 'other-role'}`}
-                    >
-                      <div 
-                        className="roleplay-avatar"
-                        style={{ background: getSpeakerColor(line.speaker) }}
-                      >
-                        {getSpeakerAvatar(line.speaker)}
-                      </div>
-                      <div className="roleplay-bubble">
-                        <div className="roleplay-header">
-                          <span className="roleplay-speaker">{line.speaker}</span>
-                          {isUserRole && (
-                            <span className="your-turn-badge">Lượt bạn</span>
-                          )}
-                        </div>
-                        <p className="roleplay-text">{line.text}</p>
-                        {!isUserRole && (
-                          <button
-                            className="play-other-btn"
-                            onClick={() => handleSpeak(line.text, index)}
-                          >
-                            <FaVolumeUp /> Nghe
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            )}
+          </div>
           )}
+
+          {/* Show all dialogues for context */}
+          <div className="context-dialogues-dialogue-lesson">
+            <h4>Toàn bộ hội thoại:</h4>
+            {dialogue.map((item, index) => (
+              <div
+                key={index}
+                className={`context-item-dialogue-lesson ${
+                  index === currentTurnIndex ? 'current-dialogue-lesson' : ''
+                } ${item.speaker === selectedRole ? 'user-role-dialogue-lesson' : ''}`}
+              >
+                <div 
+                  className="context-speaker-badge-dialogue-lesson"
+                  style={{ backgroundColor: getSpeakerColor(item.speaker) }}
+                >
+                  {item.speaker}
+                </div>
+                <p>{item.text}</p>
+                {userTranscripts[index] && (
+                  <div className="context-score-dialogue-lesson">
+                    {accuracyScores[index]?.toFixed(0)}%
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      <div className="dialogue-tips">
-        <div className="tip-card">
-          <h4>Mẹo luyện tập</h4>
-          <ul>
-            <li><strong>Nghe nhiều lần:</strong> Lặp lại hội thoại để quen với phát âm và ngữ điệu</li>
-            <li><strong>Bắt chước:</strong> Cố gắng phát âm giống như bản gốc nhất có thể</li>
-            <li><strong>Luyện vai:</strong> Thử đóng vai từng nhân vật để thực hành giao tiếp</li>
-            <li><strong>Ghi chú:</strong> Chú ý những cụm từ hoặc mẫu câu hữu ích</li>
-          </ul>
+      {/* Role Selection */}
+      {!isRolePlayMode && (
+        <div className="role-selection-dialogue-lesson">
+          <h3 className="role-selection-title-dialogue-lesson">
+            <FaUserCircle /> Chọn vai diễn để luyện tập
+          </h3>
+          <div className="role-buttons-dialogue-lesson">
+            {uniqueSpeakers.map(speaker => (
+              <button
+                key={speaker}
+                className="role-button-dialogue-lesson"
+                style={{ borderColor: getSpeakerColor(speaker) }}
+                onClick={() => startRolePlay(speaker)}
+              >
+                <div 
+                  className="role-badge-dialogue-lesson"
+                  style={{ backgroundColor: getSpeakerColor(speaker) }}
+                >
+                  {speaker}
+                </div>
+                <span>Vai {speaker}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Dialogue Content */}
+      {!isRolePlayMode && (
+      <div className="dialogue-content-dialogue-lesson">
+        <div className="dialogue-list-dialogue-lesson">
+          {dialogue.map((item, index) => (
+            <div
+              key={index}
+              className={`dialogue-item-dialogue-lesson ${
+                playingIndex === index ? 'playing-dialogue-lesson' : ''
+              } ${completedDialogues.has(index) ? 'completed-dialogue-lesson' : ''} ${
+                isAutoPlaying && currentAutoIndex === index ? 'auto-playing-dialogue-lesson' : ''
+              }`}
+            >
+              <div className="dialogue-speaker-badge-dialogue-lesson" style={{ 
+                backgroundColor: getSpeakerColor(item.speaker),
+                borderColor: getSpeakerColor(item.speaker)
+              }}>
+                <span className="speaker-label-dialogue-lesson">{item.speaker}</span>
+              </div>
+              
+              <div className="dialogue-bubble-dialogue-lesson">
+                <p className="dialogue-text-dialogue-lesson">{item.text}</p>
+                
+                <button
+                  className="speak-button-dialogue-lesson"
+                  onClick={() => handleSpeak(item.text, index)}
+                  disabled={isAutoPlaying}
+                >
+                  <FaVolumeUp />
+                </button>
+                
+                {completedDialogues.has(index) && (
+                  <FaCheckCircle className="completed-icon-dialogue-lesson" />
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
+      )}
     </div>
   );
 };

@@ -282,54 +282,54 @@ const VideoLesson: React.FC<VideoLessonProps> = ({
         </div>
       )}
 
-      <div className="video-controls">
-        <div className="add-note-section">
-          {!showNoteInput ? (
-            <button
-              className="show-note-input-btn"
-              onClick={() => setShowNoteInput(true)}
-            >
-              Thêm ghi chú mới
-            </button>
-          ) : (
-            <div className="note-input-wrapper">
-              <input
-                type="text"
-                className="note-input"
-                placeholder="Nhập nội dung ghi chú của bạn..."
-                value={noteText}
-                onChange={(e) => setNoteText(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') handleAddNote();
-                }}
-                autoFocus
-              />
-              <div className="note-actions">
-                <button
-                  className="cancel-note-btn"
-                  onClick={() => {
-                    setShowNoteInput(false);
-                    setNoteText('');
-                  }}
-                >
-                  Hủy
-                </button>
-                <button
-                  className="add-note-btn"
-                  onClick={handleAddNote}
-                >
-                  Lưu ghi chú
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
       <div className="notes-section">
-        <h3 className="notes-title">
-          Ghi chú của bạn ({notes.length})
-        </h3>
+        <div className="notes-header">
+          <h3 className="notes-title">
+            Ghi chú của bạn ({notes.length})
+          </h3>
+          <button
+            className="add-note-icon-btn"
+            onClick={() => setShowNoteInput(true)}
+            title="Thêm ghi chú mới"
+          >
+            +
+          </button>
+        </div>
+
+        {/* Note Input Form */}
+        {showNoteInput && (
+          <div className="note-input-wrapper">
+            <input
+              type="text"
+              className="note-input"
+              placeholder="Nhập nội dung ghi chú của bạn..."
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') handleAddNote();
+              }}
+              autoFocus
+            />
+            <div className="note-actions">
+              <button
+                className="cancel-note-btn"
+                onClick={() => {
+                  setShowNoteInput(false);
+                  setNoteText('');
+                }}
+              >
+                Hủy
+              </button>
+              <button
+                className="add-note-btn"
+                onClick={handleAddNote}
+              >
+                Lưu ghi chú
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="notes-list">
           {notes.length === 0 ? (
             <p className="no-notes">Chưa có ghi chú nào</p>

@@ -139,12 +139,9 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
       }
     });
 
-    // Request browser notification permission
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
-
-    // Cleanup on unmount
     return () => {
       unsubscribe();
       notificationService.disconnect();
@@ -160,11 +157,7 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
         setCurrentPage(0);
         setHasMoreNotifications((data.notifications || []).length < (data.total || 0));
       } catch (error) {
-        console.error('Error fetching notifications:', error);
-        // Fallback to mock data
-        setNotificationList(allNotifications);
-        setNotificationCount(2);
-        setHasMoreNotifications(false);
+        console.log('Error fetching notifications, using mock data:', error);
       }
     };
 
@@ -192,31 +185,24 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
     setIsUserDropdownOpen(false);
   };
 
-  // Handle scroll to load more notifications
   const handleNotificationScroll = async (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
     const scrollPosition = target.scrollTop + target.clientHeight;
     const scrollHeight = target.scrollHeight;
     
-    // Load more when scrolled near bottom (within 50px) and has more data
     if (scrollPosition >= scrollHeight - 50 && !isLoadingMore && hasMoreNotifications) {
       setIsLoadingMore(true);
       
       try {
         const nextPage = currentPage + 1;
-        console.log(`[Notifications] Loading page ${nextPage}, current items: ${notificationList.length}`);
-        
         const data = await notificationService.getNotifications(nextPage, PAGE_SIZE);
-        
-        // Check if there's more data
+
         if (data.notifications && data.notifications.length > 0) {
           setNotificationList(prev => [...prev, ...data.notifications]);
           setCurrentPage(nextPage);
-          // Update hasMore flag
           const newTotal = notificationList.length + data.notifications.length;
           setHasMoreNotifications(newTotal < (data.total || 0));
         } else {
-          // No more data
           setHasMoreNotifications(false);
         }
       } catch (error) {
@@ -276,7 +262,7 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
     { label: 'Beginner', href: '/courses/beginner' },
     { label: 'Intermediate', href: '/courses/intermediate' },
     { label: 'Advanced', href: '/courses/advanced' },
-    { label: 'Business English', href: '/courses/business' }
+    // { label: 'Business English', href: '/courses/business' }
   ];
 
   const skillsDropdown: DropdownItem[] = [
@@ -284,14 +270,6 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
     { label: 'Speaking', href: '/skills/speaking' },
     { label: 'Reading', href: '/skills/reading' },
     { label: 'Writing', href: '/skills/writing' }
-  ];
-
-  // Mock notification data (fallback)
-  const allNotifications: Notification[] = [
-    { id: '1', userId: '1', type: 'LESSON', title: 'New lesson available', content: 'Advanced Grammar Unit 5 is now available', createdAt: new Date(Date.now() - 2*60*60*1000).toISOString(), readAt: null, read: false },
-    { id: '2', userId: '1', type: 'ACHIEVEMENT', title: 'Achievement unlocked', content: "You've completed 10 lessons this week!", createdAt: new Date(Date.now() - 5*60*60*1000).toISOString(), readAt: null, read: false },
-    { id: '3', userId: '1', type: 'REMINDER', title: 'Reminder', content: "Don't forget to practice speaking today", createdAt: new Date(Date.now() - 24*60*60*1000).toISOString(), readAt: new Date(Date.now() - 12*60*60*1000).toISOString(), read: true },
-    { id: '4', userId: '1', type: 'COURSE', title: 'New course available', content: 'Business English for Professionals', createdAt: new Date(Date.now() - 2*24*60*60*1000).toISOString(), readAt: new Date(Date.now() - 1*24*60*60*1000).toISOString(), read: true },
   ];
 
   return (
@@ -329,7 +307,7 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
           />
           
           {/* <MenuItem label="Resources" href="/resources" /> */}
-          <MenuItem label="Speaking Training" href="/speaking-training" />
+          <MenuItem label="SpeakUp" href="/speaking-training" />
           <MenuItem label="About Us" href="/about" />
           <MenuItem label="Contact" href="/contact" />
         </nav>

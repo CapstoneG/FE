@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './SpeakingPracticePage.css';
 import { FaMicrophone, FaStop, FaPaperPlane, FaArrowLeft, FaRobot, FaVolumeUp } from 'react-icons/fa';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import chatbotService from '../services/aiService';
 
 interface Message {
   id: string;
@@ -24,72 +25,46 @@ interface Message {
 
 interface AIResponse {
   response: string;
-  audio_url: string;
-  grammar_feedback: {
+  analysis: {
     has_error: boolean;
-    original: string;
+    topic: string | null;
     corrected: string | null;
     explanation: string | null;
-    error_type: string | null;
-    severity: string | null;
   };
   alternatives: string[];
   translation: string;
-  flashcard_created: boolean;
-  session_id: string;
 }
 
 const SpeakingPracticePage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState<string>('');
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [isAiTyping, setIsAiTyping] = useState<boolean>(false);
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
-  const [sessionId, setSessionId] = useState<string>('');
+  const [sessionId, setSessionId] = useState<string>((location.state as any)?.sessionId || '');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
 
-  const language = searchParams.get('lang') || 'en-US';
-  const scenario = searchParams.get('scenario') || 'restaurant';
-  const customData = searchParams.get('data');
+  const variantId = searchParams.get('variant') || 'v_us';
+  const scenarioId = searchParams.get('scenario') || 'sc_restaurant';
+  const contextId = searchParams.get('context') || 'ctx_order_steak';
 
   const getScenarioTitle = () => {
-    if (scenario === 'custom' && customData) {
-      try {
-        const data = JSON.parse(decodeURIComponent(customData));
-        return data.title;
-      } catch {
-        return 'Tình huống tùy chỉnh';
-      }
-    }
-    
-    const scenarioTitles: { [key: string]: string } = {
-      restaurant: 'Nhà hàng',
-      shopping: 'Mua sắm',
-      hotel: 'Khách sạn',
-      airport: 'Sân bay',
-      interview: 'Phỏng vấn xin việc',
-      presentation: 'Thuyết trình'
-    };
-    
-    return scenarioTitles[scenario] || scenario;
+    return contextId.replace('ctx_', '').replace(/_/g, ' ');
   };
 
-  // Text-to-Speech function
   const speakText = (text: string) => {
     if (!synthRef.current) return;
     
-    // Cancel any ongoing speech
     synthRef.current.cancel();
     
     const utterance = new SpeechSynthesisUtterance(text);
-    
-    // Set language based on selected language
-    utterance.lang = language;
-    utterance.rate = 0.9; // Slightly slower for learning
+    utterance.lang = variantId === 'v_uk' ? 'en-GB' : 'en-US';
+    utterance.rate = 0.9; 
     utterance.pitch = 1;
     utterance.volume = 1;
     
@@ -102,54 +77,25 @@ const SpeakingPracticePage: React.FC = () => {
     };
     
     utterance.onerror = (event) => {
-      console.error('Speech synthesis error:', event);
       setIsSpeaking(false);
     };
     
     synthRef.current.speak(utterance);
   };
 
-  // Handle AI Response
   const handleAIResponse = async (userText: string) => {
+    if (!sessionId) {
+      console.error('No session ID available');
+      return;
+    }
+
     setIsAiTyping(true);
 
     try {
-      // Map language codes to variant
-      const variantMap: { [key: string]: string } = {
-        'en-US': 'american',
-        'en-GB': 'british'
-      };
-      const variant = variantMap[language] || 'american';
-
-      // Get scenario name
-      const scenarioName = scenario === 'custom' ? 
-        (customData ? JSON.parse(decodeURIComponent(customData)).title : 'general') : 
-        `In ${scenario}`;
-
-      const response = await fetch('https://uncriticized-vernon-idioplasmic.ngrok-free.dev/api/conversation/message', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: userText,
-          variant: variant,
-          scenario: scenarioName,
-          session_id: sessionId || 'new_session',
-          context_name: 'speaking_practice'
-        })
+      const data: AIResponse = await chatbotService.sendConversationMessage({
+        session_id: sessionId,
+        message: userText
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to get AI response');
-      }
-
-      const data: AIResponse = await response.json();
-      
-      // Update session ID if this is a new session
-      if (data.session_id && !sessionId) {
-        setSessionId(data.session_id);
-      }
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -157,24 +103,22 @@ const SpeakingPracticePage: React.FC = () => {
         text: data.response,
         timestamp: new Date(),
         isVoice: false,
-        audioUrl: data.audio_url,
         translation: data.translation,
-        grammarFeedback: data.grammar_feedback,
+        grammarFeedback: data.analysis.has_error ? {
+          has_error: data.analysis.has_error,
+          original: userText,
+          corrected: data.analysis.corrected,
+          explanation: data.analysis.explanation,
+          error_type: data.analysis.topic,
+          severity: 'medium'
+        } : undefined,
         alternatives: data.alternatives
       };
       
       setMessages(prev => [...prev, aiMessage]);
       setIsAiTyping(false);
-      
-      // Play audio from URL if available
-      if (data.audio_url) {
-        playAudioFromUrl(data.audio_url);
-      } else {
-        // Fallback to TTS
-        speakText(data.response);
-      }
+      speakText(data.response);
     } catch (error) {
-      console.error('Error getting AI response:', error);
       setIsAiTyping(false);
       
       // Fallback to mock response
@@ -190,7 +134,6 @@ const SpeakingPracticePage: React.FC = () => {
     }
   };
 
-  // Play audio from URL
   const playAudioFromUrl = (audioUrl: string) => {
     const audio = new Audio(`https://uncriticized-vernon-idioplasmic.ngrok-free.dev${audioUrl}`);
     
@@ -205,7 +148,6 @@ const SpeakingPracticePage: React.FC = () => {
     audio.onerror = (error) => {
       console.error('Error playing audio:', error);
       setIsSpeaking(false);
-      // Fallback to TTS if audio fails
       const lastMessage = messages[messages.length - 1];
       if (lastMessage && lastMessage.sender === 'ai') {
         speakText(lastMessage.text);
@@ -213,19 +155,17 @@ const SpeakingPracticePage: React.FC = () => {
     };
     
     audio.play().catch(error => {
-      console.error('Failed to play audio:', error);
       setIsSpeaking(false);
     });
   };
 
   useEffect(() => {
-    // Initialize Speech Recognition
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = language;
+      recognitionRef.current.lang = variantId === 'v_uk' ? 'en-GB' : 'en-US';
 
       recognitionRef.current.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
@@ -239,12 +179,10 @@ const SpeakingPracticePage: React.FC = () => {
         setMessages(prev => [...prev, userMessage]);
         setIsRecording(false);
         
-        // Send to AI after voice input
         handleAIResponse(transcript);
       };
 
       recognitionRef.current.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
         setIsRecording(false);
         if (event.error === 'not-allowed') {
           alert('Vui lòng cho phép truy cập microphone để sử dụng tính năng ghi âm.');
@@ -256,26 +194,22 @@ const SpeakingPracticePage: React.FC = () => {
       };
     }
 
-    // Initialize Speech Synthesis
     synthRef.current = window.speechSynthesis;
 
-    // Send initial AI greeting
     const greeting: Message = {
       id: Date.now().toString(),
       sender: 'ai',
-      text: `Xin chào! Tôi sẽ giúp bạn luyện tập tình huống "${getScenarioTitle()}". Hãy bắt đầu cuộc trò chuyện bằng cách nói hoặc gõ tin nhắn.`,
+      text: `Hello "${getScenarioTitle()}"! I'm your AI assistant. Let's practice speaking together. You can type or use the microphone to send your messages.`,
       timestamp: new Date(),
       isVoice: false
     };
     setMessages([greeting]);
     
-    // Speak the greeting
     setTimeout(() => {
       speakText(greeting.text);
     }, 500);
 
     return () => {
-      // Cleanup
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
@@ -286,7 +220,6 @@ const SpeakingPracticePage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Auto scroll to bottom
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
@@ -305,7 +238,6 @@ const SpeakingPracticePage: React.FC = () => {
     const messageText = inputText;
     setInputText('');
     
-    // Get AI response
     handleAIResponse(messageText);
   };
 
@@ -351,7 +283,7 @@ const SpeakingPracticePage: React.FC = () => {
         </button>
         <div className="practice-info">
           <h2>{getScenarioTitle()}</h2>
-          <span className="language-badge">{language}</span>
+          <span className="language-badge">{variantId === 'v_uk' ? '🇬🇧 British' : '🇺🇸 American'}</span>
           {isSpeaking && (
             <span className="speaking-indicator">
               🔊 AI đang nói...

@@ -161,25 +161,18 @@ const BeginnerPage: React.FC = () => {
             Bắt đầu hành trình chinh phục tiếng Anh từ con số 0
           </p>
           <div className="hero-stats">
-            <div className="stat-item">
+            <div className="stat-item-beginner">
               <FaBook size={24} color="#2563eb" />
               <div>
                 <h3>4 Modules</h3>
                 <p>Học từ cơ bản</p>
               </div>
             </div>
-            <div className="stat-item">
+            <div className="stat-item-beginner">
               <FaClock size={24} color="#2563eb" />
               <div>
                 <h3>20+ Giờ</h3>
                 <p>Nội dung học tập</p>
-              </div>
-            </div>
-            <div className="stat-item">
-              <BiTrophy size={24} color="#2563eb" />
-              <div>
-                <h3>Chứng chỉ</h3>
-                <p>Khi hoàn thành</p>
               </div>
             </div>
           </div>
@@ -215,12 +208,6 @@ const BeginnerPage: React.FC = () => {
               title="Ngữ pháp cơ bản"
               description="Các cấu trúc câu đơn giản và thì hiện tại đơn"
             />
-            <OverviewCard
-              icon={<FaHeadphones size={28} />}
-              iconColor="#2563eb"
-              title="Giao tiếp thực tế"
-              description="Các mẫu câu giao tiếp hữu ích trong cuộc sống"
-            />
           </div>
         </div>
       </section>
@@ -230,7 +217,7 @@ const BeginnerPage: React.FC = () => {
         <div className="content-container">
           <h2 className="section-title">Nội dung khóa học</h2>
           <p className="section-subtitle">
-            4 modules được thiết kế khoa học, từ cơ bản đến nâng cao
+            2 modules được thiết kế khoa học, từ cơ bản đến nâng cao
           </p>
           
           <div className="modules-list">

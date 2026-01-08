@@ -1,111 +1,102 @@
-import React, { useState } from 'react';
-// import './SpeakingTrainingPage.css';
+import React, { useState, useEffect } from 'react';
 import { FaMicrophone, FaGlobe, FaCheckCircle, FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import chatbotService from '../services/aiService';
+import type { Variant, Context } from '../services/aiService';
+import './SpeakingTrainingPage.css';
 
-interface Language {
-  code: string;
-  name: string;
-  nativeName: string;
-  flag: string;
-}
-
-interface Scenario {
+interface ScenarioDisplay {
   id: string;
   title: string;
   description: string;
   icon: string;
-  difficulty: string;
+  contexts?: Context[];
 }
 
 const SpeakingTrainingPage: React.FC = () => {
   const navigate = useNavigate();
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('');
+  const [variants, setVariants] = useState<Variant[]>([]);
+  const [scenarios, setScenarios] = useState<ScenarioDisplay[]>([]);
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+  const [selectedScenario, setSelectedScenario] = useState<ScenarioDisplay | null>(null);
+  const [selectedContext, setSelectedContext] = useState<Context | null>(null);
   const [showScenarioPopup, setShowScenarioPopup] = useState<boolean>(false);
-  const [selectedScenario, setSelectedScenario] = useState<string>('');
-  const [showCustomInput, setShowCustomInput] = useState<boolean>(false);
-  const [customTitle, setCustomTitle] = useState<string>('');
-  const [customDescription, setCustomDescription] = useState<string>('');
+  const [showContextPopup, setShowContextPopup] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const languages: Language[] = [
-    { code: 'en-US', name: 'English (US)', nativeName: 'English', flag: '🇺🇸' },
-    { code: 'en-GB', name: 'English (UK)', nativeName: 'English', flag: '🇬🇧' },
-  ];
+  // Load variants and scenarios from API
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const [variantsData, scenariosData] = await Promise.all([
+          chatbotService.getVariants(),
+          chatbotService.getVariantScenarios()
+        ]);
+        
+        setVariants(variantsData);
+        
+        // Transform API scenarios to display format
+        const displayScenarios: ScenarioDisplay[] = scenariosData.map(scenario => ({
+          id: scenario.id,
+          title: scenario.name,
+          description: scenario.description,
+          icon: '💬',
+          contexts: scenario.contexts
+        }));
+        
+        setScenarios(displayScenarios);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadData();
+  }, []);
 
-  const scenarios: Scenario[] = [
-    {
-      id: 'restaurant',
-      title: 'Nhà hàng',
-      description: 'Luyện tập đặt bàn, gọi món và thanh toán',
-      icon: '',
-      difficulty: 'Dễ'
-    },
-    {
-      id: 'shopping',
-      title: 'Mua sắm',
-      description: 'Hỏi giá, thử đồ và mua hàng',
-      icon: '',
-      difficulty: 'Dễ'
-    },
-    {
-      id: 'hotel',
-      title: 'Khách sạn',
-      description: 'Đặt phòng, check-in và yêu cầu dịch vụ',
-      icon: '',
-      difficulty: 'Trung bình'
-    },
-    {
-      id: 'airport',
-      title: 'Sân bay',
-      description: 'Làm thủ tục, hỏi đường và lên máy bay',
-      icon: '',
-      difficulty: 'Trung bình'
-    },
-    {
-      id: 'interview',
-      title: 'Phỏng vấn xin việc',
-      description: 'Trả lời câu hỏi phỏng vấn chuyên nghiệp',
-      icon: '',
-      difficulty: 'Khó'
-    },
-    {
-      id: 'presentation',
-      title: 'Thuyết trình',
-      description: 'Trình bày ý tưởng và thảo luận',
-      icon: '',
-      difficulty: 'Khó'
-    }
-  ];
-
-  const handleLanguageSelect = (languageCode: string) => {
-    setSelectedLanguage(languageCode);
+  const handleVariantSelect = (variant: Variant) => {
+    setSelectedVariant(variant);
     setShowScenarioPopup(true);
   };
 
-  const handleScenarioSelect = (scenarioId: string) => {
-    setSelectedScenario(scenarioId);
-    if (scenarioId === 'custom') {
-      setShowCustomInput(true);
-    } else {
-      setShowCustomInput(false);
+  const handleScenarioSelect = (scenario: ScenarioDisplay) => {
+    setSelectedScenario(scenario);
+    if (scenario.contexts && scenario.contexts.length > 0) {
+      setShowContextPopup(true);
     }
+  };
+
+  const handleContextSelect = (context: Context) => {
+    setSelectedContext(context);
   };
 
   const handleClosePopup = () => {
     setShowScenarioPopup(false);
-    setSelectedScenario('');
-    setShowCustomInput(false);
-    setCustomTitle('');
-    setCustomDescription('');
+    setShowContextPopup(false);
+    setSelectedScenario(null);
+    setSelectedContext(null);
   };
 
-  const handleStartTraining = () => {
-    if (selectedLanguage && selectedScenario) {
-      if (selectedScenario === 'custom') {
-        const customScenarioData = encodeURIComponent(JSON.stringify({ title: customTitle, description: customDescription }));
-        navigate(`/speaking-training/practice?lang=${selectedLanguage}&scenario=custom&data=${customScenarioData}`);
-      } else {
-        navigate(`/speaking-training/practice?lang=${selectedLanguage}&scenario=${selectedScenario}`);
+  const handleStartTraining = async () => {
+    if (selectedVariant && selectedScenario && selectedContext) {
+      try {
+        const sessionResponse = await chatbotService.createSession({
+          user_id: 1, 
+          variant_id: selectedVariant.id,
+          scenario_id: selectedScenario.id,
+          context_id: selectedContext.id
+        });
+
+        // Navigate with session_id
+        navigate(
+          `/speaking-training/practice?variant=${selectedVariant.id}&scenario=${selectedScenario.id}&context=${selectedContext.id}`,
+          { state: { sessionId: sessionResponse.session_id } }
+        );
+      } catch (error) {
+        console.error('Error creating session:', error);
+        alert('Không thể tạo phiên luyện tập. Vui lòng thử lại!');
       }
     }
   };
@@ -125,32 +116,36 @@ const SpeakingTrainingPage: React.FC = () => {
         <div className="language-selection">
           <div className="selection-header">
             <FaGlobe size={24} />
-            <h2>Chọn ngôn ngữ bạn muốn luyện tập</h2>
+            <h2>Chọn phiên bản tiếng Anh</h2>
           </div>
           <p className="selection-description">
-            Chọn một ngôn ngữ để bắt đầu luyện tập phát âm và giao tiếp
+            Chọn một phiên bản để bắt đầu luyện tập phát âm và giao tiếp
           </p>
 
-          <div className="languages-grid">
-            {languages.map((language) => (
-              <div
-                key={language.code}
-                className={`language-card ${selectedLanguage === language.code ? 'selected' : ''}`}
-                onClick={() => handleLanguageSelect(language.code)}
-              >
-                <div className="language-flag">{language.flag}</div>
-                <div className="language-info">
-                  <h3 className="language-name">{language.name}</h3>
-                  <p className="language-native">{language.nativeName}</p>
-                </div>
-                {selectedLanguage === language.code && (
-                  <div className="selected-indicator">
-                    <FaCheckCircle size={24} />
+          {isLoading ? (
+            <div className="loading-state">Đang tải...</div>
+          ) : (
+            <div className="languages-grid">
+              {variants.map((variant) => (
+                <div
+                  key={variant.id}
+                  className={`language-card ${selectedVariant?.id === variant.id ? 'selected' : ''}`}
+                  onClick={() => handleVariantSelect(variant)}
+                >
+                  <div className="language-flag">{variant.flag_icon}</div>
+                  <div className="language-info">
+                    <h3 className="language-name">{variant.name}</h3>
+                    <p className="language-native">{variant.name}</p>
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
+                  {selectedVariant?.id === variant.id && (
+                    <div className="selected-indicator">
+                      <FaCheckCircle size={24} />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Scenario Popup */}
@@ -172,80 +167,86 @@ const SpeakingTrainingPage: React.FC = () => {
                 {scenarios.map((scenario) => (
                   <div
                     key={scenario.id}
-                    className={`scenario-card ${selectedScenario === scenario.id ? 'selected' : ''}`}
-                    onClick={() => handleScenarioSelect(scenario.id)}
+                    className={`scenario-card ${selectedScenario?.id === scenario.id ? 'selected' : ''}`}
+                    onClick={() => handleScenarioSelect(scenario)}
                   >
                     <div className="scenario-icon">{scenario.icon}</div>
                     <div className="scenario-info">
                       <h3 className="scenario-title">{scenario.title}</h3>
                       <p className="scenario-description">{scenario.description}</p>
-                      <span className={`difficulty-badge ${scenario.difficulty.toLowerCase()}`}>
-                        {scenario.difficulty}
-                      </span>
                     </div>
-                    {selectedScenario === scenario.id && (
+                    {selectedScenario?.id === scenario.id && (
                       <div className="selected-indicator">
                         <FaCheckCircle size={20} />
                       </div>
                     )}
                   </div>
                 ))}
-                
-                {/* Custom Scenario Card */}
-                <div
-                  className={`scenario-card custom-scenario ${selectedScenario === 'custom' ? 'selected' : ''}`}
-                  onClick={() => handleScenarioSelect('custom')}
-                >
-                  <div className="scenario-icon"></div>
-                  <div className="scenario-info">
-                    <h3 className="scenario-title">Tự tạo tình huống</h3>
-                    <p className="scenario-description">Tạo tình huống riêng theo nhu cầu của bạn</p>
-                    <span className="difficulty-badge custom">
-                      Tùy chỉnh
-                    </span>
-                  </div>
-                  {selectedScenario === 'custom' && (
-                    <div className="selected-indicator">
-                      <FaCheckCircle size={20} />
-                    </div>
-                  )}
-                </div>
               </div>
-
-              {/* Custom Scenario Input */}
-              {showCustomInput && (
-                <div className="custom-scenario-input">
-                  <h3>Nhập thông tin tình huống của bạn</h3>
-                  <div className="input-group">
-                    <label htmlFor="custom-title">Tiêu đề tình huống</label>
-                    <input
-                      id="custom-title"
-                      type="text"
-                      placeholder="VD: Đi siêu thị, Gặp bác sĩ, Hỏi đường..."
-                      value={customTitle}
-                      onChange={(e) => setCustomTitle(e.target.value)}
-                      className="custom-input"
-                    />
-                  </div>
-                  <div className="input-group">
-                    <label htmlFor="custom-description">Mô tả tình huống</label>
-                    <textarea
-                      id="custom-description"
-                      placeholder="Mô tả chi tiết tình huống bạn muốn luyện tập..."
-                      value={customDescription}
-                      onChange={(e) => setCustomDescription(e.target.value)}
-                      className="custom-textarea"
-                      rows={3}
-                    />
-                  </div>
-                </div>
-              )}
 
               <div className="popup-actions">
                 <button
-                  className={`start-btn ${!selectedScenario || (selectedScenario === 'custom' && (!customTitle.trim() || !customDescription.trim())) ? 'disabled' : ''}`}
+                  className={`start-btn ${!selectedScenario ? 'disabled' : ''}`}
+                  onClick={() => selectedScenario && setShowContextPopup(true)}
+                  disabled={!selectedScenario}
+                >
+                  Tiếp theo
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Context Selection Popup */}
+        {showContextPopup && selectedScenario && (
+          <div className="scenario-popup-overlay" onClick={handleClosePopup}>
+            <div className="scenario-popup" onClick={(e) => e.stopPropagation()}>
+              <div className="popup-header">
+                <h2>Chọn ngữ cảnh cụ thể</h2>
+                <button className="close-popup-btn" onClick={handleClosePopup}>
+                  <FaTimes size={24} />
+                </button>
+              </div>
+              
+              <p className="popup-description">
+                Chọn một ngữ cảnh trong tình huống "{selectedScenario.title}"
+              </p>
+
+              <div className="scenarios-grid">
+                {selectedScenario.contexts?.map((context) => (
+                  <div
+                    key={context.id}
+                    className={`scenario-card ${selectedContext?.id === context.id ? 'selected' : ''}`}
+                    onClick={() => handleContextSelect(context)}
+                  >
+                    <div className="scenario-icon">💬</div>
+                    <div className="scenario-info">
+                      <h3 className="scenario-title">{context.name}</h3>
+                      <p className="scenario-description">{context.description}</p>
+                    </div>
+                    {selectedContext?.id === context.id && (
+                      <div className="selected-indicator">
+                        <FaCheckCircle size={20} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="popup-actions">
+                <button
+                  className="back-btn-secondary"
+                  onClick={() => {
+                    setShowContextPopup(false);
+                    setSelectedContext(null);
+                  }}
+                >
+                  Quay lại
+                </button>
+                <button
+                  className={`start-btn ${!selectedContext ? 'disabled' : ''}`}
                   onClick={handleStartTraining}
-                  disabled={!selectedScenario || (selectedScenario === 'custom' && (!customTitle.trim() || !customDescription.trim()))}
+                  disabled={!selectedContext}
                 >
                   <FaMicrophone size={18} />
                   Bắt đầu luyện tập

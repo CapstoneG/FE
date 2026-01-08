@@ -21,7 +21,6 @@ const VocabularyLesson: React.FC<VocabularyLessonProps> = ({
   title,
   description,
   vocabulary,
-  onComplete,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showMeaning, setShowMeaning] = useState(false);
@@ -44,17 +43,6 @@ const VocabularyLesson: React.FC<VocabularyLessonProps> = ({
     }
   };
 
-  const handleMarkAsLearned = () => {
-    const newLearned = new Set(learnedWords);
-    newLearned.add(currentIndex);
-    setLearnedWords(newLearned);
-    
-    if (newLearned.size === vocabulary.length && onComplete) {
-      setTimeout(() => {
-        onComplete();
-      }, 500);
-    }
-  };
 
   const handleSpeak = (text: string) => {
     if ('speechSynthesis' in window) {
@@ -70,25 +58,25 @@ const VocabularyLesson: React.FC<VocabularyLessonProps> = ({
   };
 
   return (
-    <div className="vocabulary-lesson">
-      <div className="vocabulary-header">
-        <div className="header-content">
-          <FaBook className="header-icon" size={32} />
+    <div className="vocabulary-lesson-container-vocabulary-lesson">
+      <div className="vocabulary-header-vocabulary-lesson">
+        <div className="header-content-vocabulary-lesson">
+          <FaBook className="header-icon-vocabulary-lesson" />
           <div>
-            <h1 className="lesson-title">{title}</h1>
-            {description && <p className="lesson-description">{description}</p>}
+            <h1 className="lesson-title-vocabulary-lesson">{title}</h1>
+            {description && <p className="lesson-description-vocabulary-lesson">{description}</p>}
           </div>
         </div>
         
-        <div className="view-mode-toggle">
+        <div className="view-mode-toggle-vocabulary-lesson">
           <button
-            className={`toggle-btn ${viewMode === 'flashcard' ? 'active' : ''}`}
+            className={`toggle-btn-vocabulary-lesson ${viewMode === 'flashcard' ? 'active-vocabulary-lesson' : ''}`}
             onClick={() => setViewMode('flashcard')}
           >
             Flashcard
           </button>
           <button
-            className={`toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+            className={`toggle-btn-vocabulary-lesson ${viewMode === 'list' ? 'active-vocabulary-lesson' : ''}`}
             onClick={() => setViewMode('list')}
           >
             Danh sách
@@ -96,33 +84,31 @@ const VocabularyLesson: React.FC<VocabularyLessonProps> = ({
         </div>
       </div>
 
-
-
       {viewMode === 'flashcard' ? (
-        <div className="flashcard-mode">
-          <div className="flashcard-container">
-            <div className="flashcard-counter">
+        <div className="flashcard-mode-vocabulary-lesson">
+          <div className="flashcard-container-vocabulary-lesson">
+            <div className="flashcard-counter-vocabulary-lesson">
               {currentIndex + 1} / {vocabulary.length}
             </div>
             
             <div 
-              className={`flashcard ${showMeaning ? 'flipped' : ''}`}
+              className={`flashcard-vocabulary-lesson ${showMeaning ? 'flipped-vocabulary-lesson' : ''}`}
               onClick={handleFlipCard}
             >
-              <div className="flashcard-front">
+              <div className="flashcard-front-vocabulary-lesson">
                 {currentWord.imageUrl && (
-                  <div className="word-image-container">
+                  <div className="word-image-container-vocabulary-lesson">
                     <img 
                       src={currentWord.imageUrl} 
                       alt={currentWord.word}
-                      className="word-image"
+                      className="word-image-vocabulary-lesson"
                     />
                   </div>
                 )}
-                <div className="word-header">
-                  <h2 className="word">{currentWord.word}</h2>
+                <div className="word-header-vocabulary-lesson">
+                  <h2 className="word-vocabulary-lesson">{currentWord.word}</h2>
                   <button
-                    className="speak-btn"
+                    className="speak-btn-vocabulary-lesson"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleSpeak(currentWord.word);
@@ -132,30 +118,30 @@ const VocabularyLesson: React.FC<VocabularyLessonProps> = ({
                   </button>
                 </div>
                 {currentWord.pronunciation && (
-                  <p className="pronunciation">/{currentWord.pronunciation}/</p>
+                  <p className="pronunciation-vocabulary-lesson">/{currentWord.pronunciation}/</p>
                 )}
-                <p className="flip-hint">Click để xem nghĩa</p>
+                <p className="flip-hint-vocabulary-lesson">Click để xem nghĩa</p>
               </div>
               
-              <div className="flashcard-back">
+              <div className="flashcard-back-vocabulary-lesson">
                 {currentWord.imageUrl && (
-                  <div className="word-image-container small">
+                  <div className="word-image-container-vocabulary-lesson small-vocabulary-lesson">
                     <img 
                       src={currentWord.imageUrl} 
                       alt={currentWord.word}
-                      className="word-image"
+                      className="word-image-vocabulary-lesson"
                     />
                   </div>
                 )}
-                <div className="meaning-section">
+                <div className="meaning-section-vocabulary-lesson">
                   <h3>Nghĩa:</h3>
-                  <p className="meaning">{currentWord.meaning}</p>
+                  <p className="meaning-vocabulary-lesson">{currentWord.meaning}</p>
                 </div>
-                <div className="example-section">
+                <div className="example-section-vocabulary-lesson">
                   <h3>Ví dụ:</h3>
-                  <p className="example">{currentWord.example}</p>
+                  <p className="example-vocabulary-lesson">{currentWord.example}</p>
                   <button
-                    className="speak-btn-small"
+                    className="speak-btn-small-vocabulary-lesson"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleSpeak(currentWord.example);
@@ -167,32 +153,17 @@ const VocabularyLesson: React.FC<VocabularyLessonProps> = ({
               </div>
             </div>
 
-            <div className="flashcard-actions">
+            <div className="flashcard-actions-vocabulary-lesson">
               <button
-                className="nav-btn"
+                className="nav-btn-vocabulary-lesson"
                 onClick={handlePrevious}
                 disabled={currentIndex === 0}
               >
                 <FaArrowLeft /> Trước
               </button>
               
-              {!learnedWords.has(currentIndex) && showMeaning && (
-                <button
-                  className="learned-btn"
-                  onClick={handleMarkAsLearned}
-                >
-                  <FaCheckCircle /> Đã nhớ
-                </button>
-              )}
-              
-              {learnedWords.has(currentIndex) && (
-                <span className="learned-badge">
-                  <FaCheckCircle /> Đã học
-                </span>
-              )}
-              
               <button
-                className="nav-btn"
+                className="nav-btn-vocabulary-lesson"
                 onClick={handleNext}
                 disabled={currentIndex === vocabulary.length - 1}
               >
@@ -202,72 +173,54 @@ const VocabularyLesson: React.FC<VocabularyLessonProps> = ({
           </div>
         </div>
       ) : (
-        <div className="list-mode">
-          <div className="vocabulary-list">
+        <div className="list-mode-vocabulary-lesson">
+          <div className="vocabulary-list-vocabulary-lesson">
             {vocabulary.map((item, index) => (
               <div 
                 key={index} 
-                className={`vocabulary-card ${learnedWords.has(index) ? 'learned' : ''}`}
+                className={`vocabulary-card-vocabulary-lesson ${learnedWords.has(index) ? 'learned-vocabulary-lesson' : ''}`}
               >
                 {item.imageUrl && (
-                  <div className="card-image-container">
+                  <div className="card-image-container-vocabulary-lesson">
                     <img 
                       src={item.imageUrl} 
                       alt={item.word}
-                      className="card-image"
+                      className="card-image-vocabulary-lesson"
                     />
                   </div>
                 )}
-                <div className="card-header">
-                  <div className="word-section">
-                    <h3 className="word">{item.word}</h3>
+                <div className="card-header-vocabulary-lesson">
+                  <div className="word-section-vocabulary-lesson">
+                    <h3 className="word-vocabulary-lesson">{item.word}</h3>
                     <button
-                      className="speak-btn-inline"
+                      className="speak-btn-inline-vocabulary-lesson"
                       onClick={() => handleSpeak(item.word)}
                     >
                       <FaVolumeUp size={18} />
                     </button>
                   </div>
                   {learnedWords.has(index) && (
-                    <FaCheckCircle className="learned-icon" size={20} />
+                    <FaCheckCircle className="learned-icon-vocabulary-lesson" size={20} />
                   )}
                 </div>
                 
                 {item.pronunciation && (
-                  <p className="pronunciation">/{item.pronunciation}/</p>
+                  <p className="pronunciation-vocabulary-lesson">/{item.pronunciation}/</p>
                 )}
                 
-                <p className="meaning">{item.meaning}</p>
+                <p className="meaning-vocabulary-lesson">{item.meaning}</p>
                 
-                <div className="example-box">
-                  <p className="example-label">Ví dụ:</p>
-                  <p className="example">{item.example}</p>
+                <div className="example-box-vocabulary-lesson">
+                  <p className="example-label-vocabulary-lesson">Ví dụ:</p>
+                  <p className="example-vocabulary-lesson">{item.example}</p>
                   <button
-                    className="speak-btn-inline"
+                    className="speak-btn-inline-vocabulary-lesson"
                     onClick={() => handleSpeak(item.example)}
                   >
                     <FaVolumeUp size={14} />
                   </button>
                 </div>
-                
-                {!learnedWords.has(index) && (
-                  <button
-                    className="mark-learned-btn"
-                    onClick={() => {
-                      const newLearned = new Set(learnedWords);
-                      newLearned.add(index);
-                      setLearnedWords(newLearned);
-                      
-                      if (newLearned.size === vocabulary.length && onComplete) {
-                        setTimeout(() => {
-                          onComplete();
-                        }, 500);
-                      }
-                    }}
-                  >
-                    <FaCheckCircle /> Đánh dấu đã học
-                  </button>
-                )}
+              
               </div>
             ))}
           </div>

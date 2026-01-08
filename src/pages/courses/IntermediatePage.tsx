@@ -135,25 +135,18 @@ const IntermediatePage: React.FC = () => {
             Nâng cao kỹ năng tiếng Anh lên một tầm cao mới
           </p>
           <div className="hero-stats">
-            <div className="stat-item">
+            <div className="stat-item-intermediate">
               <FaBook size={24} color="#f59e0b" />
               <div>
                 <h3>5 Modules</h3>
                 <p>Học chuyên sâu</p>
               </div>
             </div>
-            <div className="stat-item">
+            <div className="stat-item-intermediate">
               <FaClock size={24} color="#f59e0b" />
               <div>
                 <h3>35+ Giờ</h3>
                 <p>Nội dung phong phú</p>
-              </div>
-            </div>
-            <div className="stat-item">
-              <BiTrophy size={24} color="#f59e0b" />
-              <div>
-                <h3>Chứng chỉ</h3>
-                <p>Quốc tế</p>
               </div>
             </div>
           </div>
@@ -182,18 +175,6 @@ const IntermediatePage: React.FC = () => {
               iconColor="#f59e0b"
               title="Từ vựng đa dạng"
               description="Hơn 1000 từ vựng, idioms và phrasal verbs thông dụng"
-            />
-            <OverviewCard
-              icon={<FaHeadphones size={28} />}
-              iconColor="#f59e0b"
-              title="Giao tiếp tự tin"
-              description="Phát triển kỹ năng nghe - nói trong các tình huống thực tế"
-            />
-            <OverviewCard
-              icon={<FaBriefcase size={28} />}
-              iconColor="#f59e0b"
-              title="Business English"
-              description="Tiếng Anh thương mại và giao tiếp trong môi trường công sở"
             />
           </div>
         </div>
@@ -242,7 +223,7 @@ const IntermediatePage: React.FC = () => {
         <div className="content-container">
           <h2 className="section-title">Nội dung khóa học</h2>
           <p className="section-subtitle">
-            5 modules với hơn 35 giờ học chuyên sâu
+            2 modules với hơn 35 giờ học chuyên sâu
           </p>
           
           <div className="modules-list">

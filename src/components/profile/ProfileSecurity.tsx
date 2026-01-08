@@ -192,7 +192,6 @@ export const ProfileSecurity: React.FC = () => {
             <div className="delete-confirm">
               <div className="warning-message">
                 <div>
-                  <strong>Bạn có chắc chắn muốn vô hiệu hóa tài khoản không?</strong>
                   <p style={{ marginTop: '0.75rem', marginBottom: '0.75rem' }}>
                     Tài khoản của bạn sẽ bị khóa ngay lập tức và bạn sẽ không thể đăng nhập vào hệ thống.
                   </p>

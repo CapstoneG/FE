@@ -48,31 +48,33 @@
   flex-wrap: wrap;
 }
 
-.stat-item {
+.stat-item-beginner {
   display: flex;
   align-items: center;
   gap: 15px;
   background: rgba(255, 255, 255, 0.6);
-  padding: 15px 20px;
-  border-radius: 12px;
+  padding: 18px 22px;
+  border-radius: 14px;
   backdrop-filter: blur(10px);
-  transition: transform 0.3s ease;
+  transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.stat-item:hover {
+.stat-item-beginner:hover {
   transform: translateY(-5px);
   background: rgba(255, 255, 255, 0.8);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
-.stat-item h3 {
+
+.stat-item-beginner h3 {
   font-size: 1.25rem;
   margin: 0;
   font-weight: 700;
 }
 
-.stat-item p {
+
+.stat-item-beginner p {
   margin: 0;
   font-size: 0.9rem;
   opacity: 0.9;
@@ -123,9 +125,22 @@
 
 .overview-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+  max-width: 100% !important;
   gap: 30px;
   margin-top: 40px;
+}
+
+@media (min-width: 768px) {
+  .overview-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .overview-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .overview-card {
@@ -543,7 +558,7 @@
     width: 100%;
   }
 
-  .stat-item {
+  .stat-item-beginner {
     width: 100%;
   }
 

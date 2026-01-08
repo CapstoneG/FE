@@ -123,36 +123,6 @@ export const ProfileAchievements: React.FC = () => {
         </div>
       </div>
 
-      {/* Course Suggestions Section */}
-      <div className="suggestions-section">
-        <div className="section-header">
-          <h3>💡 Gợi ý cho bạn</h3>
-        </div>
-        <div className="suggestions-list">
-          {suggestions.map((suggestion) => (
-            <div key={suggestion.id} className="suggestion-card">
-              <div className="suggestion-image">
-                <img src={suggestion.image} alt={suggestion.title} />
-                <div className="suggestion-type">
-                  {suggestion.type === 'course' && '📚'}
-                  {suggestion.type === 'practice' && '🎧'}
-                  {suggestion.type === 'grammar' && '✍️'}
-                </div>
-              </div>
-              <div className="suggestion-content">
-                <h4 className="suggestion-title">{suggestion.title}</h4>
-                <p className="suggestion-reason">{suggestion.reason}</p>
-                <div className="suggestion-meta">
-                  <span className="difficulty">{suggestion.difficulty}</span>
-                  <span className="duration">{suggestion.duration}</span>
-                </div>
-                <button className="try-now-btn">Thử ngay</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Notifications Section */}
       <div className="notifications-section">
         <div className="section-header">

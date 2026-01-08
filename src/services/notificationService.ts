@@ -26,10 +26,6 @@ class NotificationService {
   private listeners: NotificationCallback[] = [];
   private isConnecting = false;
 
-  /**
-   * Connect WebSocket - CHỈ ĐỂ NHẬN notification real-time
-   * KHÔNG publish/send gì qua WebSocket
-   */
   connect(userId: string) {
     if (this.stompClient?.connected || this.isConnecting) {
       return;
@@ -56,20 +52,12 @@ class NotificationService {
       heartbeatOutgoing: 4000,
 
       onConnect: () => {
-        console.log('STOMP connected - ready to receive notifications');
         this.reconnectAttempts = 0;
         this.isConnecting = false;
-
-        // Subscribe to topic where backend publishes notifications
         const channel = `/topic/notifications/${userId}`;
-        console.log(`[WebSocket] Subscribing to channel: ${channel}`);
-
         this.stompClient?.subscribe(channel, (message: IMessage) => {
           try {
             const notification: Notification = JSON.parse(message.body);
-            console.log(`[WebSocket] ✅ Received real-time notification:`, notification);
-            
-            // Notify all listeners
             this.listeners.forEach(callback => callback(notification));
           } catch (error) {
             console.error(`[WebSocket] Error parsing notification:`, error);
@@ -133,11 +121,9 @@ class NotificationService {
    */
   async getNotifications(page: number = 0, size: number = 20) {
     try {
-      const url = `${API_BASE_URL}/notifications?page=${page}&size=${size}`;
-      console.log('[NotificationService] Fetching notifications from:', url);
+      const url = `${API_BASE_URL}/api/notifications?page=${page}&size=${size}`;
       
       const response = await this.fetchWithAuth(url);
-      console.log('[NotificationService] Response status:', response.status, response.statusText);
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -146,11 +132,7 @@ class NotificationService {
       }
       
       const rawData = await response.json();
-      console.log('[NotificationService] Raw data from backend:', rawData);
-      
-      // Backend trả về Spring Data Page format:
-      // { content: [...], totalElements: 6, ... }
-      // Cần map sang format FE expect: { notifications: [...], unreadCount: ... }
+
       const notifications = rawData.content || [];
       const unreadCount = notifications.filter((n: Notification) => !n.read).length;
       
@@ -160,10 +142,6 @@ class NotificationService {
         total: rawData.totalElements || 0
       };
       
-      console.log('[NotificationService] Mapped data:', mappedData);
-      console.log('[NotificationService] Total notifications:', notifications.length);
-      console.log('[NotificationService] Unread count:', unreadCount);
-      
       return mappedData;
     } catch (error) {
       console.error('[NotificationService] Error fetching notifications:', error);
@@ -171,13 +149,10 @@ class NotificationService {
     }
   }
 
-  /**
-   * Đánh dấu notification đã đọc - REST API
-   */
   async markAsRead(notificationId: string) {
     try {
       const response = await this.fetchWithAuth(
-        `${API_BASE_URL}/notifications/${notificationId}/read`,
+        `${API_BASE_URL}/api/notifications/${notificationId}/read`,
         { method: 'POST' }
       );
       
@@ -195,7 +170,7 @@ class NotificationService {
   async markAllAsRead() {
     try {
       const response = await this.fetchWithAuth(
-        `${API_BASE_URL}/notifications/read-all`,
+        `${API_BASE_URL}/api/notifications/read-all`,
         { method: 'POST' }
       );
       

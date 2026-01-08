@@ -371,7 +371,7 @@ class AuthService {
   async getCurrentUser(): Promise<User | null> {
     try {
       const token = this.getToken();
-      
+      console.log('Current token:', token);
       if (!token) {
         return null;
       }

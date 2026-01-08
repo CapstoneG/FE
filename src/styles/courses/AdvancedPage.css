@@ -79,7 +79,7 @@
   flex-wrap: wrap;
 }
 
-.stat-item {
+.stat-item-advanced {
   display: flex;
   align-items: center;
   gap: 15px;
@@ -91,22 +91,24 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.stat-item:hover {
+.stat-item-advanced {
   transform: translateY(-5px);
   background: rgba(255, 255, 255, 0.25);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
-.stat-item h3 {
+.stat-item-advanced h3 {
   font-size: 1.3rem;
   margin: 0;
   font-weight: 700;
+  color: white;
 }
 
-.stat-item p {
+.stat-item-advanced p {
   margin: 0;
   font-size: 0.9rem;
   opacity: 0.9;
+  color: white ;
 }
 
 .advanced-hero-image {
@@ -708,7 +710,7 @@
     width: 100%;
   }
 
-  .stat-item {
+  .stat-item-advanced {
     width: 100%;
   }
 
