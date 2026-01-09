@@ -21,6 +21,11 @@ export interface CreateDeckData {
   description: string;
 }
 
+export interface GenerateFlashcardsData {
+  deckId: number;
+  word: string[];
+}
+
 export interface StudyCard {
   id: number;
   term: string;
@@ -151,6 +156,171 @@ class FlashcardService {
         const errorData = await response.json().catch(() => ({}));
         throw {
           message: errorData.message || 'Failed to delete deck',
+          status: response.status,
+        } as ApiError;
+      }
+    } catch (error) {
+      if (error && typeof error === 'object' && 'status' in error) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw {
+          message: 'Network error. Please check your connection.',
+          status: 0,
+        } as ApiError;
+      }
+      throw {
+        message: 'An unexpected error occurred',
+        status: 500,
+      } as ApiError;
+    }
+  }
+
+  async cloneDeck(deckId: number): Promise<Deck> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/decks/${deckId}/clone`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw {
+          message: errorData.message || 'Failed to clone deck',
+          status: response.status,
+        } as ApiError;
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      if (error && typeof error === 'object' && 'status' in error) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw {
+          message: 'Network error. Please check your connection.',
+          status: 0,
+        } as ApiError;
+      }
+      throw {
+        message: 'An unexpected error occurred',
+        status: 500,
+      } as ApiError;
+    }
+  }
+
+  async resetDeckProgress(deckId: number): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/decks/${deckId}/reset`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw {
+          message: errorData.message || 'Failed to reset deck progress',
+          status: response.status,
+        } as ApiError;
+      }
+    } catch (error) {
+      if (error && typeof error === 'object' && 'status' in error) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw {
+          message: 'Network error. Please check your connection.',
+          status: 0,
+        } as ApiError;
+      }
+      throw {
+        message: 'An unexpected error occurred',
+        status: 500,
+      } as ApiError;
+    }
+  }
+
+  async getDeckStats(deckId: number): Promise<DeckStudyStatsResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/decks/${deckId}/stats`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw {
+          message: errorData.message || 'Failed to fetch deck statistics',
+          status: response.status,
+        } as ApiError;
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      if (error && typeof error === 'object' && 'status' in error) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw {
+          message: 'Network error. Please check your connection.',
+          status: 0,
+        } as ApiError;
+      }
+      throw {
+        message: 'An unexpected error occurred',
+        status: 500,
+      } as ApiError;
+    }
+  }
+
+  async getStudySession(deckId: number): Promise<StudyCard[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/study/session/${deckId}`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw {
+          message: errorData.message || 'Failed to fetch study session',
+          status: response.status,
+        } as ApiError;
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      if (error && typeof error === 'object' && 'status' in error) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw {
+          message: 'Network error. Please check your connection.',
+          status: 0,
+        } as ApiError;
+      }
+      throw {
+        message: 'An unexpected error occurred',
+        status: 500,
+      } as ApiError;
+    }
+  }
+
+  async generateFlashcards(data: GenerateFlashcardsData): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/generate-flashcards`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw {
+          message: errorData.message || 'Failed to generate flashcards',
           status: response.status,
         } as ApiError;
       }

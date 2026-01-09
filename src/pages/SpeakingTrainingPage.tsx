@@ -106,7 +106,7 @@ const SpeakingTrainingPage: React.FC = () => {
       <div className="training-container">
         {/* Header Section */}
         <div className="training-header">
-          <h1 className="training-title">Speaking Training</h1>
+          <h1 className="training-title">SpeakUp</h1>
           <p className="training-subtitle">
             Luyện tập kỹ năng nói với công nghệ nhận diện giọng nói AI
           </p>

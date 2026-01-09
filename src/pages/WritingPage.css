@@ -618,6 +618,39 @@
   font-weight: bold;
 }
 
+/* Evaluation Actions */
+.evaluation-actions {
+  margin-top: 30px;
+  padding-top: 24px;
+  border-top: 2px solid #e5e7eb;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-confirm {
+  padding: 14px 36px;
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.btn-confirm:hover {
+  background-color: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+}
+
+.btn-confirm:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
 .improvement-item:last-child {
   margin-bottom: 0;
 }
@@ -941,6 +974,7 @@
   display: flex;
   gap: 12px;
   justify-content: center;
+  margin-bottom: 10px;
 }
 
 .btn-primary,

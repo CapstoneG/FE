@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import './WritingPage.css';
 import { writingWebSocketService, type WordSuggestionResponse } from '../services/writingWebSocketService';
 import { skillsService, type WritingExercise } from '../services/skills';
+import { chatbotService } from '../services/aiService';
 import { Pagination } from '../components';
 
 interface Suggestion {
@@ -37,6 +38,7 @@ const WritingPage = () => {
   const [text, setText] = useState('');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [exerciseEvaluation, setExerciseEvaluation] = useState<EvaluationResult | null>(null);
   
   // Free writing mode states
   const [freeTitle, setFreeTitle] = useState('');
@@ -233,6 +235,7 @@ const WritingPage = () => {
     setText('');
     setSuggestions([]);
     setShowSuggestionPopup(false);
+    setExerciseEvaluation(null);
   };
 
   const getCaretCoordinates = (element: HTMLTextAreaElement, position: number) => {
@@ -290,38 +293,30 @@ const WritingPage = () => {
   };
 
   const handleGetSuggestions = async () => {
-    if (!text.trim()) return;
-    
-    // Kiểm tra kết nối WebSocket
-    if (!wsConnected) {
-      alert('WebSocket chưa kết nối. Vui lòng đợi hoặc tải lại trang.');
-      return;
-    }
+    if (!text.trim() || !selectedExercise) return;
     
     setIsLoading(true);
-    setSuggestions([]);
     
     try {
-      // Lấy từ cuối cùng trong văn bản để gợi ý
-      const words = text.trim().split(/\s+/);
-      const lastWord = words[words.length - 1];
+      const result = await chatbotService.scoreWriting({
+        title: selectedExercise.title,
+        description: selectedExercise.metadata.prompt,
+        content: text
+      });
       
-      // Gửi yêu cầu gợi ý từ vựng qua WebSocket
-      writingWebSocketService.sendWordSuggestionRequest(lastWord);
-      
-      // Kết quả sẽ được xử lý trong callback đã đăng ký ở useEffect
-      console.log('Đã gửi yêu cầu gợi ý cho từ:', lastWord);
-      
+      setExerciseEvaluation(result);
     } catch (error) {
-      console.error('Error sending suggestion request:', error);
+      console.error('Error evaluating writing:', error);
+      alert('Có lỗi xảy ra khi chấm điểm. Vui lòng thử lại.');
+    } finally {
       setIsLoading(false);
-      alert('Có lỗi xảy ra khi gửi yêu cầu. Vui lòng thử lại.');
     }
   };
 
   const handleClearText = () => {
     setText('');
     setSuggestions([]);
+    setExerciseEvaluation(null);
   };
 
   const handleEvaluate = async () => {
@@ -329,30 +324,20 @@ const WritingPage = () => {
     
     setIsEvaluating(true);
     
-    // Simulate API call for evaluation
-    setTimeout(() => {
-      const mockEvaluation: EvaluationResult = {
-        overallScore: 7.5,
-        grammarScore: 7.0,
-        grammarFeedback: 'Your writing demonstrates good grammatical structure. However, there are minor issues with tense consistency and preposition usage. For example, "I go to school yesterday" should be "I went to school yesterday". Pay attention to subject-verb agreement.',
-        vocabularyScore: 8.0,
-        vocabularyFeedback: 'Good range of vocabulary with appropriate word choices. Consider using more varied synonyms to avoid repetition. Your vocabulary level is appropriate for the content.',
-        coherenceScore: 8.5,
-        coherenceFeedback: 'Your ideas flow logically and are well-organized. Good use of transition words. Paragraphs are well-structured and easy to follow.',
-        contentScore: 7.0,
-        contentFeedback: 'Content addresses the topic clearly. You could develop supporting ideas further with more specific examples. Overall message is clear but could be more detailed.',
-        improvements: [
-          'Use more transition words to improve flow (however, moreover, furthermore)',
-          'Add specific examples to support your main ideas',
-          'Review verb tenses before finalizing your writing',
-          'Vary your vocabulary to avoid word repetition',
-          'Strengthen your conclusion with a more impactful closing statement'
-        ]
-      };
+    try {
+      const result = await chatbotService.scoreWriting({
+        title: freeTitle,
+        description: freeDescription,
+        content: freeContent
+      });
       
-      setEvaluation(mockEvaluation);
+      setEvaluation(result);
+    } catch (error) {
+      console.error('Error evaluating writing:', error);
+      alert('Có lỗi xảy ra khi chấm điểm. Vui lòng thử lại.');
+    } finally {
       setIsEvaluating(false);
-    }, 2000);
+    }
   };
 
   const handleResetFreeWriting = () => {
@@ -503,22 +488,96 @@ const WritingPage = () => {
             </div>
           </div>
 
-          <div className="writing-actions">
-            <button 
-              className="btn-primary"
-              onClick={handleGetSuggestions}
-              disabled={!text.trim() || isLoading}
-            >
-              {isLoading ? 'Processing...' : 'Submit'}
-            </button>
-            <button 
-              className="btn-secondary"
-              onClick={handleClearText}
-              disabled={!text.trim()}
-            >
-              Clear Text
-            </button>
-          </div>
+          {/* Writing Actions - Hidden after evaluation */}
+          {!exerciseEvaluation && (
+            <div className="writing-actions">
+              <button 
+                className="btn-primary"
+                onClick={handleGetSuggestions}
+                disabled={!text.trim() || isLoading}
+              >
+                {isLoading ? 'Evaluating...' : 'Submit'}
+              </button>
+              <button 
+                className="btn-secondary"
+                onClick={handleClearText}
+                disabled={!text.trim()}
+              >
+                Clear Text
+              </button>
+            </div>
+          )}
+
+          {/* AI Evaluation Result Section */}
+          {exerciseEvaluation && (
+            <div className="evaluation-section">
+              <div className="evaluation-header">
+                <h3>AI Evaluation Result</h3>
+                <div className="overall-score">
+                  <span className="score-label">Overall Score</span>
+                  <span className="score-value">{exerciseEvaluation.overallScore}/10</span>
+                </div>
+              </div>
+
+              <div className="evaluation-grid">
+                {/* Grammar Category */}
+                <div className="evaluation-category">
+                  <div className="category-header">
+                    <h4 className="category-title">Grammar</h4>
+                    <span className="category-score">{exerciseEvaluation.grammarScore}/10</span>
+                  </div>
+                  <p className="category-feedback">{exerciseEvaluation.grammarFeedback}</p>
+                </div>
+
+                {/* Vocabulary Category */}
+                <div className="evaluation-category">
+                  <div className="category-header">
+                    <h4 className="category-title">Vocabulary</h4>
+                    <span className="category-score">{exerciseEvaluation.vocabularyScore}/10</span>
+                  </div>
+                  <p className="category-feedback">{exerciseEvaluation.vocabularyFeedback}</p>
+                </div>
+
+                {/* Coherence Category */}
+                <div className="evaluation-category">
+                  <div className="category-header">
+                    <h4 className="category-title">Coherence</h4>
+                    <span className="category-score">{exerciseEvaluation.coherenceScore}/10</span>
+                  </div>
+                  <p className="category-feedback">{exerciseEvaluation.coherenceFeedback}</p>
+                </div>
+
+                {/* Content Category */}
+                <div className="evaluation-category">
+                  <div className="category-header">
+                    <h4 className="category-title">Content Relevance</h4>
+                    <span className="category-score">{exerciseEvaluation.contentScore}/10</span>
+                  </div>
+                  <p className="category-feedback">{exerciseEvaluation.contentFeedback}</p>
+                </div>
+              </div>
+
+              {/* Improvement Suggestions */}
+              <div className="improvements-section">
+                <h4 className="improvements-title">Suggestions for Improvement</h4>
+                <ul className="improvements-list">
+                  {exerciseEvaluation.improvements.map((improvement, index) => (
+                    <li key={index} className="improvement-item">{improvement}</li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Confirm Button */}
+              <div className="evaluation-actions">
+                <button 
+                  className="btn-confirm"
+                  onClick={handleBackToPractice}
+                >
+                  Hoàn thành
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );

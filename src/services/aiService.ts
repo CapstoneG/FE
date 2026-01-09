@@ -63,6 +63,33 @@ export interface MessageResponse {
   translation: string;
 }
 
+export interface ScoreWritingRequest {
+  title: string;
+  description: string;
+  content: string;
+}
+
+export interface ScoreWritingResponse {
+  grammarScore: number;
+  grammarFeedback: string;
+  vocabularyScore: number;
+  vocabularyFeedback: string;
+  coherenceScore: number;
+  coherenceFeedback: string;
+  contentScore: number;
+  contentFeedback: string;
+  overallScore: number;
+  improvements: string[];
+}
+
+export interface TranslateWordRequest {
+  word: string;
+}
+
+export interface TranslateWordResponse {
+  translated_word: string;
+}
+
 export const chatbotService = {
   async sendMessage(
     message: string,
@@ -173,6 +200,52 @@ export const chatbotService = {
       return data;
     } catch (error) {
       console.error('Error sending conversation message:', error);
+      throw error;
+    }
+  },
+
+  async scoreWriting(request: ScoreWritingRequest): Promise<ScoreWritingResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/score-writing`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: ScoreWritingResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error scoring writing:', error);
+      throw error;
+    }
+  },
+
+  async translateWord(request: TranslateWordRequest): Promise<TranslateWordResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/translate-word`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: TranslateWordResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error translating word:', error);
       throw error;
     }
   }

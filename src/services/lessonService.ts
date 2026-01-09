@@ -194,3 +194,80 @@ export const addComment = async (
   const data = await response.json();
   return data;
 };
+
+/**
+ * Video Note interface
+ */
+export interface VideoNote {
+  id: number;
+  timestamp: number;
+  content: string;
+}
+
+/**
+ * Get all video notes for a specific video/lesson
+ */
+export const getVideoNotes = async (videoId: number): Promise<VideoNote[]> => {
+  const token = localStorage.getItem('authToken');
+  const response = await fetch(`${API_BASE_URL}/api/video-notes?videoId=${videoId}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch video notes');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+/**
+ * Add a new video note
+ */
+export const addVideoNote = async (
+  videoId: number,
+  timestamp: number,
+  content: string
+): Promise<VideoNote> => {
+  const token = localStorage.getItem('authToken');
+  const response = await fetch(`${API_BASE_URL}/api/video-notes`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      videoId,
+      timestamp,
+      content,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to add video note');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+/**
+ * Delete a video note
+ */
+export const deleteVideoNote = async (noteId: number): Promise<void> => {
+  const token = localStorage.getItem('authToken');
+  const response = await fetch(`${API_BASE_URL}/api/video-notes/${noteId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to delete video note');
+  }
+};

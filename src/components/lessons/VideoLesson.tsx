@@ -99,7 +99,6 @@ const VideoLesson: React.FC<VideoLessonProps> = ({
   const isInitializedRef = useRef(false); // Track if player is already initialized
   const [notes, setNotes] = useState<VideoNote[]>([]);
   const [noteText, setNoteText] = useState('');
-  const [isPlayerReady, setIsPlayerReady] = useState(false);
   const [showNoteInput, setShowNoteInput] = useState(false);
 
   // Load Cloudinary Player script
@@ -188,7 +187,6 @@ const VideoLesson: React.FC<VideoLessonProps> = ({
 
       playerRef.current = player;
       isInitializedRef.current = true; // Mark as initialized
-      setIsPlayerReady(true);
 
       // Add event listeners for debugging
       player.on('loadstart', () => console.log('Video load started'));
@@ -289,14 +287,14 @@ const VideoLesson: React.FC<VideoLessonProps> = ({
           </h3>
           <button
             className="add-note-icon-btn"
-            onClick={() => setShowNoteInput(true)}
+            onClick={() => setShowNoteInput(!showNoteInput)}
             title="Thêm ghi chú mới"
           >
             +
           </button>
         </div>
 
-        {/* Note Input Form */}
+        {/* Note Input Form - appears between header and list */}
         {showNoteInput && (
           <div className="note-input-wrapper">
             <input

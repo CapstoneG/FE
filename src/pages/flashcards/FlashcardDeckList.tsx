@@ -36,6 +36,14 @@ const FlashcardDeckList: React.FC = () => {
   const [showStatsPopup, setShowStatsPopup] = useState(false);
   const [deckStats, setDeckStats] = useState<DeckStudyStatsResponse | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
+  const [showCreateDeckModal, setShowCreateDeckModal] = useState(false);
+  const [newDeckName, setNewDeckName] = useState('');
+  const [newDeckDescription, setNewDeckDescription] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [showAddCardsModal, setShowAddCardsModal] = useState(false);
+  const [selectedDeckId, setSelectedDeckId] = useState<number | null>(null);
+  const [wordsInput, setWordsInput] = useState('');
+  const [isAddingCards, setIsAddingCards] = useState(false);
 
   useEffect(() => {
     const fetchDecks = async () => {
@@ -77,8 +85,37 @@ const FlashcardDeckList: React.FC = () => {
   };
 
   const handleCreateDeck = () => {
-    // TODO: Navigate to create deck page or open modal
-    alert('Tính năng tạo deck mới đang được phát triển!');
+    setShowCreateDeckModal(true);
+  };
+
+  const handleCloseCreateModal = () => {
+    setShowCreateDeckModal(false);
+    setNewDeckName('');
+    setNewDeckDescription('');
+  };
+
+  const handleSubmitCreateDeck = async () => {
+    if (!newDeckName.trim()) {
+      showNotification('Vui lòng nhập tên deck!', 'error');
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      await flashcardService.createDeck({
+        name: newDeckName,
+        description: newDeckDescription
+      });
+      showNotification('Deck mới đã được tạo thành công!', 'success');
+      const data = await flashcardService.getDashboard();
+      setDeckData(data);
+      handleCloseCreateModal();
+    } catch (error) {
+      console.error('Error creating deck:', error);
+      showNotification('Có lỗi xảy ra khi tạo deck!', 'error');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const handleDeleteDeck = async (deckId: number) => {
@@ -127,6 +164,52 @@ const FlashcardDeckList: React.FC = () => {
   const handleCloseStats = () => {
     setShowStatsPopup(false);
     setDeckStats(null);
+  };
+
+  const handleOpenAddCards = (deckId: number) => {
+    setSelectedDeckId(deckId);
+    setShowAddCardsModal(true);
+  };
+
+  const handleCloseAddCards = () => {
+    setShowAddCardsModal(false);
+    setSelectedDeckId(null);
+    setWordsInput('');
+  };
+
+  const handleSubmitAddCards = async () => {
+    if (!selectedDeckId || !wordsInput.trim()) {
+      showNotification('Vui lòng nhập từ vựng!', 'error');
+      return;
+    }
+
+    // Parse words from input (comma or newline separated)
+    const words = wordsInput
+      .split(/[,\n]+/)
+      .map(word => word.trim())
+      .filter(word => word.length > 0);
+
+    if (words.length === 0) {
+      showNotification('Vui lòng nhập ít nhất một từ!', 'error');
+      return;
+    }
+
+    setIsAddingCards(true);
+    try {
+      await flashcardService.generateFlashcards({
+        deckId: selectedDeckId,
+        word: words
+      });
+      showNotification(`Đã thêm ${words.length} từ vào deck thành công!`, 'success');
+      const data = await flashcardService.getDashboard();
+      setDeckData(data);
+      handleCloseAddCards();
+    } catch (error) {
+      console.error('Error generating flashcards:', error);
+      showNotification('Có lỗi xảy ra khi thêm flashcard!', 'error');
+    } finally {
+      setIsAddingCards(false);
+    }
   };
 
   const renderDeckCard = (deck: Deck, isSystemDeck: boolean = false) => {
@@ -206,7 +289,14 @@ const FlashcardDeckList: React.FC = () => {
                 onClick={() => handleStudyDeck(deck.id)}
                 disabled={deck.learnedCards === deck.totalCards}
               >
-                <MdSchool /> {deck.learnedCards < deck.totalCards ? 'Học ngay' : 'Đã hoàn thành'}
+                <MdSchool /> {deck.learnedCards < deck.totalCards ? 'Học ngay' : 'Hoàn thành'}
+              </button>
+              <button 
+                className="btn-add-cards"
+                onClick={() => handleOpenAddCards(deck.id)}
+                title="Thêm flashcard"
+              >
+                <FaPlus />
               </button>
               <button 
                 className="btn-reset"
@@ -245,6 +335,109 @@ const FlashcardDeckList: React.FC = () => {
       {showPopup && (
         <div className={`popup-notification ${popupType}`}>
           <span>{popupMessage}</span>
+        </div>
+      )}
+
+      {/* Create Deck Modal */}
+      {showCreateDeckModal && (
+        <div className="modal-overlay" onClick={handleCloseCreateModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Tạo Deck Mới</h2>
+              <button className="modal-close" onClick={handleCloseCreateModal}>×</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="form-group">
+                <label htmlFor="deck-name">Tên Deck <span className="required">*</span></label>
+                <input
+                  id="deck-name"
+                  type="text"
+                  className="form-input"
+                  placeholder="Nhập tên deck..."
+                  value={newDeckName}
+                  onChange={(e) => setNewDeckName(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="deck-description">Mô tả</label>
+                <textarea
+                  id="deck-description"
+                  className="form-textarea"
+                  placeholder="Nhập mô tả cho deck (tùy chọn)..."
+                  value={newDeckDescription}
+                  onChange={(e) => setNewDeckDescription(e.target.value)}
+                  rows={4}
+                />
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button 
+                className="btn-cancel"
+                onClick={handleCloseCreateModal}
+                disabled={isCreating}
+              >
+                Hủy
+              </button>
+              <button 
+                className="btn-create"
+                onClick={handleSubmitCreateDeck}
+                disabled={isCreating || !newDeckName.trim()}
+              >
+                {isCreating ? 'Đang tạo...' : 'Tạo Deck'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Flashcards Modal */}
+      {showAddCardsModal && (
+        <div className="modal-overlay" onClick={handleCloseAddCards}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Thêm Flashcard</h2>
+              <button className="modal-close" onClick={handleCloseAddCards}>×</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="form-group">
+                <label htmlFor="words-input">Từ vựng <span className="required">*</span></label>
+                <textarea
+                  id="words-input"
+                  className="form-textarea"
+                  placeholder="Nhập từ vựng (mỗi từ cách nhau bởi dấu phẩy hoặc xuống dòng)"
+                  value={wordsInput}
+                  onChange={(e) => setWordsInput(e.target.value)}
+                  rows={8}
+                  autoFocus
+                />
+                <small className="form-hint">
+                  Bạn có thể nhập nhiều từ, phân cách bằng dấu phẩy hoặc xuống dòng ( Tối đa 10 từ )
+                </small>
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button 
+                className="btn-cancel"
+                onClick={handleCloseAddCards}
+                disabled={isAddingCards}
+              >
+                Hủy
+              </button>
+              <button 
+                className="btn-create"
+                onClick={handleSubmitAddCards}
+                disabled={isAddingCards || !wordsInput.trim()}
+              >
+                {isAddingCards ? 'Đang thêm...' : 'Thêm Flashcard'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

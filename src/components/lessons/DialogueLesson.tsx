@@ -564,7 +564,7 @@ const DialogueLesson: React.FC<DialogueLessonProps> = ({
                 >
                   {speaker}
                 </div>
-                <span>Vai {speaker}</span>
+                <span>{speaker}</span>
               </button>
             ))}
           </div>

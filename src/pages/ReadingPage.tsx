@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Pagination } from '../components';
 import { skillsService } from '../services/skills';
+import { chatbotService } from '../services/aiService';
 import './ReadingPage.css';
 
 interface Vocabulary {
@@ -45,6 +46,10 @@ const ReadingPage = () => {
   const [showVocabulary, setShowVocabulary] = useState(false);
   const [highlightedText, setHighlightedText] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(0);
+  const [translatedText, setTranslatedText] = useState<string>('');
+  const [showTranslation, setShowTranslation] = useState(false);
+  const [translationPosition, setTranslationPosition] = useState({ top: 0, left: 0 });
+  const [isTranslating, setIsTranslating] = useState(false);
   const itemsPerPage = 6;
   
   useEffect(() => {
@@ -102,6 +107,52 @@ const ReadingPage = () => {
     setUserAnswers(new Map());
     setShowVocabulary(false);
     setHighlightedText('');
+    setShowTranslation(false);
+    setTranslatedText('');
+  };
+
+  const handleTextSelection = async () => {
+    const selection = window.getSelection();
+    const selectedText = selection?.toString().trim();
+    
+    if (selectedText && selectedText.length > 0) {
+      const range = selection?.getRangeAt(0);
+      const rect = range?.getBoundingClientRect();
+      
+      if (rect) {
+        // Position the translation icon above the selected text
+        setTranslationPosition({
+          top: rect.top + window.scrollY - 40,
+          left: rect.left + window.scrollX + (rect.width / 2) - 15
+        });
+        setHighlightedText(selectedText);
+        setShowTranslation(true);
+        setTranslatedText('');
+      }
+    } else {
+      setShowTranslation(false);
+    }
+  };
+
+  const handleTranslate = async () => {
+    if (!highlightedText) return;
+    
+    setIsTranslating(true);
+    try {
+      const result = await chatbotService.translateWord({ word: highlightedText });
+      setTranslatedText(result.translated_word);
+    } catch (error) {
+      console.error('Error translating text:', error);
+      setTranslatedText('Không thể dịch văn bản này');
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  const handleCloseTranslation = () => {
+    setShowTranslation(false);
+    setTranslatedText('');
+    window.getSelection()?.removeAllRanges();
   };
 
   if (selectedExercise) {
@@ -135,7 +186,10 @@ const ReadingPage = () => {
                 </button>
               </div>
               
-              <div className="passage-card-reading">
+              <div 
+                className="passage-card-reading"
+                onMouseUp={handleTextSelection}
+              >
                 {selectedExercise.metadata.content.map((paragraph, index) => (
                   <p key={index} className="passage-paragraph-reading">
                     {paragraph.split(' ').map((word, wordIndex) => (
@@ -154,6 +208,47 @@ const ReadingPage = () => {
                   </p>
                 ))}
               </div>
+
+              {/* Translation Icon & Popup */}
+              {showTranslation && (
+                <>
+                  <div 
+                    className="translation-icon"
+                    style={{
+                      position: 'absolute',
+                      top: `${translationPosition.top}px`,
+                      left: `${translationPosition.left}px`,
+                      zIndex: 1000
+                    }}
+                    onClick={handleTranslate}
+                  >
+                    📖
+                  </div>
+                  
+                  {translatedText && (
+                    <div 
+                      className="translation-popup"
+                      style={{
+                        position: 'absolute',
+                        top: `${translationPosition.top + 35}px`,
+                        left: `${translationPosition.left - 50}px`,
+                        zIndex: 1001
+                      }}
+                    >
+                      <div className="translation-popup-header">
+                        <span className="translation-label">Bản dịch:</span>
+                        <button 
+                          className="close-translation"
+                          onClick={handleCloseTranslation}
+                        >
+                          ×
+                        </button>
+                      </div>
+                      <p className="translation-text">{translatedText}</p>
+                    </div>
+                  )}
+                </>
+              )}
 
               {selectedWord && (
                 <div className="vocabulary-popup-reading">
