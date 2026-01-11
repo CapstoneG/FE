@@ -22,6 +22,31 @@ export interface ChangePasswordData {
   confirmPassword: string;
 }
 
+export interface ActivityDataItem {
+  name: string; // T2, T3, T4, T5, T6, T7 (days of week)
+  flashcards: number;
+  lessons: number;
+  skills: number;
+}
+
+export interface ActivityDataSkillItem {
+  name: string; // VOCAB, GRAMMAR, READING, LISTENING, SPEAKING, WRITING
+  times: number;
+}
+
+export interface UserDashboard {
+  streakDays: number;
+  targetDailyStudied: number;
+  targetDaysPerW: number;
+  lessonComplete: number;
+  flashcardsStudied: number;
+  timeStudyToday: number;
+  timeStudyW: number;
+  timeStudyM: number;
+  activityData: ActivityDataItem[];
+  activityDataSkill: ActivityDataSkillItem[];
+}
+
 interface ApiResponse<T> {
   code: number;
   message: string;
@@ -103,6 +128,36 @@ class UserService {
       }
     } catch (error) {
       console.error('Error updating profile:', error);
+      throw error;
+    }
+  }
+
+  async getDashboard(): Promise<UserDashboard> {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/users/dashboard`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData: ApiResponse<null> = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch dashboard data');
+      }
+      const result = await response.json();
+      
+      console.log('Fetched dashboard response:', result);
+      // API returns the dashboard data directly, not wrapped in { data: ... }
+      return result as UserDashboard;
+    } catch (error) {
+      console.error('Error fetching dashboard:', error);
       throw error;
     }
   }

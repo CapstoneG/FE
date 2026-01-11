@@ -5,6 +5,9 @@ import { MdQuiz } from 'react-icons/md';
 import { BiTrophy } from 'react-icons/bi';
 import { IoMdCheckmarkCircleOutline } from 'react-icons/io';
 import { OverviewCard } from '@/components';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import LessonDetail from '@/pages/lesson/LessonDetail';
+import { authService } from '@/services/authService';
 
 interface Lesson {
   id: number;
@@ -27,6 +30,12 @@ const IntermediatePage: React.FC = () => {
   const [activeModule, setActiveModule] = useState<number | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const lessonParam = searchParams.get('lesson');
+  const activeLessonId = lessonParam ? parseInt(lessonParam, 10) : null;
+  const [userLevel, setUserLevel] = useState<string | null>(null);
 
   // Icon mapping
   const getIconByName = (iconName: string) => {
@@ -46,12 +55,34 @@ const IntermediatePage: React.FC = () => {
     return Math.round((completedCount / lessons.length) * 100);
   };
 
+  // Fetch user level
+  useEffect(() => {
+    const fetchUserLevel = async () => {
+      const user = await authService.getCurrentUser();
+      setUserLevel(user?.level || null);
+    };
+    fetchUserLevel();
+  }, []);
+
   // Fetch modules data
   useEffect(() => {
     const fetchModules = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:8080/api/v1/courses/2/units');
+        setError(null);
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('http://localhost:8080/api/v1/courses/2/units', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (response.status === 401) {
+          setError('Bạn chưa thể học course này');
+          setLoading(false);
+          return;
+        }
         
         if (!response.ok) {
           throw new Error('Failed to fetch modules');
@@ -85,6 +116,7 @@ const IntermediatePage: React.FC = () => {
         setModules(transformedModules);
       } catch (error) {
         console.error('Error fetching modules:', error);
+        setError('Có lỗi xảy ra khi tải dữ liệu');
       } finally {
         setLoading(false);
       }
@@ -106,6 +138,36 @@ const IntermediatePage: React.FC = () => {
     }
   };
 
+  // Start lesson with authentication check
+  const handleStartLesson = (lessonId: number) => {
+    const token = localStorage.getItem('authToken');
+    const returnUrl = `/courses/intermediate?lesson=${lessonId}`;
+    if (!token) {
+      navigate(`/login?next=${encodeURIComponent(returnUrl)}`);
+      return;
+    }
+    navigate(returnUrl);
+  };
+
+  // Check if user can access this course
+  const canAccessCourse = () => {
+    if (!userLevel) return false;
+    const normalizedLevel = userLevel.toLowerCase();
+    return normalizedLevel === 'intermediate' || normalizedLevel === 'advanced';
+  };
+
+  // Show lesson detail if lessonId is present
+  if (activeLessonId) {
+    return (
+      <div className="intermediate-page">
+        <LessonDetail
+          lessonId={activeLessonId}
+          onBack={() => navigate('/courses/intermediate')}
+        />
+      </div>
+    );
+  }
+
   // Loading state
   if (loading) {
     return (
@@ -118,6 +180,32 @@ const IntermediatePage: React.FC = () => {
         }}>
           <div className="video-lesson-spinner" />
           <p style={{ marginLeft: '16px' }}>Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="intermediate-page">
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '100vh',
+          gap: '16px'
+        }}>
+          <h2 style={{ 
+            color: '#ef4444',
+            fontSize: '24px',
+            margin: 0
+          }}>{error}</h2>
+          <p style={{ 
+            color: '#6b7280',
+            fontSize: '16px',
+            margin: 0
+          }}>Vui lòng hoàn thành khóa học trước đó hoặc liên hệ hỗ trợ</p>
         </div>
       </div>
     );
@@ -274,28 +362,44 @@ const IntermediatePage: React.FC = () => {
                 
                 {activeModule === module.id && (
                   <div className="module-lessons">
-                    {module.lessons.map((lesson) => (
-                      <div key={lesson.id} className={`lesson-item ${lesson.completed ? 'completed' : ''}`}>
-                        <div className="lesson-info">
-                          <div className="lesson-icon">
-                            {getLessonIcon(lesson.type)}
+                    {module.lessons.map((lesson, index) => {
+                      // Check if previous lesson is completed
+                      // Special units (7, 8, 9) have all lessons unlocked
+                      const isLocked = [7, 8, 9].includes(module.id) ? false : (index > 0 && !module.lessons[index - 1].completed);
+                      // Check if user can access this course
+                      const hasAccess = canAccessCourse();
+                      const isDisabled = isLocked || !hasAccess;
+                      
+                      return (
+                        <div key={lesson.id} className={`lesson-item ${lesson.completed ? 'completed' : ''} ${isDisabled ? 'locked' : ''}`}>
+                          <div className="lesson-info">
+                            <div className="lesson-icon">
+                              {getLessonIcon(lesson.type)}
+                            </div>
+                            <div className="lesson-text">
+                              <h4>{lesson.title}</h4>
+                              <span className="lesson-duration">
+                                <FaClock size={12} /> {lesson.duration}
+                              </span>
+                            </div>
                           </div>
-                          <div className="lesson-text">
-                            <h4>{lesson.title}</h4>
-                            <span className="lesson-duration">
-                              <FaClock size={12} /> {lesson.duration}
-                            </span>
+                          <div className="lesson-status">
+                            {lesson.completed ? (
+                              <FaCheckCircle size={20} color="#10b981" />
+                            ) : (
+                              <button
+                                className={`start-lesson-btn ${isDisabled ? 'locked' : ''}`}
+                                disabled={isDisabled}
+                                onClick={() => !isDisabled && handleStartLesson(lesson.id)}
+                                title={!hasAccess ? "Cần đạt trình độ Intermediate để học" : isLocked ? "Hoàn thành bài trước để mở khóa" : ""}
+                              >
+                                Bắt đầu
+                              </button>
+                            )}
                           </div>
                         </div>
-                        <div className="lesson-status">
-                          {lesson.completed ? (
-                            <FaCheckCircle size={20} color="#10b981" />
-                          ) : (
-                            <button className="start-lesson-btn">Bắt đầu</button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

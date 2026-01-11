@@ -5,8 +5,8 @@ import { FaArrowLeft, FaArrowRight, FaShuffle, FaRotate } from 'react-icons/fa6'
 import { IoVolumeHigh } from 'react-icons/io5';
 import { MdFavorite, MdFavoriteBorder } from 'react-icons/md';
 import { flashcardService } from '@/services/flashcards';
-import { useStudyEvents } from '@/hooks';
 import type { StudyCard } from '@/services/flashcards';
+import { useStudyEvents } from '@/hooks';
 
 interface Flashcard {
   id: number;
@@ -27,13 +27,19 @@ const FlashcardStudy: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [deckName, setDeckName] = useState('');
 
-  // Track study session for flashcard learning
+  // Track study session for flashcard study mode
   useStudyEvents({
-    deckId: parseInt(deckId || '0'),
+    deckId: deckId ? parseInt(deckId) : undefined,
     activityType: 'FLASHCARD',
-    skill: 'VOCAB', 
-    autoStart: true,  
-    autoEnd: true,    
+    skill: 'VOCAB',
+    autoStart: !!deckId && flashcards.length > 0,
+    autoEnd: true,
+    onSessionStart: (sessionId) => {
+      console.log('[Flashcard Study] Study session started:', sessionId);
+    },
+    onSessionEnd: () => {
+      console.log('[Flashcard Study] Study session ended');
+    },
     onStatsUpdate: (event) => {
       console.log('[Flashcard Study] Stats updated:', event);
     },

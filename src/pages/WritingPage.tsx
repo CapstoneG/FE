@@ -4,6 +4,7 @@ import { writingWebSocketService, type WordSuggestionResponse } from '../service
 import { skillsService, type WritingExercise } from '../services/skills';
 import { chatbotService } from '../services/aiService';
 import { Pagination } from '../components';
+import { useStudyEvents } from '../hooks';
 
 interface Suggestion {
   synonyms: string[];
@@ -66,6 +67,41 @@ const WritingPage = () => {
   const currentWordStartRef = useRef(0);
   const currentWordEndRef = useRef(0);
   const justSelectedSynonymRef = useRef(false);
+
+  // Track study session for exercise mode
+  useStudyEvents({
+    lessonId: selectedExercise?.id,
+    activityType: 'SKILL',
+    skill: 'WRITING',
+    autoStart: pageMode === 'exercise' && !!selectedExercise,
+    autoEnd: true,
+    onSessionStart: (sessionId) => {
+      console.log('[Writing Exercise] Study session started:', sessionId);
+    },
+    onSessionEnd: () => {
+      console.log('[Writing Exercise] Study session ended');
+    },
+    onStatsUpdate: (event) => {
+      console.log('[Writing Exercise] Stats updated:', event);
+    },
+  });
+
+  // Track study session for freewriting mode
+  useStudyEvents({
+    activityType: 'SKILL',
+    skill: 'WRITING',
+    autoStart: pageMode === 'freewriting',
+    autoEnd: true,
+    onSessionStart: (sessionId) => {
+      console.log('[Writing Freewriting] Study session started:', sessionId);
+    },
+    onSessionEnd: () => {
+      console.log('[Writing Freewriting] Study session ended');
+    },
+    onStatsUpdate: (event) => {
+      console.log('[Writing Freewriting] Stats updated:', event);
+    },
+  });
 
   // Load writing exercises
   useEffect(() => {

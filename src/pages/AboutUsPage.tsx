@@ -24,10 +24,7 @@ const AboutUsPage: React.FC = () => {
             </div>
             <div className="section-image">
               <div className="image-placeholder mission-image">
-                <svg width="200" height="200" fill="none" viewBox="0 0 24 24">
-                  <path fill="#4F46E5" d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 10c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" opacity="0.3"/>
-                  <path stroke="#4F46E5" strokeWidth="1.5" d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
-                </svg>
+                <img src="https://i.pinimg.com/736x/39/2e/c0/392ec05e477d8a53c46b697e5d42f965.jpg" alt="" />
               </div>
             </div>
           </div>
@@ -104,7 +101,7 @@ const AboutUsPage: React.FC = () => {
             <div className="section-text">
               <h2 className="section-title">Câu Chuyện Của Chúng Tôi</h2>
               <p className="section-description">
-                ENGLISHHUB được thành lập vào năm 2020, xuất phát từ nhận thức về những khó khăn 
+                ENGLISHHUB được thành lập vào năm 2025, xuất phát từ nhận thức về những khó khăn 
                 mà người Việt Nam gặp phải khi học tiếng Anh theo phương pháp truyền thống.
               </p>
               <p className="section-description">
@@ -113,7 +110,7 @@ const AboutUsPage: React.FC = () => {
                 và duy trì động lực học tập lâu dài.
               </p>
               <p className="section-description">
-                Sau 5 năm phát triển, ENGLISHHUB đã trở thành một trong những nền tảng học tiếng 
+                Sau 4 tháng phát triển, ENGLISHHUB đã trở thành một trong những nền tảng học tiếng 
                 Anh trực tuyến hàng đầu tại Việt Nam, với hơn 100,000 học viên tin tưởng và lựa chọn.
               </p>
             </div>

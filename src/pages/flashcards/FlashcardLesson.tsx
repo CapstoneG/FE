@@ -5,6 +5,7 @@ import { FaCheck } from 'react-icons/fa';
 import { flashcardService } from '@/services/flashcards';
 import { submitFlashcardResults } from '@/services/studyService';
 import volumeIcon from '@/assets/volume.png';
+import { useStudyEvents } from '@/hooks';
 
 interface FlashCard {
   cardId: number;
@@ -51,6 +52,24 @@ const FlashcardLesson: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Track study session for flashcard lesson mode
+  useStudyEvents({
+    deckId: deckId ? parseInt(deckId) : undefined,
+    activityType: 'FLASHCARD',
+    skill: 'VOCAB',
+    autoStart: !!deckId && flashcards.length > 0 && !isCompleted,
+    autoEnd: true,
+    onSessionStart: (sessionId) => {
+      console.log('[Flashcard Lesson] Study session started:', sessionId);
+    },
+    onSessionEnd: () => {
+      console.log('[Flashcard Lesson] Study session ended');
+    },
+    onStatsUpdate: (event) => {
+      console.log('[Flashcard Lesson] Stats updated:', event);
+    },
+  });
 
   // Fetch flashcards from API
   useEffect(() => {

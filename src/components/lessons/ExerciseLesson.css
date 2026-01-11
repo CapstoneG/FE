@@ -4,9 +4,9 @@
   max-width: 900px;
   margin: 0 auto;
   padding: 2rem;
-  background: #1a1a1a;
+  background: #f8f9fa;
   min-height: 100vh;
-  color: #e5e5e5;
+  color: #2d3748;
   border-radius: 20px;
 }
 
@@ -22,14 +22,14 @@
 .exercise-title-exercise-lesson {
   font-size: 2rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #2d3748;
   margin: 0 0 0.75rem 0;
   letter-spacing: -0.5px;
 }
 
 .exercise-description-exercise-lesson {
   font-size: 1.1rem;
-  color: #a0a0a0;
+  color: #4a5568;
   margin: 0.5rem 0;
   line-height: 1.6;
 }
@@ -39,27 +39,27 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  background: #252525;
-  border-left: 4px solid #4a9eff;
+  background: #ffffff;
+  border-left: 4px solid #cbd5e0;
   border-radius: 8px;
   margin-top: 1rem;
-  color: #d0d0d0;
+  color: #4a5568;
   font-size: 0.95rem;
   line-height: 1.5;
 }
 
 .instruction-icon-exercise-lesson {
-  color: #4a9eff;
+  color: #cbd5e0;
   font-size: 1.2rem;
   flex-shrink: 0;
 }
 
 /* Progress Section */
 .progress-section-exercise-lesson {
-  background: #252525;
+  background: #ffffff;
   padding: 1.25rem;
   border-radius: 12px;
-  border: 1px solid #333333;
+  border: 1px solid #e1e4e8;
 }
 
 .progress-info-exercise-lesson {
@@ -72,20 +72,20 @@
 .progress-text-exercise-lesson {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #b0b0b0;
+  color: #4a5568;
 }
 
 .progress-bar-container-exercise-lesson {
   width: 100%;
   height: 8px;
-  background: #333333;
+  background: #e1e4e8;
   border-radius: 10px;
   overflow: hidden;
 }
 
 .progress-bar-fill-exercise-lesson {
   height: 100%;
-  background: #4a9eff;
+  background: #cbd5e0;
   border-radius: 10px;
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -96,18 +96,18 @@
 }
 
 .question-card-exercise-lesson {
-  background: #252525;
-  border: 1px solid #333333;
+  background: #ffffff;
+  border: 1px solid #e1e4e8;
   border-radius: 16px;
   padding: 2rem;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .question-number-badge-exercise-lesson {
   display: inline-block;
   padding: 0.5rem 1rem;
-  background: #333333;
-  color: #4a9eff;
+  background: #f8f9fa;
+  color: #2d3748;
   border-radius: 20px;
   font-size: 0.9rem;
   font-weight: 600;
@@ -122,7 +122,7 @@
 .question-text-exercise-lesson {
   font-size: 1.3rem;
   font-weight: 600;
-  color: #ffffff;
+  color: #2d3748;
   margin: 0 0 1.5rem 0;
   line-height: 1.6;
 }
@@ -131,18 +131,18 @@
 .text-input-exercise-lesson {
   width: 100%;
   padding: 1rem 1.25rem;
-  background: #1a1a1a;
-  border: 2px solid #333333;
+  background: #ffffff;
+  border: 2px solid #e1e4e8;
   border-radius: 10px;
   font-size: 1.05rem;
-  color: #ffffff;
+  color: #2d3748;
   transition: all 0.3s ease;
 }
 
 .text-input-exercise-lesson:focus {
   outline: none;
-  border-color: #4a9eff;
-  background: #202020;
+  border-color: #cbd5e0;
+  background: #f8f9fa;
 }
 
 .text-input-exercise-lesson:disabled {
@@ -151,7 +151,7 @@
 }
 
 .text-input-exercise-lesson::placeholder {
-  color: #666666;
+  color: #94a3b8;
 }
 
 /* Multiple Choice Options */
@@ -166,19 +166,19 @@
   align-items: center;
   gap: 1rem;
   padding: 1.25rem 1.5rem;
-  background: #1a1a1a;
-  border: 2px solid #333333;
+  background: #ffffff;
+  border: 2px solid #e1e4e8;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: left;
   font-size: 1rem;
-  color: #e5e5e5;
+  color: #2d3748;
 }
 
 .option-button-exercise-lesson:hover:not(:disabled) {
-  border-color: #4a9eff;
-  background: #202020;
+  border-color: #cbd5e0;
+  background: #f8f9fa;
   transform: translateX(4px);
 }
 
@@ -187,18 +187,18 @@
 }
 
 .option-button-exercise-lesson.selected-exercise-lesson {
-  border-color: #4a9eff;
-  background: #1e3a5f;
+  border-color: #cbd5e0;
+  background: #e8f4f8;
 }
 
 .option-button-exercise-lesson.correct-exercise-lesson {
   border-color: #10b981;
-  background: #1a3d2e;
+  background: #d1fae5;
 }
 
 .option-button-exercise-lesson.incorrect-exercise-lesson {
   border-color: #ef4444;
-  background: #3d1a1a;
+  background: #fee2e2;
 }
 
 .option-letter-exercise-lesson {
@@ -207,17 +207,17 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: #333333;
+  background: #e1e4e8;
   border-radius: 8px;
   font-weight: 700;
   font-size: 1rem;
   flex-shrink: 0;
-  color: #a0a0a0;
+  color: #4a5568;
 }
 
 .option-button-exercise-lesson.selected-exercise-lesson .option-letter-exercise-lesson {
-  background: #4a9eff;
-  color: #ffffff;
+  background: #cbd5e0;
+  color: #2d3748;
 }
 
 .option-button-exercise-lesson.correct-exercise-lesson .option-letter-exercise-lesson {
@@ -246,7 +246,7 @@
 .image-option-exercise-lesson {
   position: relative;
   aspect-ratio: 1;
-  border: 3px solid #333333;
+  border: 3px solid #e1e4e8;
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
@@ -254,13 +254,13 @@
 }
 
 .image-option-exercise-lesson:hover {
-  border-color: #4a9eff;
+  border-color: #cbd5e0;
   transform: scale(1.05);
 }
 
 .image-option-exercise-lesson.selected-exercise-lesson {
-  border-color: #4a9eff;
-  box-shadow: 0 0 0 4px rgba(74, 158, 255, 0.2);
+  border-color: #cbd5e0;
+  box-shadow: 0 0 0 4px rgba(203, 213, 224, 0.3);
 }
 
 .image-option-exercise-lesson.correct-exercise-lesson {
@@ -285,14 +285,14 @@
   right: 8px;
   width: 32px;
   height: 32px;
-  background: #4a9eff;
+  background: #2d3748;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-size: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* Match Pairs */
@@ -311,20 +311,20 @@
 
 .match-item-exercise-lesson {
   padding: 1rem 1.25rem;
-  background: #1a1a1a;
-  border: 2px solid #333333;
+  background: #ffffff;
+  border: 2px solid #e1e4e8;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 1rem;
-  color: #e5e5e5;
+  color: #2d3748;
   text-align: left;
   position: relative;
 }
 
 .match-item-exercise-lesson:hover:not(:disabled) {
-  border-color: #4a9eff;
-  background: #202020;
+  border-color: #cbd5e0;
+  background: #f8f9fa;
 }
 
 .match-item-exercise-lesson:disabled {
@@ -333,13 +333,13 @@
 }
 
 .match-item-exercise-lesson.selected-exercise-lesson {
-  border-color: #4a9eff;
-  background: #1e3a5f;
+  border-color: #cbd5e0;
+  background: #e8f4f8;
 }
 
 .match-item-exercise-lesson.matched-exercise-lesson {
   border-color: #10b981;
-  background: #1a3d2e;
+  background: #d1fae5;
 }
 
 .match-arrow-exercise-lesson {
@@ -362,12 +362,12 @@
 }
 
 .feedback-box-exercise-lesson.correct-feedback-exercise-lesson {
-  background: #1a3d2e;
+  background: #d1fae5;
   border-color: #10b981;
 }
 
 .feedback-box-exercise-lesson.incorrect-feedback-exercise-lesson {
-  background: #3d1a1a;
+  background: #fee2e2;
   border-color: #ef4444;
 }
 
@@ -401,7 +401,7 @@
 
 .feedback-content-exercise-lesson p {
   margin: 0;
-  color: #d0d0d0;
+  color: #4a5568;
   line-height: 1.5;
 }
 
@@ -418,10 +418,10 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.875rem 1.5rem;
-  background: #252525;
-  border: 2px solid #333333;
+  background: #ffffff;
+  border: 2px solid #e1e4e8;
   border-radius: 10px;
-  color: #e5e5e5;
+  color: #2d3748;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -429,8 +429,8 @@
 }
 
 .nav-button-exercise-lesson:hover:not(:disabled) {
-  background: #2a2a2a;
-  border-color: #4a4a4a;
+  background: #f8f9fa;
+  border-color: #cbd5e0;
   transform: translateY(-2px);
 }
 
@@ -440,14 +440,14 @@
 }
 
 .nav-button-exercise-lesson.primary-exercise-lesson {
-  background: #4a9eff;
-  border-color: #4a9eff;
+  background: #2d3748;
+  border-color: #2d3748;
   color: #ffffff;
 }
 
 .nav-button-exercise-lesson.primary-exercise-lesson:hover:not(:disabled) {
-  background: #3d8ee6;
-  border-color: #3d8ee6;
+  background: #1a202c;
+  border-color: #1a202c;
 }
 
 .submit-button-exercise-lesson {
@@ -479,14 +479,14 @@
 }
 
 .result-card-exercise-lesson {
-  background: #252525;
-  border: 1px solid #333333;
+  background: #ffffff;
+  border: 1px solid #e1e4e8;
   border-radius: 20px;
   padding: 3rem;
   max-width: 700px;
   width: 100%;
   text-align: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .result-icon-exercise-lesson {
@@ -520,12 +520,12 @@
   font-size: 2.5rem;
   font-weight: 800;
   margin: 0 0 1rem 0;
-  color: #ffffff;
+  color: #2d3748;
 }
 
 .result-message-exercise-lesson {
   font-size: 1.2rem;
-  color: #a0a0a0;
+  color: #4a5568;
   margin-bottom: 2.5rem;
 }
 
@@ -539,12 +539,12 @@
   height: 150px;
   margin: 0 auto 1.5rem;
   border-radius: 50%;
-  background: #1a1a1a;
-  border: 8px solid #333333;
+  background: #f8f9fa;
+  border: 8px solid #e1e4e8;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .passed-exercise-lesson .score-circle-exercise-lesson {
@@ -558,12 +558,12 @@
 .score-number-exercise-lesson {
   font-size: 3rem;
   font-weight: 800;
-  color: #ffffff;
+  color: #2d3748;
 }
 
 .score-details-exercise-lesson {
   font-size: 1.1rem;
-  color: #b0b0b0;
+  color: #4a5568;
   margin: 0;
 }
 
@@ -580,10 +580,10 @@
   align-items: center;
   gap: 0.5rem;
   padding: 1rem 2rem;
-  background: #333333;
-  border: 2px solid #4a4a4a;
+  background: #ffffff;
+  border: 2px solid #e1e4e8;
   border-radius: 10px;
-  color: #e5e5e5;
+  color: #2d3748;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -591,8 +591,8 @@
 }
 
 .retry-button-exercise-lesson:hover {
-  background: #3a3a3a;
-  border-color: #555555;
+  background: #f8f9fa;
+  border-color: #cbd5e0;
   transform: translateY(-2px);
 }
 
@@ -601,7 +601,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 1rem 2rem;
-  background: #4a9eff;
+  background: #2d3748;
   border: none;
   border-radius: 10px;
   color: #ffffff;
@@ -612,7 +612,7 @@
 }
 
 .continue-button-exercise-lesson:hover {
-  background: #3d8ee6;
+  background: #1a202c;
   transform: translateY(-2px);
 }
 
@@ -621,13 +621,13 @@
   text-align: left;
   margin-top: 2rem;
   padding-top: 2rem;
-  border-top: 2px solid #333333;
+  border-top: 2px solid #e1e4e8;
 }
 
 .review-section-exercise-lesson h3 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #2d3748;
   margin: 0 0 1.5rem 0;
 }
 
@@ -639,7 +639,7 @@
 
 .review-item-exercise-lesson {
   padding: 1.25rem;
-  background: #1a1a1a;
+  background: #f8f9fa;
   border-radius: 12px;
   border: 2px solid;
 }
@@ -662,7 +662,7 @@
 .review-number-exercise-lesson {
   font-weight: 700;
   font-size: 0.95rem;
-  color: #b0b0b0;
+  color: #4a5568;
 }
 
 .review-icon-correct-exercise-lesson {
@@ -677,7 +677,7 @@
 
 .review-question-exercise-lesson {
   font-size: 1rem;
-  color: #e5e5e5;
+  color: #2d3748;
   margin: 0 0 0.75rem 0;
   line-height: 1.5;
 }
@@ -685,7 +685,7 @@
 .review-answer-exercise-lesson {
   margin-top: 0.75rem;
   padding-top: 0.75rem;
-  border-top: 1px solid #333333;
+  border-top: 1px solid #e1e4e8;
 }
 
 .wrong-answer-exercise-lesson {

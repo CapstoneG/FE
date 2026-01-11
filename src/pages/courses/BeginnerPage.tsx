@@ -270,7 +270,8 @@ const BeginnerPage: React.FC = () => {
                   <div className="module-lessons">
                     {module.lessons.map((lesson, index) => {
                       // Check if previous lesson is completed
-                      const isLocked = index > 0 && !module.lessons[index - 1].completed;
+                      // Special units (7, 8, 9) have all lessons unlocked
+                      const isLocked = [7, 8, 9].includes(module.id) ? false : (index > 0 && !module.lessons[index - 1].completed);
                       
                       return (
                         <div key={lesson.id} className={`lesson-item ${lesson.completed ? 'completed' : ''} ${isLocked ? 'locked' : ''}`}>

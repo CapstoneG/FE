@@ -183,16 +183,6 @@ const SpeakingTrainingPage: React.FC = () => {
                   </div>
                 ))}
               </div>
-
-              <div className="popup-actions">
-                <button
-                  className={`start-btn ${!selectedScenario ? 'disabled' : ''}`}
-                  onClick={() => selectedScenario && setShowContextPopup(true)}
-                  disabled={!selectedScenario}
-                >
-                  Tiếp theo
-                </button>
-              </div>
             </div>
           </div>
         )}

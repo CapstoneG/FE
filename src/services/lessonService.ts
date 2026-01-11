@@ -28,6 +28,7 @@ export interface LessonContent {
     text: string;
   }>;
   video?: {
+    id?: number;
     url?: string;
     description?: string;
     duration?: number;
@@ -204,9 +205,7 @@ export interface VideoNote {
   content: string;
 }
 
-/**
- * Get all video notes for a specific video/lesson
- */
+
 export const getVideoNotes = async (videoId: number): Promise<VideoNote[]> => {
   const token = localStorage.getItem('authToken');
   const response = await fetch(`${API_BASE_URL}/api/video-notes?videoId=${videoId}`, {
@@ -224,9 +223,7 @@ export const getVideoNotes = async (videoId: number): Promise<VideoNote[]> => {
   return data;
 };
 
-/**
- * Add a new video note
- */
+
 export const addVideoNote = async (
   videoId: number,
   timestamp: number,
@@ -254,9 +251,7 @@ export const addVideoNote = async (
   return data;
 };
 
-/**
- * Delete a video note
- */
+
 export const deleteVideoNote = async (noteId: number): Promise<void> => {
   const token = localStorage.getItem('authToken');
   const response = await fetch(`${API_BASE_URL}/api/video-notes/${noteId}`, {

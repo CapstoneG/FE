@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './SpeakingPracticePage.css';
-import { FaMicrophone, FaStop, FaPaperPlane, FaArrowLeft, FaRobot, FaVolumeUp } from 'react-icons/fa';
+import { FaMicrophone, FaStop, FaPaperPlane, FaArrowLeft, FaRobot, FaVolumeUp, FaUser } from 'react-icons/fa';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import chatbotService from '../services/aiService';
 
@@ -286,7 +286,7 @@ const SpeakingPracticePage: React.FC = () => {
           <span className="language-badge">{variantId === 'v_uk' ? '🇬🇧 British' : '🇺🇸 American'}</span>
           {isSpeaking && (
             <span className="speaking-indicator">
-              🔊 AI đang nói...
+              AI đang nói...
             </span>
           )}
         </div>
@@ -334,7 +334,7 @@ const SpeakingPracticePage: React.FC = () => {
               {message.grammarFeedback && message.grammarFeedback.has_error && (
                 <div className="grammar-feedback error">
                   <div className="feedback-header">
-                    ⚠️ <strong>Grammar Error</strong> ({message.grammarFeedback.severity})
+                    <strong>Grammar Error</strong> ({message.grammarFeedback.severity})
                   </div>
                   <div className="feedback-content">
                     <p><strong>Original:</strong> {message.grammarFeedback.original}</p>
@@ -354,7 +354,7 @@ const SpeakingPracticePage: React.FC = () => {
               {/* Alternatives */}
               {message.alternatives && message.alternatives.length > 0 && (
                 <div className="alternatives">
-                  <strong>💡 Cách nói khác:</strong>
+                  <strong>Cách nói khác:</strong>
                   {message.alternatives.map((alt, idx) => (
                     <div key={idx} className="alternative-item">• {alt}</div>
                   ))}
@@ -370,7 +370,7 @@ const SpeakingPracticePage: React.FC = () => {
             </div>
             {message.sender === 'user' && (
               <div className="message-avatar user-avatar">
-                👤
+                <FaUser size={20} />
               </div>
             )}
           </div>

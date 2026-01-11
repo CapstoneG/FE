@@ -1,7 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Pagination } from '../components';
+import { Toast } from '../components/common/Toast';
 import { skillsService } from '../services/skills';
 import { chatbotService } from '../services/aiService';
+import { flashcardService } from '../services/flashcards';
+import { useStudyEvents } from '../hooks';
 import './ReadingPage.css';
 
 interface Vocabulary {
@@ -50,7 +53,26 @@ const ReadingPage = () => {
   const [showTranslation, setShowTranslation] = useState(false);
   const [translationPosition, setTranslationPosition] = useState({ top: 0, left: 0 });
   const [isTranslating, setIsTranslating] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const itemsPerPage = 6;
+  
+  // Track study session when exercise is selected
+  useStudyEvents({
+    lessonId: selectedExercise?.id,
+    activityType: 'SKILL',
+    skill: 'READING',
+    autoStart: !!selectedExercise,
+    autoEnd: true,
+    onSessionStart: (sessionId) => {
+      console.log('[Reading] Study session started:', sessionId);
+    },
+    onSessionEnd: () => {
+      console.log('[Reading] Study session ended');
+    },
+    onStatsUpdate: (event) => {
+      console.log('[Reading] Stats updated:', event);
+    },
+  });
   
   useEffect(() => {
     const fetchExercises = async () => {
@@ -155,9 +177,32 @@ const ReadingPage = () => {
     window.getSelection()?.removeAllRanges();
   };
 
+  const handleQuickAddFlashcard = async () => {
+    if (!highlightedText) return;
+    
+    const trimmedWord = highlightedText.trim().split(/\s+/)[0].toLowerCase().replace(/[.,!?;:]/g, '');
+    if (!trimmedWord) return;
+
+    try {
+      await flashcardService.addFlashcards({ words: [trimmedWord] });
+      console.log('[Reading] Quick added flashcard:', trimmedWord);
+      setToast({ message: `Added "${trimmedWord}" to flashcards!`, type: 'success' });
+    } catch (error) {
+      console.error('[Reading] Failed to add flashcard:', error);
+      setToast({ message: 'Failed to add flashcard. Please try again.', type: 'error' });
+    }
+  };
+
   if (selectedExercise) {
     return (
       <div className="reading-page-reading">
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
         <button className="back-button-reading" onClick={handleBackToList}>
           ← Back
         </button>
@@ -223,6 +268,20 @@ const ReadingPage = () => {
                     onClick={handleTranslate}
                   >
                     📖
+                  </div>
+                  
+                  <div 
+                    className="translation-icon"
+                    style={{
+                      position: 'absolute',
+                      top: `${translationPosition.top}px`,
+                      left: `${translationPosition.left + 35}px`,
+                      zIndex: 1000
+                    }}
+                    onClick={handleQuickAddFlashcard}
+                    title="Add to flashcards now"
+                  >
+                    ➕
                   </div>
                   
                   {translatedText && (

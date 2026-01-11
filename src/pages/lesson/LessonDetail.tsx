@@ -64,6 +64,7 @@ interface LessonData {
   orderIndex: number;
   duration: number;
   completed: boolean;
+  unitId?: number; // Unit ID from API
   exercises?: any[];
   dialogues?: any[];
   vocabularies?: any[];
@@ -252,6 +253,12 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
         
         setLesson(data);
         
+        // Auto-show exercises for lessons with ID >= 21
+        if (lessonId >= 21) {
+          console.log('Auto-showing exercises for lesson ID', lessonId);
+          setShowExercises(true);
+        }
+        
         const saved = localStorage.getItem(STORAGE_KEY);
         setCompleted(saved === 'true');
       } catch (err) {
@@ -305,8 +312,13 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
   };
 
   const handleBackToLesson = () => {
-    setShowExercises(false);
-    window.scrollTo(0, 0);
+    // For lessons with ID >= 21, go back to course page
+    if (lessonId >= 21) {
+      onBack();
+    } else {
+      setShowExercises(false);
+      window.scrollTo(0, 0);
+    }
   };
 
   const renderExercisesPage = () => {
@@ -331,14 +343,14 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
         <div className="beginner-lesson-detail">
           <div className="lesson-header-lesson-detail">
             <button onClick={handleBackToLesson} className="back-btn-lesson-detail">
-              <FaArrowLeft /> <span>Quay lại bài học</span>
+              <FaArrowLeft /> <span>{lessonId >= 21 ? 'Quay lại khóa học' : 'Quay lại bài học'}</span>
             </button>
             <h1 className="lesson-title-lesson-detail">Bài tập - {lesson.title}</h1>
           </div>
           <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
             <p style={{ fontSize: '1.2rem', color: '#6b7280' }}>Bài học này chưa có bài tập</p>
             <button onClick={handleBackToLesson} className="primary-btn-lesson-detail" style={{ marginTop: '1rem' }}>
-              Quay lại bài học
+              {lessonId >= 21 ? 'Quay lại khóa học' : 'Quay lại bài học'}
             </button>
           </div>
         </div>
@@ -350,7 +362,7 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
         {/* Back Button */}
         <div className="lesson-header-lesson-detail">
           <button onClick={handleBackToLesson} className="back-btn-lesson-detail">
-            <FaArrowLeft /> <span>Quay lại bài học</span>
+            <FaArrowLeft /> <span>{lessonId >= 21 ? 'Quay lại khóa học' : 'Quay lại bài học'}</span>
           </button>
           <h1 className="lesson-title-lesson-detail">Bài tập - {lesson.title}</h1>
         </div>
@@ -430,6 +442,7 @@ const BeginnerLessonDetail: React.FC<Props> = ({ lessonId, onBack }) => {
               description: content.video!.description || '',
               duration: `${lesson.duration} phút`,
               completed: completed,
+              parsedContent: content, // Truyền parsedContent để VideoLesson có thể lấy video.id
             }}
             courseTitle="Khóa học Beginner"
             onBack={onBack}

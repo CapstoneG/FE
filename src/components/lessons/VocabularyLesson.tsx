@@ -196,7 +196,7 @@ const VocabularyLesson: React.FC<VocabularyLessonProps> = ({
                       className="speak-btn-inline-vocabulary-lesson"
                       onClick={() => handleSpeak(item.word)}
                     >
-                      <FaVolumeUp size={18} />
+                      <FaVolumeUp className="learned-icon-vocabulary-lesson" size={18} />
                     </button>
                   </div>
                   {learnedWords.has(index) && (
@@ -213,12 +213,6 @@ const VocabularyLesson: React.FC<VocabularyLessonProps> = ({
                 <div className="example-box-vocabulary-lesson">
                   <p className="example-label-vocabulary-lesson">Ví dụ:</p>
                   <p className="example-vocabulary-lesson">{item.example}</p>
-                  <button
-                    className="speak-btn-inline-vocabulary-lesson"
-                    onClick={() => handleSpeak(item.example)}
-                  >
-                    <FaVolumeUp size={14} />
-                  </button>
                 </div>
               
               </div>

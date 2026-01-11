@@ -26,6 +26,10 @@ export interface GenerateFlashcardsData {
   word: string[];
 }
 
+export interface AddFlashcardsData {
+  words: string[];
+}
+
 export interface StudyCard {
   id: number;
   term: string;
@@ -321,6 +325,38 @@ class FlashcardService {
         const errorData = await response.json().catch(() => ({}));
         throw {
           message: errorData.message || 'Failed to generate flashcards',
+          status: response.status,
+        } as ApiError;
+      }
+    } catch (error) {
+      if (error && typeof error === 'object' && 'status' in error) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw {
+          message: 'Network error. Please check your connection.',
+          status: 0,
+        } as ApiError;
+      }
+      throw {
+        message: 'An unexpected error occurred',
+        status: 500,
+      } as ApiError;
+    }
+  }
+
+  async addFlashcards(data: AddFlashcardsData): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/add-flashcards`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw {
+          message: errorData.message || 'Failed to add flashcards',
           status: response.status,
         } as ApiError;
       }

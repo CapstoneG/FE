@@ -8,7 +8,8 @@ function AppContent() {
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
   const isPlacementTest = location.pathname === '/placement-test';
   const isAdminPage = location.pathname.startsWith('/admin');
-  const hideHeader = isAuthPage || isPlacementTest || isAdminPage;
+  const hideSpeakingPracticeHeader = location.pathname === '/speaking-training/practice';
+  const hideHeader = isAuthPage || isPlacementTest || isAdminPage || hideSpeakingPracticeHeader;
 
   return (
     <div className={`app ${hideHeader ? 'no-header' : ''}`}>

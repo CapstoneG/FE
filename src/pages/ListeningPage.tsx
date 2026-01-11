@@ -3,6 +3,7 @@ import './ListeningPage.css';
 import { FaHeadphones, FaPlay, FaPause, FaVolumeUp } from 'react-icons/fa';
 import { skillsService } from '../services/skills';
 import { Pagination } from '../components';
+import { useStudyEvents } from '../hooks';
 
 // ==================== TYPE DEFINITIONS ====================
 interface Question {
@@ -54,6 +55,24 @@ const ListeningPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [score, setScore] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  
+  // Track study session when exercise is selected
+  useStudyEvents({
+    lessonId: selectedExercise?.id,
+    activityType: 'SKILL',
+    skill: 'LISTENING',
+    autoStart: !!selectedExercise,
+    autoEnd: true,
+    onSessionStart: (sessionId) => {
+      console.log('[Listening] Study session started:', sessionId);
+    },
+    onSessionEnd: () => {
+      console.log('[Listening] Study session ended');
+    },
+    onStatsUpdate: (event) => {
+      console.log('[Listening] Stats updated:', event);
+    },
+  });
   
   // Audio player state
   const [isPlaying, setIsPlaying] = useState(false);

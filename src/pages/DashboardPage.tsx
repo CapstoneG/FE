@@ -5,73 +5,18 @@ import { achievementService } from '../services/achievements';
 import type { AchievementsResponse } from '../services/achievements';
 import { getStudyChart } from '../services/studyService';
 import type { StudyChartDataPoint } from '../services/studyService';
+import { userService } from '../services/userService';
+import type { UserDashboard } from '../services/userService';
 import { FaFire } from 'react-icons/fa';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-// New interfaces for redesigned dashboard
-interface ContinueLearningItem {
-  id: number;
-  title: string;
-  type: 'lesson' | 'flashcard' | 'test';
-  progress: number;
-  icon: string;
-}
-
-interface FlashcardStat {
-  total: number;
-  dueToday: number;
-}
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   
-  // Mock data - in real app, fetch from API
-  const mockData = {
-    user: {
-      name: user?.fullName || user?.username || 'Learner',
-      streak: 12
-    },
-    dailyGoal: {
-      target: 60,
-      current: 45,
-      percentage: 75
-    },
-    weeklyGoal: {
-      targetDays: 5,
-      completedDays: 4,
-      percentage: 80
-    },
-    studyTime: {
-      today: 45,
-      thisWeek: 180,
-      thisMonth: 720
-    },
-    continueLearning: [
-      { id: 1, title: 'Business Vocabulary Unit 5', type: 'lesson' as const, progress: 65, icon: '📚' },
-      { id: 2, title: 'Daily Words Practice', type: 'flashcard' as const, progress: 30, icon: '🎴' }
-    ] as ContinueLearningItem[],
-    stats: {
-      lessonsCompleted: 34,
-      vocabularyLearned: 458,
-      strongSkills: ['Grammar', 'Reading'],
-      weakSkills: ['Speaking', 'Listening']
-    },
-    flashcards: {
-      total: 458,
-      dueToday: 23
-    } as FlashcardStat,
-    learningSettings: {
-      reminderTime: '19:00',
-      daysPerWeek: 5
-    },
-    recommendations: [
-      { id: 1, title: 'Intermediate Grammar Review', type: 'Lesson', level: 'B1' },
-      { id: 2, title: 'Business English Phrases', type: 'Vocabulary', level: 'B2' },
-      { id: 3, title: 'Conversation Practice', type: 'Speaking', level: 'B1' }
-    ]
-  };
-
   // State management
   const [loading, setLoading] = useState(true);
+  const [dashboard, setDashboard] = useState<UserDashboard | null>(null);
   const [achievements, setAchievements] = useState<AchievementsResponse>({
     achievementCompleteList: [],
     achievementProgressList: []
@@ -83,6 +28,14 @@ const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      try {
+        // Fetch dashboard data
+        const dashboardData = await userService.getDashboard();
+        setDashboard(dashboardData);
+      } catch (error) {
+        console.error('Error fetching dashboard:', error);
+      }
+
       try {
         // Fetch achievements
         const achievementsData = await achievementService.getAchievements();
@@ -134,7 +87,7 @@ const DashboardPage: React.FC = () => {
     fetchData();
   }, []);
 
-  if (loading) {
+  if (loading || !dashboard) {
     return (
       <div className="dash-loading">
         <div className="dash-loading-spinner"></div>
@@ -143,13 +96,21 @@ const DashboardPage: React.FC = () => {
     );
   }
 
+  const dailyGoalPercentage = dashboard.targetDailyStudied > 0 
+    ? Math.round((dashboard.timeStudyToday / dashboard.targetDailyStudied) * 100) 
+    : 0;
+  const activeDays = dashboard.activityData?.filter(d => d.lessons > 0 || d.flashcards > 0 || d.skills > 0).length || 0;
+  const weeklyGoalPercentage = dashboard.targetDaysPerW > 0
+    ? Math.round((activeDays / dashboard.targetDaysPerW) * 100)
+    : 0;
+
   return (
     <div className="dash-page">
       <div className="dash-container">
         {/* 1. Overview Section */}
         <section className="dash-overview">
           <div className="dash-greeting-card">
-            <h1>Xin chào, {mockData.user.name}!</h1>
+            <h1>Xin chào, {user?.fullName || user?.username || 'Learner'}!</h1>
             <p>Hãy tiếp tục hành trình học tập của bạn hôm nay</p>
           </div>
 
@@ -159,19 +120,19 @@ const DashboardPage: React.FC = () => {
                 <FaFire />
               </div>
               <div className="dash-stat-content">
-                <div className="dash-stat-value">{mockData.user.streak} ngày</div>
+                <div className="dash-stat-value">{dashboard.streakDays} ngày</div>
                 <div className="dash-stat-label">Chuỗi học liên tục</div>
               </div>
             </div>
 
             <div className="dash-stat-card">
               <div className="dash-stat-content">
-                <div className="dash-stat-value">{mockData.dailyGoal.current}/{mockData.dailyGoal.target} phút</div>
+                <div className="dash-stat-value">{dashboard.timeStudyToday}/{dashboard.targetDailyStudied} phút</div>
                 <div className="dash-stat-label">Mục tiêu hôm nay</div>
                 <div className="dash-goal-progress-bar">
                   <div 
                     className="dash-goal-progress-fill" 
-                    style={{ width: `${mockData.dailyGoal.percentage}%` }}
+                    style={{ width: `${dailyGoalPercentage}%` }}
                   ></div>
                 </div>
               </div>
@@ -179,12 +140,12 @@ const DashboardPage: React.FC = () => {
 
             <div className="dash-stat-card">
               <div className="dash-stat-content">
-                <div className="dash-stat-value">{mockData.weeklyGoal.completedDays}/{mockData.weeklyGoal.targetDays} ngày</div>
+                <div className="dash-stat-value">{activeDays}/{dashboard.targetDaysPerW} ngày</div>
                 <div className="dash-stat-label">Mục tiêu tuần này</div>
                 <div className="dash-goal-progress-bar">
                   <div 
                     className="dash-goal-progress-fill" 
-                    style={{ width: `${mockData.weeklyGoal.percentage}%` }}
+                    style={{ width: `${weeklyGoalPercentage}%` }}
                   ></div>
                 </div>
               </div>
@@ -192,72 +153,45 @@ const DashboardPage: React.FC = () => {
           </div>
         </section>
 
-        {/* 3 & 4. Two Column Grid */}
+        {/* Progress and Study Time - 2 Column Grid */}
         <div className="dash-grid-2col">
-          {/* 3. Progress Section */}
           <section className="dash-progress">
             <h2 className="dash-section-title">Tiến độ học tập</h2>
             <div className="dash-progress-stats">
               <div className="dash-progress-stat-item">
                 <div className="dash-progress-stat-content">
-                  <div className="dash-progress-stat-value">{mockData.stats.lessonsCompleted}</div>
+                  <div className="dash-progress-stat-value">{dashboard.lessonComplete}</div>
                   <div className="dash-progress-stat-label">Bài học hoàn thành</div>
                 </div>
               </div>
 
               <div className="dash-progress-stat-item">
                 <div className="dash-progress-stat-content">
-                  <div className="dash-progress-stat-value">{mockData.stats.vocabularyLearned}</div>
-                  <div className="dash-progress-stat-label">Từ vựng đã học</div>
+                  <div className="dash-progress-stat-value">{dashboard.flashcardsStudied}</div>
+                  <div className="dash-progress-stat-label">Flashcards đã học</div>
                 </div>
               </div>
             </div>
-
-            {/* <div className="dash-skill-analysis">
-              <h4>Phân tích kỹ năng</h4>
-              <div className="dash-skill-item dash-skill-strong">
-                <span className="dash-skill-icon">💪</span>
-                <span>Điểm mạnh: {mockData.stats.strongSkills.join(', ')}</span>
-              </div>
-              <div className="dash-skill-item dash-skill-weak">
-                <span className="dash-skill-icon">📈</span>
-                <span>Cần cải thiện: {mockData.stats.weakSkills.join(', ')}</span>
-              </div>
-            </div> */}
           </section>
 
-          {/* 4. Flashcard Section */}
-          <section className="dash-flashcard">
-            <h2 className="dash-section-title">🎴 Flashcard</h2>
-            <div className="dash-flashcard-widget">
-              <div className="dash-flashcard-icon-lg">🎴</div>
-              <div className="dash-flashcard-count">{mockData.flashcards.dueToday}</div>
-              <div className="dash-flashcard-label">thẻ cần ôn hôm nay</div>
-              <div className="dash-flashcard-time">Khoảng 5-10 phút</div>
-              <button className="dash-btn-flashcard">Bắt đầu ôn tập →</button>
-              <div className="dash-flashcard-total">Tổng: {mockData.flashcards.total} thẻ</div>
+          <section className="dash-study-time">
+            <h2 className="dash-section-title">Thống kê thời gian học</h2>
+            <div className="dash-time-stats">
+              <div className="dash-time-card">
+                <div className="dash-time-label">Hôm nay</div>
+                <div className="dash-time-value">{dashboard.timeStudyToday} phút</div>
+              </div>
+              <div className="dash-time-card">
+                <div className="dash-time-label">Tuần này</div>
+                <div className="dash-time-value">{dashboard.timeStudyW} phút</div>
+              </div>
+              <div className="dash-time-card">
+                <div className="dash-time-label">Tháng này</div>
+                <div className="dash-time-value">{dashboard.timeStudyM} phút</div>
+              </div>
             </div>
           </section>
         </div>
-
-        {/* Study Time Statistics */}
-        <section className="dash-study-time">
-          <h2 className="dash-section-title">Thống kê thời gian học</h2>
-          <div className="dash-time-stats">
-            <div className="dash-time-card">
-              <div className="dash-time-label">Hôm nay</div>
-              <div className="dash-time-value">{mockData.studyTime.today} phút</div>
-            </div>
-            <div className="dash-time-card">
-              <div className="dash-time-label">Tuần này</div>
-              <div className="dash-time-value">{mockData.studyTime.thisWeek} phút</div>
-            </div>
-            <div className="dash-time-card">
-              <div className="dash-time-label">Tháng này</div>
-              <div className="dash-time-value">{mockData.studyTime.thisMonth} phút</div>
-            </div>
-          </div>
-        </section>
 
         {/* Learning Chart */}
         <section className="dash-chart">
@@ -325,7 +259,96 @@ const DashboardPage: React.FC = () => {
           </div>
         </section>
 
-      
+        {/* Activity Charts - 2 Column Grid */}
+        <div className="dash-grid-2col">
+          <section className="dash-chart">
+            <div className="chart-card">
+              <h3>Hoạt động tuần này</h3>
+              <div className="chart-wrapper">
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={dashboard.activityData || []}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="name" stroke="#6b7280" />
+                    <YAxis stroke="#6b7280" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'white', 
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                      }} 
+                    />
+                    <Legend />
+                    <Line 
+                      type="monotone" 
+                      dataKey="flashcards" 
+                      stroke="#667eea" 
+                      strokeWidth={3}
+                      name="Flashcards"
+                      dot={{ fill: '#667eea', r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="lessons" 
+                      stroke="#f5576c" 
+                      strokeWidth={3}
+                      name="Bài học"
+                      dot={{ fill: '#f5576c', r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="skills" 
+                      stroke="#f59e0b" 
+                      strokeWidth={3}
+                      name="Kỹ năng"
+                      dot={{ fill: '#f59e0b', r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </section>
+
+          <section className="dash-chart">
+            <div className="chart-card">
+              <h3>Hoạt động theo kỹ năng</h3>
+              <div className="chart-wrapper">
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={dashboard.activityDataSkill || []}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis 
+                      dataKey="name" 
+                      stroke="#6b7280"
+                      angle={-15}
+                      textAnchor="end"
+                      height={80}
+                      fontSize={12}
+                    />
+                    <YAxis stroke="#6b7280" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'white', 
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                      }} 
+                    />
+                    <Legend />
+                    <Bar 
+                      dataKey="times" 
+                      fill="#667eea" 
+                      name="Thời gian (phút)"
+                      radius={[8, 8, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </section>
+        </div>
 
         {/* 6. Achievements Section */}
         <section className="dash-achievements">

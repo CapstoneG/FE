@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import './SpeakingPage.css';
 import { skillsService } from '../services/skills';
 import { Pagination } from '../components';
+import { useStudyEvents } from '../hooks';
 
 interface SpeakingMetadata {
   estimatedTime: string;
@@ -33,6 +34,22 @@ const SpeakingPage = () => {
   const [audioURL, setAudioURL] = useState<string>('');
   const [showPreparation, setShowPreparation] = useState(true);
   
+  useStudyEvents({
+    lessonId: selectedExercise?.id,
+    activityType: 'SKILL',
+    skill: 'SPEAKING',
+    autoStart: !!selectedExercise,
+    autoEnd: true,
+    onSessionStart: (sessionId) => {
+      console.log('[Speaking] Study session started:', sessionId);
+    },
+    onSessionEnd: () => {
+      console.log('[Speaking] Study session ended');
+    },
+    onStatsUpdate: (event) => {
+      console.log('[Speaking] Stats updated:', event);
+    },
+  });
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);

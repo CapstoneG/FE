@@ -1,8 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './VideoLesson.css';
+import { getVideoNotes, addVideoNote, deleteVideoNote } from '../../services/lessonService';
+import type { LessonContent } from '../../services/lessonService';
 
-// Định nghĩa type cho note
+// Định nghĩa type cho note (local state)
 interface VideoNote {
+  id?: number;
   time: number;
   text: string;
 }
@@ -58,6 +61,7 @@ interface VideoLessonProps {
     description: string;
     duration: string;
     completed: boolean;
+    parsedContent?: LessonContent;
   };
   courseTitle?: string;
   onBack?: () => void;
@@ -100,6 +104,37 @@ const VideoLesson: React.FC<VideoLessonProps> = ({
   const [notes, setNotes] = useState<VideoNote[]>([]);
   const [noteText, setNoteText] = useState('');
   const [showNoteInput, setShowNoteInput] = useState(false);
+  const [isLoadingNotes, setIsLoadingNotes] = useState(false);
+
+  // Get videoId from lesson data
+  const videoId = lesson?.parsedContent?.video?.id;
+
+  // Load notes from API when videoId changes
+  useEffect(() => {
+    if (videoId) {
+      loadNotes();
+    }
+  }, [videoId]);
+
+  // Load notes từ API
+  const loadNotes = async () => {
+    if (!videoId) return;
+    
+    setIsLoadingNotes(true);
+    try {
+      const notesData = await getVideoNotes(videoId);
+      const convertedNotes: VideoNote[] = notesData.map(note => ({
+        id: note.id,
+        time: note.timestamp,
+        text: note.content
+      }));
+      setNotes(convertedNotes);
+    } catch (error) {
+      console.error('Error loading notes:', error);
+    } finally {
+      setIsLoadingNotes(false);
+    }
+  };
 
   // Load Cloudinary Player script
   useEffect(() => {
@@ -201,24 +236,35 @@ const VideoLesson: React.FC<VideoLessonProps> = ({
   };
 
   // Thêm note mới
-  const handleAddNote = () => {
+  const handleAddNote = async () => {
     const text = noteText.trim();
     if (!text) {
       alert('Vui lòng nhập nội dung ghi chú');
       return;
     }
 
-    if (!playerRef.current) {
+    if (!playerRef.current || !videoId) {
       alert('Video player chưa sẵn sàng');
       return;
     }
 
     const time = Math.floor(playerRef.current.currentTime());
-    const newNote: VideoNote = { time, text };
+    
+    try {
+      const newNoteFromAPI = await addVideoNote(videoId, time, text);
+      const newNote: VideoNote = {
+        id: newNoteFromAPI.id,
+        time: newNoteFromAPI.timestamp,
+        text: newNoteFromAPI.content
+      };
 
-    setNotes((prevNotes) => [...prevNotes, newNote]);
-    setNoteText('');
-    setShowNoteInput(false);
+      setNotes((prevNotes) => [...prevNotes, newNote]);
+      setNoteText('');
+      setShowNoteInput(false);
+    } catch (error) {
+      console.error('Error adding note:', error);
+      alert('Không thể thêm ghi chú. Vui lòng thử lại.');
+    }
   };
 
   // Click vào note để nhảy đến thời điểm đó
@@ -258,8 +304,22 @@ const VideoLesson: React.FC<VideoLessonProps> = ({
   };
 
   // Xóa note
-  const handleDeleteNote = (index: number) => {
-    setNotes((prevNotes) => prevNotes.filter((_, i) => i !== index));
+  const handleDeleteNote = async (index: number) => {
+    const note = notes[index];
+    
+    if (!note.id) {
+      // Nếu note chưa có ID (chưa lưu), chỉ xóa local
+      setNotes((prevNotes) => prevNotes.filter((_, i) => i !== index));
+      return;
+    }
+    
+    try {
+      await deleteVideoNote(note.id);
+      setNotes((prevNotes) => prevNotes.filter((_, i) => i !== index));
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      alert('Không thể xóa ghi chú. Vui lòng thử lại.');
+    }
   };
 
   return (
@@ -329,7 +389,9 @@ const VideoLesson: React.FC<VideoLessonProps> = ({
         )}
 
         <div className="notes-list">
-          {notes.length === 0 ? (
+          {isLoadingNotes ? (
+            <p className="no-notes">Đang tải ghi chú...</p>
+          ) : notes.length === 0 ? (
             <p className="no-notes">Chưa có ghi chú nào</p>
           ) : (
             notes.map((note, index) => (

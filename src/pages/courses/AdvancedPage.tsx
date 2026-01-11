@@ -6,6 +6,9 @@ import { BiTrophy } from 'react-icons/bi';
 import { IoMdCheckmarkCircleOutline } from 'react-icons/io';
 import { RiEnglishInput } from 'react-icons/ri';
 import { OverviewCard } from '@/components';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import LessonDetail from '@/pages/lesson/LessonDetail';
+import { authService } from '@/services/authService';
 
 interface Lesson {
   id: number;
@@ -28,6 +31,11 @@ const AdvancedPage: React.FC = () => {
   const [activeModule, setActiveModule] = useState<number | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const lessonParam = searchParams.get('lesson');
+  const activeLessonId = lessonParam ? parseInt(lessonParam, 10) : null;
+  const [userLevel, setUserLevel] = useState<string | null>(null);
 
   // Icon mapping
   const getIconByName = (iconName: string) => {
@@ -50,13 +58,27 @@ const AdvancedPage: React.FC = () => {
     return Math.round((completedCount / lessons.length) * 100);
   };
 
+  // Fetch user level
+  useEffect(() => {
+    const fetchUserLevel = async () => {
+      const user = await authService.getCurrentUser();
+      setUserLevel(user?.level || null);
+    };
+    fetchUserLevel();
+  }, []);
+
   // Fetch modules data
   useEffect(() => {
     const fetchModules = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:8080/api/v1/courses/3/units');
-        
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('http://localhost:8080/api/v1/courses/3/units', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch modules');
         }
@@ -110,6 +132,36 @@ const AdvancedPage: React.FC = () => {
       default: return <FaBook size={16} />;
     }
   };
+
+  // Start lesson with authentication check
+  const handleStartLesson = (lessonId: number) => {
+    const token = localStorage.getItem('authToken');
+    const returnUrl = `/courses/advanced?lesson=${lessonId}`;
+    if (!token) {
+      navigate(`/login?next=${encodeURIComponent(returnUrl)}`);
+      return;
+    }
+    navigate(returnUrl);
+  };
+
+  // Check if user can access this course (only Advanced level)
+  const canAccessCourse = () => {
+    if (!userLevel) return false;
+    const normalizedLevel = userLevel.toLowerCase();
+    return normalizedLevel === 'advanced';
+  };
+
+  // Show lesson detail if lessonId is present
+  if (activeLessonId) {
+    return (
+      <div className="advanced-page">
+        <LessonDetail
+          lessonId={activeLessonId}
+          onBack={() => navigate('/courses/advanced')}
+        />
+      </div>
+    );
+  }
 
   // Loading state
   if (loading) {
@@ -292,28 +344,44 @@ const AdvancedPage: React.FC = () => {
                 
                 {activeModule === module.id && (
                   <div className="module-lessons">
-                    {module.lessons.map((lesson) => (
-                      <div key={lesson.id} className={`lesson-item ${lesson.completed ? 'completed' : ''}`}>
-                        <div className="lesson-info">
-                          <div className="lesson-icon">
-                            {getLessonIcon(lesson.type)}
+                    {module.lessons.map((lesson, index) => {
+                      // Check if previous lesson is completed
+                      // Special units (7, 8, 9) have all lessons unlocked
+                      const isLocked = [7, 8, 9].includes(module.id) ? false : (index > 0 && !module.lessons[index - 1].completed);
+                      // Check if user can access this course (only Advanced)
+                      const hasAccess = canAccessCourse();
+                      const isDisabled = isLocked || !hasAccess;
+                      
+                      return (
+                        <div key={lesson.id} className={`lesson-item ${lesson.completed ? 'completed' : ''} ${isDisabled ? 'locked' : ''}`}>
+                          <div className="lesson-info">
+                            <div className="lesson-icon">
+                              {getLessonIcon(lesson.type)}
+                            </div>
+                            <div className="lesson-text">
+                              <h4>{lesson.title}</h4>
+                              <span className="lesson-duration">
+                                <FaClock size={12} /> {lesson.duration}
+                              </span>
+                            </div>
                           </div>
-                          <div className="lesson-text">
-                            <h4>{lesson.title}</h4>
-                            <span className="lesson-duration">
-                              <FaClock size={12} /> {lesson.duration}
-                            </span>
+                          <div className="lesson-status">
+                            {lesson.completed ? (
+                              <FaCheckCircle size={20} color="#10b981" />
+                            ) : (
+                              <button
+                                className={`start-lesson-btn ${isDisabled ? 'locked' : ''}`}
+                                disabled={isDisabled}
+                                onClick={() => !isDisabled && handleStartLesson(lesson.id)}
+                                title={!hasAccess ? "Cần đạt trình độ Advanced để học" : isLocked ? "Hoàn thành bài trước để mở khóa" : ""}
+                              >
+                                Bắt đầu
+                              </button>
+                            )}
                           </div>
                         </div>
-                        <div className="lesson-status">
-                          {lesson.completed ? (
-                            <FaCheckCircle size={20} color="#10b981" />
-                          ) : (
-                            <button className="start-lesson-btn">Bắt đầu</button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
